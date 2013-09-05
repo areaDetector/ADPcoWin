@@ -1,0 +1,497 @@
+
+# Macros:
+#% macro, P, Device Prefix
+#% macro, R, Device Suffix
+#% macro, PORT, Asyn Port name
+#% macro, TIMEOUT, Timeout
+#% macro, ADDR, Asyn Port address
+
+# This associates the template with an edm screen
+# % gui, $(PORT), edmtab, pcoDetector.edl, P=$(P),R=$(R)
+
+# All tags starting with gdatag are DLS specific for GDA
+# % gdatag, template, pcocam, $(PORT)_pcocam, $(PORT) pcocam class instance
+
+# Overwrite ADBase.template TriggerMode definition strings
+record(mbbo, "$(P)$(R)TriggerMode")
+{
+    field(ZRST, "Auto")
+    field(ZRVL, "0")
+    field(ONST, "Soft")
+    field(ONVL, "1")
+    field(TWST, "Ext + Soft")
+    field(TWVL, "2")
+    field(THST, "Ext Pulse")
+    field(THVL, "3")
+}
+
+record(mbbi, "$(P)$(R)TriggerMode_RBV")
+{
+    field(ZRST, "Auto")
+    field(ZRVL, "0")
+    field(ONST, "Soft")
+    field(ONVL, "1")
+    field(TWST, "Ext + Soft")
+    field(TWVL, "2")
+    field(THST, "Ext Pulse")
+    field(THVL, "3")
+}
+
+
+# % gdatag, pv, rw, $(PORT)_pcocam, PIX_RATE, Set pixel rate
+record(mbbo, "$(P)$(R)PIX_RATE")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PIX_RATE")
+    field(VAL, "0")
+    field(ZRST, "Unset")
+    field(ZRVL, 0)
+}
+
+# % gdatag, pv, ro, $(PORT)_pcocam, PIX_RATE_RBV, Readback for pixel rate
+record(mbbi, "$(P)$(R)PIX_RATE_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PIX_RATE")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Unset")
+    field(ZRVL, 0)
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, ADC_MODE, Set adc mode
+record(mbbo, "$(P)$(R)ADC_MODE") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ADC_MODE")
+    field(ZRST, "One ADC")
+    field(ZRVL, "1")
+    field(ONVL, "2")
+    field(ONST, "Two ADC")
+    field(IVOA, "Don't drive outputs")
+    field(VAL,  "1")
+    field(PINI, "YES")
+}
+
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, ADC_MODE_RBV, Readback for adc mode
+record(mbbi, "$(P)$(R)ADC_MODE_RBV") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ADC_MODE")
+    field(ZRST, "One ADC")
+    field(ZRVL, "1")
+    field(ONVL, "2")
+    field(ONST, "Two ADC")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, pv, ro, $(PORT)_pcocam, CAM_RAM_USE_RBV, Readback for cam ram usage
+record(ai, "$(P)$(R)CAM_RAM_USE_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAM_RAM_USE")
+    field(PREC, "0")
+    field(EGU, "%")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, pv, ro, $(PORT)_pcocam, ELEC_TEMP_RBV, Readback for elec temp
+record(ai, "$(P)$(R)ELEC_TEMP_RBV") 
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ELECTRONICS_TEMP")
+    field(PREC, "0")
+    field(EGU, "C")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, pv, ro, $(PORT)_pcocam, POWER_TEMP_RBV, Readback for power temp
+record(ai, "$(P)$(R)POWER_TEMP_RBV") 
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_POWER_TEMP")
+    field(PREC, "0")
+    field(EGU, "C")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, STORAGE_MODE, Set storage mode
+record(mbbo, "$(P)$(R)STORAGE_MODE") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_STORAGE_MODE")
+    field(ZRST, "Recorder")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(ONST, "FIFO buffer")
+    field(IVOA, "Don't drive outputs")
+    field(VAL,  "1")
+    field(PINI, "YES")
+}
+
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, STORAGE_MODE_RBV, Readback for storage mode
+record(mbbi, "$(P)$(R)STORAGE_MODE_RBV") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_STORAGE_MODE")
+    field(ZRST, "Recorder")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(ONST, "FIFO buffer")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, RECORDER_MODE, Set recorder mode
+record(mbbo, "$(P)$(R)RECORDER_MODE") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_RECORDER_SUBMODE")
+    field(ZRST, "Sequence")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(ONST, "Ring buffer")
+    field(IVOA, "Don't drive outputs")
+    field(VAL,  "1")
+    field(PINI, "YES")
+}
+
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, RECORDER_MODE_RBV, Readback for recorder mode
+record(mbbi, "$(P)$(R)RECORDER_MODE_RBV") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_RECORDER_SUBMODE")
+    field(ZRST, "Sequence")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(ONST, "Ring buffer")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, TIMESTAMP_MODE, Set timestamp mode
+record(mbbo, "$(P)$(R)TIMESTAMP_MODE") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_TIMESTAMP_MODE")
+    field(ZRST, "None")
+    field(ONST, "BCD")
+    field(TWST, "BCD+ASCII")
+    field(THST, "ASCII")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "3")
+    field(IVOA, "Don't drive outputs")
+    field(VAL,  "2")
+    field(PINI, "YES")
+}
+
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, TIMESTAMP_MODE_RBV, Readback for timestamp mode
+record(mbbi, "$(P)$(R)TIMESTAMP_MODE_RBV") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_TIMESTAMP_MODE")
+    field(ZRST, "None")
+    field(ONST, "BCD")
+    field(TWST, "BCD+ASCII")
+    field(THST, "ASCII")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "3")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, ACQUIRE_MODE, Set acquire mode
+record(mbbo, "$(P)$(R)ACQUIRE_MODE") 
+{
+    field(DESC, "mode select")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ACQUIRE_MODE")
+    field(ZRST, "Auto")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(ONST, "Ext. enable")
+    field(TWST, "Ext. trigger")
+    field(IVOA, "Don't drive outputs")
+    field(VAL,  "0")
+    field(PINI, "YES")
+}
+
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, ACQUIRE_MODE_RBV, Readback for acquire mode
+record(mbbi, "$(P)$(R)ACQUIRE_MODE_RBV") 
+{
+    field(DESC, "acquire mode select")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ACQUIRE_MODE")
+    field(ZRST, "Auto")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(ONST, "Ext. enable")
+    field(TWST, "Ext. trigger")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, ARM_MODE, Set arm mode
+record(mbbo, "$(P)$(R)ARM_MODE") 
+{
+    field(DESC, "arm mode select")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ARM_MODE")
+    field(ZRST, "Disarmed")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(ONST, "Armed")
+    field(IVOA, "Don't drive outputs")
+    field(VAL,  "0")
+    field(PINI, "YES")
+}
+
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, ARM_MODE_RBV, Readback for arm mode
+record(mbbi, "$(P)$(R)ARM_MODE_RBV") 
+{
+    field(DESC, "arm mode select")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ARM_MODE")
+    field(ZRST, "Disarmed")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(ONST, "Armed")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, pv, rw, $(PORT)_pcocam, DELAY_TIME, Set delay time
+record(ao, "$(P)$(R)DELAY_TIME") 
+{
+    field(DTYP, "asynFloat64")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DELAY_TIME")
+    field(VAL, "0")
+    field(PREC, "6")
+    field(EGU,  "")
+}
+
+# % gdatag, pv, ro, $(PORT)_pcocam, DELAY_TIME_RBV, Readback for delay time
+record(ai, "$(P)$(R)DELAY_TIME_RBV") 
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DELAY_TIME")
+    field(PREC, "6")
+    field(EGU, "")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, pv, ro, $(PORT)_pcocam, IMAGE_NUMBER_RBV, Readback for image number
+record(ai, "$(P)$(R)IMAGE_NUMBER_RBV") 
+{
+    field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_IMAGE_NUMBER")
+    field(PREC, "0")
+    field(EGU, "")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, CAMERA_SETUP, Set camera shutter setup
+record(mbbo, "$(P)$(R)CAMERA_SETUP") 
+{
+    field(DESC, "shutter mode select")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAMERA_SETUP")
+    field(ZRST, "Rolling Shutter")
+    field(ZRVL, "1")
+    field(ONVL, "2")
+    field(ONST, "Global Shutter")
+    field(IVOA, "Don't drive outputs")
+    field(VAL,  "0")
+}
+
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, CAMERA_SETUP_RBV, Readback for camera shutter setup
+record(mbbi, "$(P)$(R)CAMERA_SETUP_RBV") 
+{
+    field(DESC, "shutter mode readback")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAMERA_SETUP")
+    field(ZRST, "Rolling Shutter")
+    field(ZRVL, "1")
+    field(ONVL, "2")
+    field(ONST, "Global Shutter")
+    field(SCAN, "I/O Intr")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, BIT_ALIGNMENT, Set camera bit alignment
+record(mbbo, "$(P)$(R)BIT_ALIGNMENT") 
+{
+    field(DESC, "bit alignment select")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BIT_ALIGNMENT")
+    field(ZRST, "MSB")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(ONST, "LSB")
+    field(IVOA, "Don't drive outputs")
+    field(VAL,  "0")
+}
+
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, BIT_ALIGNMENT_RBV, Readback for camera bit alignment
+record(mbbi, "$(P)$(R)BIT_ALIGNMENT_RBV") 
+{
+    field(DESC, "bit alignment readback")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BIT_ALIGNMENT")
+    field(ZRST, "MSB")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(ONST, "LSB")
+    field(SCAN, "I/O Intr")
+}
+
+# State record
+record(stringin, "$(P)$(R)STATE_RECORD_RBV")
+{
+    field(DTYP, "asynOctetRead")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_STATERECORD")
+    field(SCAN, "I/O Intr")
+}
+
+# Clear the state record
+record(longout, "$(P)$(R)CLEAR_STATE_RECORD")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CLEARSTATERECORD")
+}
+
+# Error counter, out of ND arrays
+record(longin, "$(P)$(R)OUTOFNDARRAYS_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_OUTOFNDARRAYS")
+    field(SCAN, "I/O Intr")
+}
+
+# Error counter, buffer queue read failures
+record(longin, "$(P)$(R)BUFFERQUEUEREADFAILURES_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BUFFERQUEUEREADFAILURES")
+    field(SCAN, "I/O Intr")
+}
+
+# Error counter, buffers with no data
+record(longin, "$(P)$(R)BUFFERSWITHNODATA_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BUFFERSWITHNODATA")
+    field(SCAN, "I/O Intr")
+}
+
+# Error counter, out of ND arrays
+record(longin, "$(P)$(R)MISPLACEDBUFFERS_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_MISPLACEDBUFFERS")
+    field(SCAN, "I/O Intr")
+}
+
+# Error counter, missing frames
+record(longin, "$(P)$(R)MISSINGFRAMES_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_MISSINGFRAMES")
+    field(SCAN, "I/O Intr")
+}
+
+# Error counter, DRIVERLIBRARYERRORS
+record(longin, "$(P)$(R)DRIVERLIBRARYERRORS_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DRIVERLIBRARYERRORS")
+    field(SCAN, "I/O Intr")
+}
+
+# Hardware binning X
+record(longin, "$(P)$(R)HWBINX_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_HWBINX")
+    field(SCAN, "I/O Intr")
+}
+
+# Hardware binning Y
+record(longin, "$(P)$(R)HWBINY_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_HWBINY")
+    field(SCAN, "I/O Intr")
+}
+
+# Hardware ROI X1
+record(longin, "$(P)$(R)HWROIX1_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_HWROIX1")
+    field(SCAN, "I/O Intr")
+}
+
+# Hardware ROI Y1
+record(longin, "$(P)$(R)HWROIY1_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_HWROIY1")
+    field(SCAN, "I/O Intr")
+}
+
+# Hardware ROI X2
+record(longin, "$(P)$(R)HWROIX2_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_HWROIX2")
+    field(SCAN, "I/O Intr")
+}
+
+# Hardware ROI Y2
+record(longin, "$(P)$(R)HWROIY2_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_HWROIY2")
+    field(SCAN, "I/O Intr")
+}
+
+# Hardware image size X
+record(longin, "$(P)$(R)XCAMSIZE_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_XCAMSIZE")
+    field(SCAN, "I/O Intr")
+}
+
+# Hardware image size Y
+record(longin, "$(P)$(R)YCAMSIZE_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_YCAMSIZE")
+    field(SCAN, "I/O Intr")
+}
+
+# Parameters that are not implemented and are disabled to remove them
+# from the GUI.
+record(ao, "$(P)$(R)Gain")
+{
+   field(DISA, "1")
+}
+record(mbbo, "$(P)$(R)ColorMode")
+{
+   field(DISA, "1")
+}
+record(ai, "$(P)$(R)Gain_RBV")
+{
+   field(DISA, "1")
+}
+
