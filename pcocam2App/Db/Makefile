@@ -11,15 +11,16 @@ include $(TOP)/configure/CONFIG
 # In a Diamond Support Module, install
 # templates like this
 #
-#DB += motor.template
-#DB += basic_motor.template
+DB += pco.template
+DB += PCO_dio_logic.template
+DB += PCO_dio_sim.template
+
 
 #----------------------------------------------------
 # In a Diamond IOC Application, build db files from
 # template files like this
 #
-#DB += BL06I-MO-IOC-01.db
-#DB += BL06I-MO-IOC-01_sim.db
+#DB += pcocamfull.db
 
 #USES_TEMPLATE += $(MOTOR)/db/motor.template
 #USES_TEMPLATE += $(MOTOR)/db/basic_motor.template
@@ -27,3 +28,7 @@ include $(TOP)/configure/CONFIG
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+#
+#pcocamfull.db: ../pcocamfull.substitutions
+#	msi -I.. -I$(ASYN)/db -I$(AREADETECTOR)/db -I$(EPICS_BASE)/db -S$? <$(DEV_NULL) > $@
+
