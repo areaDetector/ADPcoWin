@@ -811,7 +811,7 @@ void Pco::initialisePixelRate()
                 "%ld Hz", this->camDescription.pixelRate[i]);
             this->pixRateEnumValues[this->pixRateNumEnums] = i;
             this->pixRateEnumSeverities[this->pixRateNumEnums] = 0;
-            if(this->camDescription.pixelRate[i] > this->pixRateMax)
+            if((int)this->camDescription.pixelRate[i] > this->pixRateMax)
             {
                 this->pixRateMax = this->camDescription.pixelRate[i];
                 this->pixRateMaxValue = this->pixRateNumEnums;
@@ -829,7 +829,9 @@ void Pco::initialisePixelRate()
         this->pixRateValue = this->pixRateMaxValue;
         this->api->setPixelRate(this->camera, this->pixRate);
     }
-    this->api->getPixelRate(this->camera, &this->pixRate);
+    unsigned long r;
+    this->api->getPixelRate(this->camera, &r);
+    this->pixRate = (int)r;
     this->setIntegerParam(this->handlePixRate, this->pixRateValue);
 }
 
@@ -1279,7 +1281,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         this->getIntegerParam(this->handleAdcMode, &this->adcMode);
         this->getIntegerParam(this->handleBitAlignment, &this->bitAlignmentMode);
         this->getIntegerParam(this->handleAcquireMode, &this->acquireMode);
-        this->getIntegerParam(this->handlePixRate, &this->pixRate);
+        this->getIntegerParam(this->handlePixRate, &this->pixRateValue);
+        this->pixRate = this->camDescription.pixelRate[this->pixRateEnumValues[this->pixRateValue]];
         this->getDoubleParam(this->ADAcquireTime, &this->exposureTime);
         this->getDoubleParam(this->ADAcquirePeriod, &this->acquisitionPeriod);
         this->getDoubleParam(this->handleDelayTime, &this->delayTime);
@@ -1310,7 +1313,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         this->setIntegerParam(this->handleAcquireMode, this->acquireMode);
         this->setIntegerParam(this->handleAdcMode, this->adcMode);
         this->setIntegerParam(this->handleBitAlignment, this->bitAlignmentMode);
-        this->setIntegerParam(this->handlePixRate, this->pixRate);
+        this->setIntegerParam(this->handlePixRate, this->pixRateValue);
         this->setDoubleParam(this->ADAcquireTime, this->exposureTime);
         this->setDoubleParam(this->ADAcquirePeriod, this->acquisitionPeriod);
         this->setDoubleParam(this->handleDelayTime, this->delayTime);
@@ -1603,7 +1606,12 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
  */
 void Pco::cfgPixelRate() throw(PcoException)
 {
-
+    this->api->setPixelRate(this->camera, (unsigned long)this->pixRate);
+    unsigned long v;
+    this->api->getPixelRate(this->camera, &v);
+    this->pixRate = (int)v;
+    
+#if 0
     bool valid = false;
     int maxRate = 0;
     for(int j=0; j<DllApi::descriptionNumPixelRates && !valid; j++ )
@@ -1619,6 +1627,7 @@ void Pco::cfgPixelRate() throw(PcoException)
     unsigned long v;
     this->api->getPixelRate(this->camera, &v);
     this->pixRate = (int)v;
+#endif
 }
 
 /**
