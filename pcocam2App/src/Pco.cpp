@@ -1074,7 +1074,9 @@ void Pco::frameReceived(int bufferNumber)
                 this->xCamSize*this->yCamSize*sizeof(unsigned short));
         // Post the NDarray to the state machine thread
         this->receivedFrameQueue.send(&image, sizeof(NDArray*));
-        if(this->receivedFrameQueue.pending() <= 1)
+// JAT: Not sure why we don't always post the message but not doing was causing
+//      the Dimax to get stuck when using hardware trigger.
+//        if(this->receivedFrameQueue.pending() <= 1)
         {
             this->post(Pco::requestImageReceived);
         }
@@ -1115,6 +1117,10 @@ void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
                 delete[] this->buffers[i].buffer;
             }
             this->buffers[i].buffer = new unsigned short[bufferSize];
+            // JAT: For the Dimax we have freed the buffers so we must reallocated
+            //      from scratch rather than just the memory.
+            this->buffers[i].bufferNumber = DllApi::bufferUnallocated;
+            this->buffers[i].eventHandle = NULL;
             this->api->allocateBuffer(this->camera, &this->buffers[i].bufferNumber,
                     bufferSize, &this->buffers[i].buffer, &this->buffers[i].eventHandle);
             this->buffers[i].ready = true;
@@ -1145,6 +1151,12 @@ void Pco::freeImageBuffers() throw()
     try
     {
         this->api->cancelImages(this->camera);
+        // JAT: We didn't originally free the buffers from the DLL routinely.
+        //      However, for the Dimax it seems to be essential.
+        for(int i=0; i<Pco::numApiBuffers; i++)
+        {
+            this->api->freeBuffer(this->camera, i);
+        }
     }
     catch(PcoException& e)
     {
@@ -1936,6 +1948,7 @@ bool Pco::receiveImages() throw()
                     this->numImagesCounter++;
                 }
                 // Pass the array on
+                printf("#### Frame handled\n");
                 this->doCallbacksGenericPointer(image, NDArrayData, 0);
                 image->release();
             }
