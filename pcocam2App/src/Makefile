@@ -36,8 +36,8 @@ USR_LDFLAGS += /INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF
 else ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
 LIB_INSTALLS += $(wildcard ../lib64/*.lib)
 BIN_INSTALLS += $(wildcard ../dll64/*.dll)
-USR_CFLAGS += -DDEBUG  /Zi /O2 /wd4290
-USR_CPPFLAGS += -DDEBUG /Zi /O2 /wd4290
+USR_CFLAGS += /O2 /wd4290
+USR_CPPFLAGS += /O2 /wd4290
 USR_LDFLAGS += /INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF
 else
 USR_CPPFLAGS += -DDEBUG -O0

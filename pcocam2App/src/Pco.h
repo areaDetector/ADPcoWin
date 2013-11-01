@@ -1,6 +1,6 @@
 /* Pco.h
  *
- * Revamped pixium area detector driver.
+ * Revamped PCO area detector driver.
  *
  * Author:  Giles Knap
  *          Jonathan Thompson
