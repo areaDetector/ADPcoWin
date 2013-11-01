@@ -1,6 +1,6 @@
 /* Pco.h
  *
- * Revamped pixium area detector driver.
+ * Revamped PCO area detector driver.
  *
  * Author:  Giles Knap
  *          Jonathan Thompson
@@ -589,10 +589,13 @@ bool Pco::connectToCamera()
         }
 
         // Build the set of binning values
+//printf("#### X binning: ");
         this->setValidBinning(this->availBinX, this->camDescription.maxBinHorz,
                 this->camDescription.binHorzStepping);
+//printf("\n#### Y binning: ");
         this->setValidBinning(this->availBinY, this->camDescription.maxBinVert,
                 this->camDescription.binVertStepping);
+//printf("\n");
 
         // Get more camera information
         this->api->getTransferParameters(this->camera, &this->camTransfer);
@@ -844,6 +847,7 @@ void Pco::setValidBinning(std::set<int>& valid, int max, int step) throw()
     int bin = 1;
     while(bin <= max)
     {
+//printf("%d,", bin);
         this->availBinX.insert(bin);
         if(step == DllApi::binSteppingLinear)
         {
@@ -1467,7 +1471,7 @@ void Pco::cfgTriggerMode() throw(PcoException)
 void Pco::cfgBinningAndRoi() throw(PcoException)
 {
     // Work out the software and hardware binning
-#if 0
+#if 1
     // Hardware version, see comment above
     if(this->availBinX.find(this->reqBinX) == this->availBinX.end())
     {
@@ -1515,7 +1519,7 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
     this->reqRoiSizeY = std::min(this->reqRoiSizeY, this->yCamSize-this->reqRoiStartY);
 
     // Get the desired hardware ROI (zero based, end not inclusive)
-#if 0
+#if 1
     // Hardware version, see comment above
     this->hwRoiX1 = this->reqRoiStartX;
     this->hwRoiX2 = this->reqRoiStartX+this->reqRoiSizeX;
@@ -1574,8 +1578,8 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
 
     // Work out the software ROI that cuts off the remaining bits in coordinates
     // relative to the hardware ROI
-    this->swRoiStartX = this->hwRoiX1 - this->reqRoiStartX;
-    this->swRoiStartY = this->hwRoiY1 - this->reqRoiStartY;
+    this->swRoiStartX = this->reqRoiStartX - this->hwRoiX1;
+    this->swRoiStartY = this->reqRoiStartY - this->hwRoiY1;
     this->swRoiSizeX = this->reqRoiSizeX;
     this->swRoiSizeY = this->reqRoiSizeY;
 
@@ -1854,6 +1858,9 @@ bool Pco::receiveImages() throw()
         this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
         if(image != NULL)
         {
+//printf("#### Image: %04x %04x %04x %04x\n",
+//        (int)((unsigned short*)image->pData)[0], (int)((unsigned short*)image->pData)[1],
+//        (int)((unsigned short*)image->pData)[2], (int)((unsigned short*)image->pData)[3]);
             // What is the number of the image?  If the image does not
             // contain the BCD image number
             // use the dead reckoning number instead.
@@ -1864,6 +1871,8 @@ bool Pco::receiveImages() throw()
                 imageNumber = this->extractImageNumber(
                         (unsigned short*)image->pData);
             }
+//printf("#### imageNumber=%d, lastImageNumberValid=%d\n",
+//        (int)imageNumber, (int)this->lastImageNumberValid);
             // If this is the image we are expecting?
             if(this->lastImageNumberValid && imageNumber != this->lastImageNumber+1)
             {
@@ -1877,6 +1886,13 @@ bool Pco::receiveImages() throw()
             // Do software ROI, binning and reversal if required
             if(this->roiRequired)
             {
+//printf("#### Performing s/w processing\n");
+//printf("     dim=0, size=%d, offset=%d, binning=%d, reverse=%d\n",
+//        (int)this->arrayDims[0].size, (int)this->arrayDims[0].offset,
+//        (int)this->arrayDims[0].binning, (int)this->arrayDims[0].reverse);
+//printf("     dim=1, size=%d, offset=%d, binning=%d, reverse=%d\n",
+//        (int)this->arrayDims[1].size, (int)this->arrayDims[1].offset,
+//        (int)this->arrayDims[1].binning, (int)this->arrayDims[1].reverse);
                 NDArray* scratch;
                 this->pNDArrayPool->convert(image, &scratch,
                         (NDDataType_t)this->dataType, this->arrayDims);
@@ -1948,7 +1964,7 @@ bool Pco::receiveImages() throw()
                     this->numImagesCounter++;
                 }
                 // Pass the array on
-                printf("#### Frame handled\n");
+//printf("#### Frame handled\n");
                 this->doCallbacksGenericPointer(image, NDArrayData, 0);
                 image->release();
             }
