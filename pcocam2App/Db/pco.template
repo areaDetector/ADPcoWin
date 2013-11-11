@@ -337,7 +337,7 @@ record(mbbo, "$(P)$(R)BIT_ALIGNMENT")
     field(ONVL, "1")
     field(ONST, "LSB")
     field(IVOA, "Don't drive outputs")
-    field(VAL,  "0")
+    field(VAL,  "1")
 }
 
 # % gdatag, mbbinary, ro, $(PORT)_pcocam, BIT_ALIGNMENT_RBV, Readback for camera bit alignment
@@ -480,6 +480,15 @@ record(longin, "$(P)$(R)YCAMSIZE_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# Camlink clock rate
+record(longin, "$(P)$(R)CAMLINKCLOCK_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAMLINKCLOCK")
+    field(SCAN, "I/O Intr")
+    field(EGU, "Hz")
+}
+
 # Parameters that are not implemented and are disabled to remove them
 # from the GUI.
 record(ao, "$(P)$(R)Gain")
@@ -494,4 +503,5 @@ record(ai, "$(P)$(R)Gain_RBV")
 {
    field(DISA, "1")
 }
+
 

@@ -19,6 +19,8 @@ DBD += pcocam2HardwareSupport.dbd
 pcocam2_SRCS += Pco.cpp
 pcocam2_SRCS += DllApi.cpp
 pcocam2_SRCS += NDArrayException.cpp
+pcocam2_SRCS += StateMachine.cpp
+pcocam2_SRCS += TraceStream.cpp
 pcocam2_SRCS += PcoException.cpp
 pcocam2_SRCS_WIN32 += PcoApi.cpp
 pcocam2_SRCS += SimulationApi.cpp
@@ -33,6 +35,12 @@ BIN_INSTALLS += $(wildcard ../dll/*.dll)
 USR_CFLAGS += -DDEBUG  /Zi /O2
 USR_CPPFLAGS += -DDEBUG /Zi /O2
 USR_LDFLAGS += /INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF
+else ifeq (windows-x64-debug, $(findstring windows-x64-debug, $(T_A)))
+LIB_INSTALLS += $(wildcard ../lib64/*.lib)
+BIN_INSTALLS += $(wildcard ../dll64/*.dll)
+USR_CFLAGS += /wd4290
+USR_CPPFLAGS += /wd4290
+#USR_LDFLAGS += /INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF
 else ifeq (windows-x64, $(findstring windows-x64, $(T_A)))
 LIB_INSTALLS += $(wildcard ../lib64/*.lib)
 BIN_INSTALLS += $(wildcard ../dll64/*.dll)
