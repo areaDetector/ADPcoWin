@@ -1366,10 +1366,11 @@ int SimulationApi::doCancelImages(Handle handle)
  * While using CamLink or GigE this function must be called, before the user tries to get images
  * from the camera and the sizes have changed. With all other interfaces this is a dummy call.
  */
-void SimulationApi::doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes)
+int SimulationApi::doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes)
 {
     this->pco->setIntegerParam(this->handleCamlinkHorzRes, (int)xRes);
     this->pco->setIntegerParam(this->handleCamlinkHorzRes, (int)yRes);
+    return DllApi::errorNone;
 }
 
 /**
