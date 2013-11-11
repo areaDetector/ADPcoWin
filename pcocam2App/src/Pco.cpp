@@ -47,6 +47,7 @@ const char* Pco::nameHwRoiX2 = "PCO_HWROIX2";
 const char* Pco::nameHwRoiY2 = "PCO_HWROIY2";
 const char* Pco::nameXCamSize = "PCO_XCAMSIZE";
 const char* Pco::nameYCamSize = "PCO_YCAMSIZE";
+const char* Pco::nameCamlinkClock = "PCO_CAMLINKCLOCK";
 
 /** Constants
  */
@@ -151,6 +152,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->createParam(Pco::nameHwRoiY2, asynParamInt32, &this->handleHwRoiY2);
     this->createParam(Pco::nameXCamSize, asynParamInt32, &this->handleXCamSize);
     this->createParam(Pco::nameYCamSize, asynParamInt32, &this->handleYCamSize);
+    this->createParam(Pco::nameCamlinkClock, asynParamInt32, &this->handleCamlinkClock);
     // ...and initialise them
     this->setIntegerParam(this->NDDataType, NDUInt16);
     this->setIntegerParam(this->ADNumExposures, 1);
@@ -161,7 +163,6 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->setIntegerParam(this->ADMaxSizeX, 1280);
     this->setIntegerParam(this->ADMaxSizeY, 1024);
     this->setIntegerParam(this->NDArraySize, 0);
-    this->setIntegerParam(this->NDDataType,  NDInt32);
     this->setStringParam(this->handleStateRecord, "");
     this->setIntegerParam(this->handleClearStateRecord, 0);
     this->setIntegerParam(this->handleOutOfNDArrays, 0);
@@ -178,6 +179,9 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->setIntegerParam(this->handleHwRoiY2, 0);
     this->setIntegerParam(this->handleXCamSize, 1280);
     this->setIntegerParam(this->handleYCamSize, 1024);
+    this->setIntegerParam(this->handleBitAlignment, 0);
+    // We are not connected to a camera
+    this->camera = NULL;
     // Initialise the buffers
     for(int i=0; i<Pco::numApiBuffers; i++)
     {
@@ -216,7 +220,7 @@ Pco::~Pco()
         }
         this->api->closeCamera(this->camera);
     }
-    catch(PcoException& e)
+    catch(PcoException&)
     {
     }
     for(int i=0; i<Pco::numApiBuffers; i++)
@@ -546,7 +550,7 @@ bool Pco::connectToCamera()
         {
             this->api->closeCamera(this->camera);
         }
-        catch(PcoException& e)
+        catch(PcoException&)
         {
             // Swallow errors from this
         }
@@ -583,7 +587,7 @@ bool Pco::connectToCamera()
             this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
             this->api->resetSettingsToDefault(this->camera);
         }
-        catch(PcoException& e)
+        catch(PcoException&)
         {
             // Swallow errors from this
         }
@@ -604,6 +608,7 @@ bool Pco::connectToCamera()
         this->setIntegerParam(ADMaxSizeY, (int)this->camSizes.yResActual);
         this->setIntegerParam(ADSizeX, (int)this->camSizes.xResActual);
         this->setIntegerParam(ADSizeY, (int)this->camSizes.yResActual);
+        this->setIntegerParam(this->handleCamlinkClock, (int)this->camTransfer.clockFrequency);
 
         // Update area detector information strings
         switch(this->camType)
@@ -775,7 +780,7 @@ bool Pco::connectToCamera()
         this->pollCameraNoAcquisition();
         this->pollCamera();
     }
-    catch(PcoException& e)
+    catch(PcoException&)
     {
         //result = false;
     }
@@ -948,7 +953,7 @@ int Pco::checkMemoryBuffer() throw(PcoException)
                 }
             }
         }
-        catch(PcoException& e)
+        catch(PcoException&)
         {
         }
     }
@@ -1768,7 +1773,7 @@ void Pco::doDisarm() throw()
     {
         this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
     }
-    catch(PcoException& e)
+    catch(PcoException&)
     {
         // Not much we can do with this error
     }
@@ -1807,7 +1812,7 @@ void Pco::startCamera() throw()
         {
             this->api->forceTrigger(this->camera, &triggerState);
         }
-        catch(PcoException& e)
+        catch(PcoException&)
         {
             this->driverLibraryErrors++;
             this->updateErrorCounters();

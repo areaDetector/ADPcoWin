@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 917
-y 96
+x 921
+y 121
 w 390
 h 820
 font "arial-bold-r-12.0"
@@ -63,7 +63,7 @@ release 0
 x 5
 y 475
 w 108
-h 14
+h 13
 font "arial-medium-r-12.0"
 fgColor index 14
 bgColor index 5
@@ -1341,5 +1341,44 @@ botShadowColor index 11
 controlPv "$(P)$(R)PIX_RATE"
 indicatorPv "$(P)$(R)PIX_RATE_RBV"
 font "helvetica-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 130
+y 790
+w 61
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Camlink Clk"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 190
+y 790
+w 70
+h 15
+controlPv "$(P)$(R)CAMLINKCLOCK_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
 endObjectProperties
 

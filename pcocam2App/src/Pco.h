@@ -68,6 +68,7 @@ protected:
     int handleHwRoiY2;
     int handleXCamSize;
     int handleYCamSize;
+    int handleCamlinkClock;
 
 // Parameter names
 private:
@@ -101,6 +102,7 @@ private:
     static const char* nameHwRoiY2;
     static const char* nameXCamSize;
     static const char* nameYCamSize;
+    static const char* nameCamlinkClock;
 
 // Constants
 public:
