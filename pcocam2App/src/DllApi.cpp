@@ -650,11 +650,15 @@ void DllApi::cancelImages(Handle handle) throw(PcoException)
  * from the camera and the sizes have changed. With all other interfaces this is a dummy call.
  */
 void DllApi::camlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes)
-    throw()
+    throw(PcoException)
 {
-    doCamlinkSetImageParameters(handle, xRes, yRes);
+    int result = doCamlinkSetImageParameters(handle, xRes, yRes);
     *this->trace << "DllApi->CamlinkSetImageParameters(" << handle <<
-        ", " << xRes << ", " << yRes << ")" << std::endl;
+        ", " << xRes << ", " << yRes << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("camlinkSetImageParameters", result);
+    }
 }
 
 /**

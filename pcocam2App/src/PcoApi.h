@@ -82,7 +82,7 @@ protected:
     virtual int doAllocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
             unsigned short** buffer, Handle* event);
     virtual int doCancelImages(Handle handle);
-    virtual void doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes);
+    virtual int doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes);
     virtual int doArm(Handle handle);
     virtual int doAddBufferEx(Handle handle, unsigned long firstImage, unsigned long lastImage,
         short bufferNumber, unsigned short xRes, unsigned short yRes, unsigned short bitRes);

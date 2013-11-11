@@ -532,10 +532,10 @@ int PcoApi::doCancelImages(Handle handle)
  * While using CamLink or GigE this function must be called, before the user tries to get images
  * from the camera and the sizes have changed. With all other interfaces this is a dummy call.
  */
-void PcoApi::doCamlinkSetImageParameters(Handle handle, unsigned short xRes,
+int PcoApi::doCamlinkSetImageParameters(Handle handle, unsigned short xRes,
         unsigned short yRes)
 {
-    PCO_CamLinkSetImageParameters(handle, xRes, yRes);
+    return PCO_CamLinkSetImageParameters(handle, xRes, yRes);
 }
 
 /**

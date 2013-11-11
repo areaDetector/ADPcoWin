@@ -160,7 +160,7 @@ protected:
     virtual int doAllocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
             unsigned short** buffer, Handle* event) = 0;
     virtual int doCancelImages(Handle handle) = 0;
-    virtual void doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes) = 0;
+    virtual int doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes) = 0;
     virtual int doArm(Handle handle) = 0;
     virtual int doAddBufferEx(Handle handle, unsigned long firstImage, unsigned long lastImage, 
         short bufferNumber, unsigned short xRes, unsigned short yRes, unsigned short bitRes) = 0;
@@ -223,7 +223,7 @@ public:
     void allocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
             unsigned short** buffer, Handle* event) throw(PcoException);
     void cancelImages(Handle handle) throw(PcoException);
-    void camlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes) throw();
+    void camlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes) throw(PcoException);
     void arm(Handle handle) throw(PcoException);
     void addBufferEx(Handle handle, unsigned long firstImage, unsigned long lastImage, 
         short bufferNumber, unsigned short xRes, unsigned short yRes, 
