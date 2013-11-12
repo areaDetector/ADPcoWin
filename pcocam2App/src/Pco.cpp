@@ -308,6 +308,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doArm();
                     this->stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
                     state = Pco::stateArmed;
+                    this->setStringParam(this->ADStatusMessage, "");
                 }
                 catch(std::bad_alloc& e)
                 {
@@ -315,6 +316,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doDisarm();
                     this->errorTrace << "Failed to arm due to out of memory, " << e.what() << std::endl;
                     state = Pco::stateIdle;
+                    this->setStringParam(this->ADStatusMessage, e.what());
                 }
                 catch(PcoException& e)
                 {
@@ -322,6 +324,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doDisarm();
                     this->errorTrace << "Failed to arm due DLL error, " << e.what() << std::endl;
                     state = Pco::stateIdle;
+                    this->setStringParam(this->ADStatusMessage, e.what());
                 }
             }
             else if(event == Pco::requestAcquire)
@@ -333,6 +336,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->startCamera();
                     this->stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
                     state = Pco::statedUnarmedAcquiring;
+                    this->setStringParam(this->ADStatusMessage, "");
                 }
                 catch(std::bad_alloc& e)
                 {
@@ -340,6 +344,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doDisarm();
                     this->errorTrace << "Failed to arm due to out of memory, " << e.what() << std::endl;
                     state = Pco::stateIdle;
+                    this->setStringParam(this->ADStatusMessage, e.what());
                 }
                 catch(PcoException& e)
                 {
@@ -347,6 +352,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doDisarm();
                     this->errorTrace << "Failed to arm due DLL error, " << e.what() << std::endl;
                     state = Pco::stateIdle;
+                    this->setStringParam(this->ADStatusMessage, e.what());
                 }
             }
             else if(event == Pco::requestImageReceived)
