@@ -308,7 +308,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doArm();
                     this->stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
                     state = Pco::stateArmed;
-                    this->setStringParam(this->ADStatusMessage, "");
+                    this->outputStatusMessage("");
                 }
                 catch(std::bad_alloc& e)
                 {
@@ -316,7 +316,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doDisarm();
                     this->errorTrace << "Failed to arm due to out of memory, " << e.what() << std::endl;
                     state = Pco::stateIdle;
-                    this->setStringParam(this->ADStatusMessage, e.what());
+                    this->outputStatusMessage(e.what());
                 }
                 catch(PcoException& e)
                 {
@@ -324,7 +324,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doDisarm();
                     this->errorTrace << "Failed to arm due DLL error, " << e.what() << std::endl;
                     state = Pco::stateIdle;
-                    this->setStringParam(this->ADStatusMessage, e.what());
+                    this->outputStatusMessage(e.what());
                 }
             }
             else if(event == Pco::requestAcquire)
@@ -336,7 +336,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->startCamera();
                     this->stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
                     state = Pco::statedUnarmedAcquiring;
-                    this->setStringParam(this->ADStatusMessage, "");
+                    this->outputStatusMessage("");
                 }
                 catch(std::bad_alloc& e)
                 {
@@ -344,15 +344,18 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->doDisarm();
                     this->errorTrace << "Failed to arm due to out of memory, " << e.what() << std::endl;
                     state = Pco::stateIdle;
-                    this->setStringParam(this->ADStatusMessage, e.what());
+                    this->outputStatusMessage(e.what());
                 }
                 catch(PcoException& e)
                 {
                     this->acquisitionComplete();
                     this->doDisarm();
                     this->errorTrace << "Failed to arm due DLL error, " << e.what() << std::endl;
-                    state = Pco::stateIdle;
-                    this->setStringParam(this->ADStatusMessage, e.what());
+                    this->outputStatusMessage(e.what());
+                    this->api->closeCamera(this->camera);
+                    this->camera = 0;
+                    this->stateMachine->startTimer(Pco::reconnectPeriod, Pco::requestTimerExpiry);
+                    state = Pco::stateUnconnected;
                 }
             }
             else if(event == Pco::requestImageReceived)
@@ -539,6 +542,18 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
         }
     }
     return state;
+}
+
+/**
+ * Output a message to the status PV.
+ * \param[in] text The message to output
+ */
+void Pco::outputStatusMessage(const char* text)
+{
+    this->lock();
+    this->setStringParam(this->ADStatusMessage, text);
+    this->callParamCallbacks();
+    this->unlock();
 }
 
 /**

@@ -286,6 +286,7 @@ private:
     template<typename T> void sumArray(NDArray* startingArray,
             NDArray* addArray) throw();
     void initialisePixelRate();
+    void outputStatusMessage(const char* text);
 };
 
 #endif
