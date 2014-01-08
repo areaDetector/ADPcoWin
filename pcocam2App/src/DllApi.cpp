@@ -66,6 +66,20 @@ void DllApi::closeCamera(Handle handle) throw(PcoException)
 }
 
 /**
+ * Reboot the camera
+ */
+void DllApi::rebootCamera(Handle handle) throw(PcoException)
+{
+    int result = doRebootCamera(handle);
+    *this->trace << "DllApi->RebootCamera(" << handle << ") = " <<
+            result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("rebootCamera", result);
+    }
+}
+
+/**
  * Get general information from the camera
  */
 void DllApi::getGeneral(Handle handle) throw(PcoException)

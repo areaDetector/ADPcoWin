@@ -492,6 +492,14 @@ int SimulationApi::doCloseCamera(Handle handle)
 }
 
 /**
+ * Reboot the camera
+ */
+int SimulationApi::doRebootCamera(Handle handle)
+{
+    return DllApi::errorNone;
+}
+
+/**
  * Get general information from the camera
  */
 int SimulationApi::doGetGeneral(Handle handle)

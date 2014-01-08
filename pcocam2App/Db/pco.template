@@ -337,7 +337,6 @@ record(mbbo, "$(P)$(R)BIT_ALIGNMENT")
     field(ONVL, "1")
     field(ONST, "LSB")
     field(IVOA, "Don't drive outputs")
-    field(VAL,  "1")
 }
 
 # % gdatag, mbbinary, ro, $(PORT)_pcocam, BIT_ALIGNMENT_RBV, Readback for camera bit alignment
