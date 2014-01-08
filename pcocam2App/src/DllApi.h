@@ -113,6 +113,7 @@ public:
 protected:
     virtual int doOpenCamera(Handle* handle, unsigned short camNum) = 0;
     virtual int doCloseCamera(Handle handle) = 0;
+    virtual int doRebootCamera(Handle handle) = 0;
     virtual int doGetGeneral(Handle handle) = 0;
     virtual int doGetCameraType(Handle handle, unsigned short* camType) = 0;
     virtual int doGetSensorStruct(Handle handle) = 0;
@@ -176,6 +177,7 @@ protected:
 public:
     void openCamera(Handle* handle, unsigned short camNum) throw(PcoException);
     void closeCamera(Handle handle) throw(PcoException);
+    void rebootCamera(Handle handle) throw(PcoException);
     void getGeneral(Handle handle) throw(PcoException);
     void getCameraType(Handle handle, unsigned short* camType) throw(PcoException);
     void getSensorStruct(Handle handle) throw(PcoException);

@@ -35,6 +35,7 @@ public:
 protected:
     virtual int doOpenCamera(Handle* handle, unsigned short camNum);
     virtual int doCloseCamera(Handle handle);
+    virtual int doRebootCamera(Handle handle);
     virtual int doGetGeneral(Handle handle);
     virtual int doGetCameraType(Handle handle, unsigned short* camType);
     virtual int doGetSensorStruct(Handle handle);

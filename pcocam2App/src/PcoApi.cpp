@@ -126,6 +126,14 @@ int PcoApi::doCloseCamera(Handle handle)
 }
 
 /**
+ * Reboot the camera
+ */
+int PcoApi::doRebootCamera(Handle handle)
+{
+    return PCO_RebootCamera(handle);
+}
+
+/**
  * Get general information from the camera
  */
 int PcoApi::doGetGeneral(Handle handle)
