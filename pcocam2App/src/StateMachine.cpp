@@ -191,3 +191,15 @@ void StateMachine::run()
      return this->requestQueue.pending();
  }
 
+ /**
+  * Clear the event queue.
+  */
+ void StateMachine::clear()
+{
+    int event;
+    while(this->requestQueue.tryReceive(&event, sizeof(int)) == sizeof(int))
+    {
+        // Just discard messages on the queue
+    }
+}
+

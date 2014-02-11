@@ -61,6 +61,7 @@ public:
     void stopTimer();
     virtual void run();
     int pending();
+    void clear();
 };
 
 #endif
