@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cstdarg>
 #include <epicsExport.h>
+#include <epicsThread.h>
 #include <iocsh.h>
 #include <db_access.h>
 #include <iostream>
@@ -1389,11 +1390,11 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         // from the camera and the sizes have changed. With all other interfaces this is a dummy call.
         this->api->camlinkSetImageParameters(this->camera, this->xCamSize, this->yCamSize);
 
-        // Now Arm the camera, so it is ready to take images, all settings should have been made by now
-        this->api->arm(this->camera);
-
         // Make sure the pco camera clock is correct
         this->setCameraClock();
+
+        // Now Arm the camera, so it is ready to take images, all settings should have been made by now
+        this->api->arm(this->camera);
 
         // Give the buffers to the camera
         this->addAvailableBufferAll();
@@ -1403,6 +1404,17 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         // Start the camera recording
         this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 
+        // The PCO4000 appears to output 1,2 or 3 dodgy frames immediately on
+        // getting the arm.  This bit of code tries to drop them.
+        if(this->camType == DllApi::cameraType4000)
+        {
+            this->unlock();
+            epicsThreadSleep(0.3);
+            this->lock();
+            this->discardImages();        // Dump any images
+            this->stateMachine->clear();  // Dump any frame received messages
+        }
+        
         // Update EPICS
         this->callParamCallbacks();
         this->unlock();
