@@ -129,8 +129,8 @@ protected:
     virtual int doGetSizes(Handle handle, Sizes* sizes) = 0;
     virtual int doSetDateTime(Handle handle, struct tm* currentTime) = 0;
     virtual int doGetTemperature(Handle handle, short* ccd, short* camera, short* psu) = 0;
-    virtual int doSetCoolingSetpoint(Handle handle, int setPoint) = 0;
-    virtual int doGetCoolingSetpoint(Handle handle, int* setPoint) = 0;
+    virtual int doSetCoolingSetpoint(Handle handle, short setPoint) = 0;
+    virtual int doGetCoolingSetpoint(Handle handle, short* setPoint) = 0;
     virtual int doSetPixelRate(Handle handle, unsigned long pixRate) = 0;
     virtual int doGetPixelRate(Handle handle, unsigned long* pixRate) = 0;
     virtual int doGetBitAlignment(Handle handle, unsigned short* bitAlignment) = 0;
@@ -195,8 +195,8 @@ public:
     void getSizes(Handle handle, Sizes* sizes) throw(PcoException);
     void setDateTime(Handle handle, struct tm* currentTime) throw(PcoException);
     void getTemperature(Handle handle, short* ccd, short* camera, short* psu) throw(PcoException);
-    void setCoolingSetpoint(Handle handle, int setPoint) throw(PcoException);
-    void getCoolingSetpoint(Handle handle, int* setPoint) throw(PcoException);
+    void setCoolingSetpoint(Handle handle, short setPoint) throw(PcoException);
+    void getCoolingSetpoint(Handle handle, short* setPoint) throw(PcoException);
     void setPixelRate(Handle handle, unsigned long pixRate) throw(PcoException);
     void getPixelRate(Handle handle, unsigned long* pixRate) throw(PcoException);
     void getBitAlignment(Handle handle, unsigned short* bitAlignment) throw(PcoException);

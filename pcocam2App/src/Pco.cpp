@@ -657,10 +657,10 @@ bool Pco::connectToCamera()
         this->setIntegerParam(this->handleCamlinkClock, (int)this->camTransfer.clockFrequency);
 
         // Initialise the cooling setpoint information
-        this->setIntegerParam(handleMinCoolingSetpoint, this->description.minCoolingSetpoint);
-        this->setIntegerParam(handleMaxCoolingSetpoint, this->description.maxCoolingSetpoint);
-        this->setIntegerParam(handleDefaultCoolingSetpoint, this->description.defaultCoolingSetpoint);
-        this->setIntegerParam(handleCoolingSetpoint, this->description.defaultCoolingSetpoint);
+        this->setIntegerParam(handleMinCoolingSetpoint, this->camDescription.minCoolingSetpoint);
+        this->setIntegerParam(handleMaxCoolingSetpoint, this->camDescription.maxCoolingSetpoint);
+        this->setIntegerParam(handleDefaultCoolingSetpoint, this->camDescription.defaultCoolingSetpoint);
+        this->setIntegerParam(handleCoolingSetpoint, this->camDescription.defaultCoolingSetpoint);
         this->setCoolingSetpoint();
 
         // Update area detector information strings
@@ -1319,8 +1319,8 @@ void Pco::setCoolingSetpoint()
     int maxCoolingSetpoint;
     int desiredCoolingSetpoint;
     this->getIntegerParam(this->handleCoolingSetpoint, &desiredCoolingSetpoint);
-    this->getIntegerParam(this->handleMinCoolingSetpoint, &desiredMinCoolingSetpoint);
-    this->getIntegerParam(this->handleMaxCoolingSetpoint, &desiredMaxCoolingSetpoint);
+    this->getIntegerParam(this->handleMinCoolingSetpoint, &minCoolingSetpoint);
+    this->getIntegerParam(this->handleMaxCoolingSetpoint, &maxCoolingSetpoint);
     if(minCoolingSetpoint == 0 && maxCoolingSetpoint == 0)
     {
         // Min and max = 0 means there is no cooling available for this camera.
@@ -1339,7 +1339,7 @@ void Pco::setCoolingSetpoint()
         {
             short actualCoolingSetpoint;
             this->api->getCoolingSetpoint(this->camera, &actualCoolingSetpoint);
-            this->setIntegerParam(this->handleCoolingSetpoint, &actualCoolingSetpoint);
+            this->setIntegerParam(this->handleCoolingSetpoint, (int)actualCoolingSetpoint);
         }
         catch(PcoException&)
         {

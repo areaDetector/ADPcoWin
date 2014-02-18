@@ -790,7 +790,7 @@ int SimulationApi::doGetTemperature(Handle handle, short* ccd,
  */
 int SimulationApi::doSetCoolingSetpoint(Handle handle, short setPoint)
 {
-    return DllApi::DllApi::errorNone;
+    return DllApi::errorNone;
 }
 
 /**
@@ -798,7 +798,7 @@ int SimulationApi::doSetCoolingSetpoint(Handle handle, short setPoint)
  */
 int SimulationApi::doGetCoolingSetpoint(Handle handle, short* setPoint)
 {
-    return DllApi::DllApi::errorNone;
+    return DllApi::errorNone;
 }
 
 /**
