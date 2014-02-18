@@ -593,6 +593,9 @@ int SimulationApi::doGetCameraDescription(Handle handle, Description* descriptio
         description->convFact = (unsigned short)v;
         this->pco->getIntegerParam(this->handleGeneralCaps, &v);
         description->generalCaps = (unsigned long)v;
+        description->minCoolingSetpoint = 0;
+        description->maxCoolingSetpoint = 0;
+        description->defaultCoolingSetpoint = 0;
         result = DllApi::errorNone;
     }
     return result;
@@ -780,6 +783,22 @@ int SimulationApi::doGetTemperature(Handle handle, short* ccd,
         result = DllApi::errorNone;
     }
     return result;
+}
+
+/**
+ * Set the camera's cooling setpoint
+ */
+int SimulationApi::doSetCoolingSetpoint(Handle handle, short setPoint)
+{
+    return DllApi::DllApi::errorNone;
+}
+
+/**
+ * Get the camera's cooling setpoint.
+ */
+int SimulationApi::doGetCoolingSetpoint(Handle handle, short* setPoint)
+{
+    return DllApi::DllApi::errorNone;
 }
 
 /**

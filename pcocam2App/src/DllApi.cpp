@@ -134,8 +134,9 @@ void DllApi::getCameraDescription(Handle handle, Description* description) throw
         description->roiHorSteps << "," << description->roiVertSteps << ", {" <<
         description->pixelRate[0] << "," << description->pixelRate[1] << "," <<
         description->pixelRate[2] << "," << description->pixelRate[3] << "}, " <<
-        description->convFact << "}) = " <<
-        result << std::endl;
+        description->convFact << "," << description->minCoolingSetpoint << "," <<
+        description->maxCoolingSetpoint << "," << description->defaultCoolingSetpoint <<
+        "}) = " << result << std::endl;
     if(result != DllApi::errorNone)
     {
         throw PcoException("getCameraDescription", result);
@@ -261,6 +262,34 @@ void DllApi::getTemperature(Handle handle, short* ccd,
     if(result != DllApi::errorNone)
     {
         throw PcoException("getTemperature", result);
+    }
+}
+
+/**
+ * Set the camera sensor cooling setpoint.
+ */
+void DllApi::setCoolingSetpoint(Handle handle, int setPoint) throw(PcoException)
+{
+    int result = doSetCoolingSetpoint(handle, setPoint);
+    *this->trace << "DllApi->SetCoolingSetpoint(" << handle << ", " <<
+        setPoint << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setCoolingSetpoint", result);
+    }
+}
+
+/**
+ * Get the camera sensor cooling setpoint.
+ */
+void DllApi::getCoolingSetpoint(Handle handle, int* setPoint) throw(PcoException)
+{
+    int result = doGetCoolingSetpoint(handle, setPoint);
+    *this->trace << "DllApi->GetCoolingSetpoint(" << handle << ", " <<
+        *setPoint << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getCoolingSetpoint", result);
     }
 }
 

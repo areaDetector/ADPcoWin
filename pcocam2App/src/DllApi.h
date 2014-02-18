@@ -81,7 +81,7 @@ public:
         unsigned short binVertStepping; // Vert. bin. stepping (0:bin, 1:lin)
         unsigned short roiHorSteps;     // Minimum granularity of ROI in pixels
         unsigned short roiVertSteps;    // Minimum granularity of ROI in pixels
-        unsigned long pixelRate[descriptionNumPixelRates];    // Possible pixelrates in Hz              // 48
+        unsigned long pixelRate[descriptionNumPixelRates];    // Possible pixelrates in Hz  // 48
         unsigned short convFact;        // Possible conversion factor in e/cnt   // 136
         unsigned long generalCaps;      // General capabilities
         unsigned long minDelayNs;       // Minimum delay time in ns
@@ -90,6 +90,9 @@ public:
         unsigned long minExposureNs;    // Minimum exposure time in ns
         unsigned long maxExposureMs;    // Maximum exposure time in ms           // 200
         unsigned long minExposureStepNs;// Minimum stepping of exposure time in ns
+        short minCoolingSetpoint;       // Minimum cooling setpoint
+        short maxCoolingSetpoint;       // Maximum cooling setpoint
+        short defaultCoolingSetpoint;   // Default cooling setpoint
     };
     struct Transfer
     {
@@ -126,6 +129,8 @@ protected:
     virtual int doGetSizes(Handle handle, Sizes* sizes) = 0;
     virtual int doSetDateTime(Handle handle, struct tm* currentTime) = 0;
     virtual int doGetTemperature(Handle handle, short* ccd, short* camera, short* psu) = 0;
+    virtual int doSetCoolingSetpoint(Handle handle, int setPoint) = 0;
+    virtual int doGetCoolingSetpoint(Handle handle, int* setPoint) = 0;
     virtual int doSetPixelRate(Handle handle, unsigned long pixRate) = 0;
     virtual int doGetPixelRate(Handle handle, unsigned long* pixRate) = 0;
     virtual int doGetBitAlignment(Handle handle, unsigned short* bitAlignment) = 0;
@@ -190,6 +195,8 @@ public:
     void getSizes(Handle handle, Sizes* sizes) throw(PcoException);
     void setDateTime(Handle handle, struct tm* currentTime) throw(PcoException);
     void getTemperature(Handle handle, short* ccd, short* camera, short* psu) throw(PcoException);
+    void setCoolingSetpoint(Handle handle, int setPoint) throw(PcoException);
+    void getCoolingSetpoint(Handle handle, int* setPoint) throw(PcoException);
     void setPixelRate(Handle handle, unsigned long pixRate) throw(PcoException);
     void getPixelRate(Handle handle, unsigned long* pixRate) throw(PcoException);
     void getBitAlignment(Handle handle, unsigned short* bitAlignment) throw(PcoException);
