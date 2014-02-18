@@ -192,6 +192,9 @@ int PcoApi::doGetCameraDescription(Handle handle, Description* description)
         description->pixelRate[3] = info.dwPixelRateDESC[3];
         description->convFact = info.wConvFactDESC[0];
         description->generalCaps = info.dwGeneralCapsDESC1;
+        description->minCoolingSetpoint = info.sMinCoolSetDESC;
+        description->maxCoolingSetpoint = info.sMaxCoolSetDESC;
+        description->defaultCoolingSetpoint = info.sDefaultCoolSetDESC;
     }
     return result;
 }
@@ -290,6 +293,22 @@ int PcoApi::doGetTemperature(Handle handle, short* ccd,
         short* camera, short* psu)
 {
     return PCO_GetTemperature(handle, ccd, camera, psu);
+}
+
+/**
+ * Set the camera's cooling setpoint
+ */
+int PcoApi::doSetCoolingSetpoint(Handle handle, short setPoint)
+{
+    return PCO_SetCoolingSetpointTemperature(handle, setPoint);
+}
+
+/**
+ * Get the camera's cooling setpoint.
+ */
+int PcoApi::doGetCoolingSetpoint(Handle handle, short* setPoint)
+{
+    return PCO_GetCoolingSetpointTemperature(handle, setPoint);
 }
 
 /**

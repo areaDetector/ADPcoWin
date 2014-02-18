@@ -49,6 +49,10 @@ const char* Pco::nameHwRoiY2 = "PCO_HWROIY2";
 const char* Pco::nameXCamSize = "PCO_XCAMSIZE";
 const char* Pco::nameYCamSize = "PCO_YCAMSIZE";
 const char* Pco::nameCamlinkClock = "PCO_CAMLINKCLOCK";
+const char* Pco::nameMinCoolingSetpoint = "PCO_MINCOOLINGSETPOINT";
+const char* Pco::nameMaxCoolingSetpoint = "PCO_MAXCOOLINGSETPOINT";
+const char* Pco::nameDefaultCoolingSetpoint = "PCO_DEFAULTCOOLINGSETPOINT";
+const char* Pco::nameCoolingSetpoint = "PCO_COOLINGSETPOINT";
 
 /** Constants
  */
@@ -154,6 +158,10 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->createParam(Pco::nameXCamSize, asynParamInt32, &this->handleXCamSize);
     this->createParam(Pco::nameYCamSize, asynParamInt32, &this->handleYCamSize);
     this->createParam(Pco::nameCamlinkClock, asynParamInt32, &this->handleCamlinkClock);
+    this->createParam(Pco::nameMinCoolingSetpoint, asynParamInt32, &this->handleMinCoolingSetpoint);
+    this->createParam(Pco::nameMaxCoolingSetpoint, asynParamInt32, &this->handleMaxCoolingSetpoint);
+    this->createParam(Pco::nameDefaultCoolingSetpoint, asynParamInt32, &this->handleDefaultCoolingSetpoint);
+    this->createParam(Pco::nameCoolingSetpoint, asynParamInt32, &this->handleCoolingSetpoint);
     // ...and initialise them
     this->setIntegerParam(this->NDDataType, NDUInt16);
     this->setIntegerParam(this->ADNumExposures, 1);
@@ -181,6 +189,10 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->setIntegerParam(this->handleXCamSize, 1280);
     this->setIntegerParam(this->handleYCamSize, 1024);
     this->setIntegerParam(this->handleBitAlignment, 1);
+    this->setIntegerParam(this->handleMinCoolingSetpoint, 0);
+    this->setIntegerParam(this->handleMaxCoolingSetpoint, 0);
+    this->setIntegerParam(this->handleDefaultCoolingSetpoint, 0);
+    this->setIntegerParam(this->handleCoolingSetpoint, 0);
     // We are not connected to a camera
     this->camera = NULL;
     // Initialise the buffers
@@ -598,229 +610,233 @@ bool Pco::connectToCamera()
     {
         try
         {
-            // Get various camera data
-            this->api->getGeneral(this->camera);
-            this->api->getCameraType(this->camera, &this->camType);
-            this->api->getSensorStruct(this->camera);
-            this->api->getCameraDescription(this->camera, &this->camDescription);
-            this->api->getStorageStruct(this->camera, &this->camRamSize, &this->camPageSize);
-            this->api->getRecordingStruct(this->camera);
+        // Get various camera data
+        this->api->getGeneral(this->camera);
+        this->api->getCameraType(this->camera, &this->camType);
+        this->api->getSensorStruct(this->camera);
+        this->api->getCameraDescription(this->camera, &this->camDescription);
+        this->api->getStorageStruct(this->camera, &this->camRamSize, &this->camPageSize);
+        this->api->getRecordingStruct(this->camera);
 
-            // Corrections for values that appear to be incorrectly returned by the SDK
-            switch(this->camType)
-            {
-            case DllApi::cameraTypeDimaxStd:
-            case DllApi::cameraTypeDimaxTv:
-            case DllApi::cameraTypeDimaxAutomotive:
-                this->camDescription.roiVertSteps = 4;
-                break;
-            default:
-                break;
-            }
+        // Corrections for values that appear to be incorrectly returned by the SDK
+        switch(this->camType)
+        {
+        case DllApi::cameraTypeDimaxStd:
+        case DllApi::cameraTypeDimaxTv:
+        case DllApi::cameraTypeDimaxAutomotive:
+            this->camDescription.roiVertSteps = 4;
+            break;
+        default:
+            break;
+        }
 
-            // reset the camera
-            try
-            {
-                this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
-                this->api->resetSettingsToDefault(this->camera);
-            }
-            catch(PcoException&)
-            {
-                // Swallow errors from this
-            }
-
-            // Build the set of binning values
-    //printf("#### X binning: ");
-            this->setValidBinning(this->availBinX, this->camDescription.maxBinHorz,
-                    this->camDescription.binHorzStepping);
-    //printf("\n#### Y binning: ");
-            this->setValidBinning(this->availBinY, this->camDescription.maxBinVert,
-                    this->camDescription.binVertStepping);
-    //printf("\n");
-
-            // Get more camera information
-            this->api->getTransferParameters(this->camera, &this->camTransfer);
-            this->api->getSizes(this->camera, &this->camSizes);
-            this->setIntegerParam(ADMaxSizeX, (int)this->camSizes.xResActual);
-            this->setIntegerParam(ADMaxSizeY, (int)this->camSizes.yResActual);
-            this->setIntegerParam(ADSizeX, (int)this->camSizes.xResActual);
-            this->setIntegerParam(ADSizeY, (int)this->camSizes.yResActual);
-            this->setIntegerParam(this->handleCamlinkClock, (int)this->camTransfer.clockFrequency);
-
-            // Update area detector information strings
-            switch(this->camType)
-            {
-            case DllApi::cameraType1200Hs:
-                this->setStringParam(ADModel, "PCO.Camera 1200");
-                break;
-            case DllApi::cameraType1300:
-                this->setStringParam(ADModel, "PCO.Camera 1300");
-                break;
-            case DllApi::cameraType1600:
-                this->setStringParam(ADModel, "PCO.Camera 1600");
-                break;
-            case DllApi::cameraType2000:
-                this->setStringParam(ADModel, "PCO.Camera 2000");
-                break;
-            case DllApi::cameraType4000:
-                this->setStringParam(ADModel, "PCO.Camera 4000");
-                break;
-            case DllApi::cameraTypeEdge:
-            case DllApi::cameraTypeEdgeGl:
-                this->setStringParam(ADModel, "PCO.Camera Edge");
-                break;
-            case DllApi::cameraTypeDimaxStd:
-            case DllApi::cameraTypeDimaxTv:
-            case DllApi::cameraTypeDimaxAutomotive:
-                this->setStringParam(ADModel, "PCO.Camera Dimax");
-                break;
-            default:
-                this->setStringParam(ADModel, "PCO.Camera");
-                break;
-            }
-            this->setStringParam(ADManufacturer, "PCO");
-
-            // Work out how to decode the BCD frame number in the image
-            this->shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
-            this->shiftHighBcd = this->shiftLowBcd + Pco::bitsPerNybble;
-
-            // Set the camera clock
-            this->setCameraClock();
-
-            // Handle the pixel rates
-            this->initialisePixelRate();
-    #if 0
-            // Find the highest pixel rate the camera supports
-            unsigned long pixRate = 0;
-            int pixRateIndex = 0;
-            for(int i = 0; i<DllApi::descriptionNumPixelRates; i++)
-            {
-                if(this->camDescription.pixelRate[i] > pixRate)
-                {
-                    pixRate = this->camDescription.pixelRate[i];
-                    pixRateIndex = i;
-                }
-            }
-            if(pixRate > 0)
-            {
-                this->api->setPixelRate(this->camera, pixRate);
-            }
-            this->api->getPixelRate(this->camera, &pixRate);
-            // Use the available rates as enum values
-            this->pixRateNumEnums = 0;
-            for(int i=0; i<DllApi::descriptionNumPixelRates; i++)
-            {
-                if(this->camDescription.pixelRate[i] > 0)
-                {
-                    epicsSnprintf(this->pixRateEnumStrings[this->pixRateNumEnums], MAX_ENUM_STRING_SIZE,
-                        "%ld Hz", this->camDescription.pixelRate[i]);
-                    this->pixRateEnumValues[this->pixRateNumEnums] = i;
-                    this->pixRateEnumSeverities[this->pixRateNumEnums] = 0;
-                    this->pixRateNumEnums++;
-                }
-            }
-            this->doCallbacksEnum(this->pixRateEnumStrings, this->pixRateEnumValues, this->pixRateEnumSeverities,
-                this->pixRateNumEnums,  this->handlePixRate, 0);
-            this->setIntegerParam(this->handlePixRate, pixRateIndex);
-    #endif
-
-            // Make Edge specific function calls
-            if(this->camType == DllApi::cameraTypeEdge || this->camType == DllApi::cameraTypeEdgeGl)
-            {
-                // Get Edge camera setup mode
-                unsigned long setupData[DllApi::cameraSetupDataSize];
-                unsigned short setupDataLen = DllApi::cameraSetupDataSize;
-                unsigned short setupType;
-                this->api->getCameraSetup(this->camera, &setupType, setupData, &setupDataLen);
-                this->setIntegerParam(this->handleCameraSetup, setupData[0]);
-            }
-
-            // Set the default binning
-            this->api->setBinning(this->camera, Pco::defaultHorzBin, Pco::defaultVertBin);
-            this->setIntegerParam(this->ADBinX, Pco::defaultHorzBin);
-            this->setIntegerParam(this->ADBinY, Pco::defaultVertBin);
-
-            // Set the default ROI (apparently a must do step)
-            int roix1, roix2, roiy1, roiy2; // region of interest
-            // to maximise in x dimension
-            roix1 = Pco::defaultRoiMinX;
-            roix2 = this->camDescription.maxHorzRes/Pco::defaultHorzBin/
-                    this->camDescription.roiHorSteps;
-            roix2 *= this->camDescription.roiHorSteps;
-            // to maximise in y dimension
-            roiy1 = Pco::defaultRoiMinY;
-            roiy2 = this->camDescription.maxVertRes/Pco::defaultVertBin/
-                    this->camDescription.roiVertSteps;
-            roiy2 *= this->camDescription.roiVertSteps;
-            this->api->setRoi(this->camera,
-                    (unsigned short)roix1, (unsigned short)roiy1,
-                    (unsigned short)roix2, (unsigned short)roiy2);
-            this->setIntegerParam(this->ADMinX, roix1-1);
-            this->setIntegerParam(this->ADMinY, roiy1-1);
-            this->setIntegerParam(this->ADSizeX, roix2-roix1+1);
-            this->setIntegerParam(this->ADSizeY, roiy2-roiy1+1);
-
-            // Set initial trigger mode to auto
-            this->api->setTriggerMode(this->camera, DllApi::triggerExternal);
-
-            // Set the storage mode to FIFO
-            this->api->setStorageMode(this->camera, DllApi::storageModeFifoBuffer);
-
-            // Set our preferred time stamp mode.
-            if((this->camDescription.generalCaps & DllApi::generalCapsNoTimestamp) != 0)
-            {
-                this->api->setTimestampMode(this->camera, DllApi::timestampModeOff);
-            }
-            else if((this->camDescription.generalCaps & DllApi::generalCapsTimestampAsciiOnly) != 0)
-            {
-                this->api->setTimestampMode(this->camera, DllApi::timestampModeAscii);
-            }
-            else
-            {
-                this->api->setTimestampMode(this->camera, DllApi::timestampModeBinaryAndAscii);
-            }
-
-            // Set the acquire mode.
-            this->api->setAcquireMode(this->camera, DllApi::acquireModeAuto);
-            this->setIntegerParam(this->handleAcquireMode, DllApi::acquireModeAuto);
-
-            // Set the delay and exposure times
-            this->api->setDelayExposureTime(this->camera,
-                    Pco::defaultDelayTime, Pco::defaultExposureTime,
-                    DllApi::timebaseMilliseconds, DllApi::timebaseMilliseconds);
-            this->setDoubleParam(this->ADAcquireTime,
-                    Pco::defaultExposureTime * Pco::oneMillisecond);
-
-            // Set the gain
-            if(this->camDescription.convFact > 0)
-            {
-                this->api->setConversionFactor(this->camera, this->camDescription.convFact);
-                this->setDoubleParam(this->ADGain, this->camDescription.convFact);
-            }
-
-            // Set the ADC mode for the cameras that support it
-            if(this->camType == DllApi::cameraType1600 ||
-                    this->camType == DllApi::cameraType2000 ||
-                    this->camType == DllApi::cameraType4000)
-            {
-                this->api->setAdcOperation(this->camera, DllApi::adcModeSingle);
-            }
-
-            // Default data type
-            this->setIntegerParam(this->NDDataType, NDUInt16);
-
-            // Lets have a look at the status of the camera
-            unsigned short recordingState;
-            this->api->getRecordingState(this->camera, &recordingState);
-
-            // refresh everything
-            this->pollCameraNoAcquisition();
-            this->pollCamera();
+        // reset the camera
+        try
+        {
+            this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
+            this->api->resetSettingsToDefault(this->camera);
         }
         catch(PcoException&)
         {
-            //result = false;
+            // Swallow errors from this
         }
+
+        // Build the set of binning values
+        this->setValidBinning(this->availBinX, this->camDescription.maxBinHorz,
+                this->camDescription.binHorzStepping);
+        this->setValidBinning(this->availBinY, this->camDescription.maxBinVert,
+                this->camDescription.binVertStepping);
+
+        // Get more camera information
+        this->api->getTransferParameters(this->camera, &this->camTransfer);
+        this->api->getSizes(this->camera, &this->camSizes);
+        this->setIntegerParam(ADMaxSizeX, (int)this->camSizes.xResActual);
+        this->setIntegerParam(ADMaxSizeY, (int)this->camSizes.yResActual);
+        this->setIntegerParam(ADSizeX, (int)this->camSizes.xResActual);
+        this->setIntegerParam(ADSizeY, (int)this->camSizes.yResActual);
+        this->setIntegerParam(this->handleCamlinkClock, (int)this->camTransfer.clockFrequency);
+
+        // Initialise the cooling setpoint information
+        this->setIntegerParam(handleMinCoolingSetpoint, this->description.minCoolingSetpoint);
+        this->setIntegerParam(handleMaxCoolingSetpoint, this->description.maxCoolingSetpoint);
+        this->setIntegerParam(handleDefaultCoolingSetpoint, this->description.defaultCoolingSetpoint);
+        this->setIntegerParam(handleCoolingSetpoint, this->description.defaultCoolingSetpoint);
+        this->setCoolingSetpoint();
+
+        // Update area detector information strings
+        switch(this->camType)
+        {
+        case DllApi::cameraType1200Hs:
+            this->setStringParam(ADModel, "PCO.Camera 1200");
+            break;
+        case DllApi::cameraType1300:
+            this->setStringParam(ADModel, "PCO.Camera 1300");
+            break;
+        case DllApi::cameraType1600:
+            this->setStringParam(ADModel, "PCO.Camera 1600");
+            break;
+        case DllApi::cameraType2000:
+            this->setStringParam(ADModel, "PCO.Camera 2000");
+            break;
+        case DllApi::cameraType4000:
+            this->setStringParam(ADModel, "PCO.Camera 4000");
+            break;
+        case DllApi::cameraTypeEdge:
+        case DllApi::cameraTypeEdgeGl:
+            this->setStringParam(ADModel, "PCO.Camera Edge");
+            break;
+        case DllApi::cameraTypeDimaxStd:
+        case DllApi::cameraTypeDimaxTv:
+        case DllApi::cameraTypeDimaxAutomotive:
+            this->setStringParam(ADModel, "PCO.Camera Dimax");
+            break;
+        default:
+            this->setStringParam(ADModel, "PCO.Camera");
+            break;
+        }
+        this->setStringParam(ADManufacturer, "PCO");
+
+        // Work out how to decode the BCD frame number in the image
+        this->shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
+        this->shiftHighBcd = this->shiftLowBcd + Pco::bitsPerNybble;
+
+        // Set the camera clock
+        this->setCameraClock();
+
+        // Handle the pixel rates
+        this->initialisePixelRate();
+#if 0
+        // Find the highest pixel rate the camera supports
+        unsigned long pixRate = 0;
+        int pixRateIndex = 0;
+        for(int i = 0; i<DllApi::descriptionNumPixelRates; i++)
+        {
+            if(this->camDescription.pixelRate[i] > pixRate)
+            {
+                pixRate = this->camDescription.pixelRate[i];
+                pixRateIndex = i;
+            } 
+        }
+        if(pixRate > 0)
+        {
+            this->api->setPixelRate(this->camera, pixRate);
+        }
+        this->api->getPixelRate(this->camera, &pixRate);
+        // Use the available rates as enum values
+        this->pixRateNumEnums = 0;
+        for(int i=0; i<DllApi::descriptionNumPixelRates; i++)
+        {
+            if(this->camDescription.pixelRate[i] > 0)
+            {
+                epicsSnprintf(this->pixRateEnumStrings[this->pixRateNumEnums], MAX_ENUM_STRING_SIZE,
+                    "%ld Hz", this->camDescription.pixelRate[i]);
+                this->pixRateEnumValues[this->pixRateNumEnums] = i;
+                this->pixRateEnumSeverities[this->pixRateNumEnums] = 0;
+                this->pixRateNumEnums++;
+            }
+        }
+        this->doCallbacksEnum(this->pixRateEnumStrings, this->pixRateEnumValues, this->pixRateEnumSeverities,
+            this->pixRateNumEnums,  this->handlePixRate, 0);
+        this->setIntegerParam(this->handlePixRate, pixRateIndex);
+#endif
+
+        // Make Edge specific function calls
+        if(this->camType == DllApi::cameraTypeEdge || this->camType == DllApi::cameraTypeEdgeGl)
+        {
+            // Get Edge camera setup mode
+            unsigned long setupData[DllApi::cameraSetupDataSize];
+            unsigned short setupDataLen = DllApi::cameraSetupDataSize;
+            unsigned short setupType;
+            this->api->getCameraSetup(this->camera, &setupType, setupData, &setupDataLen);
+            this->setIntegerParam(this->handleCameraSetup, setupData[0]);
+        }
+
+        // Set the default binning
+        this->api->setBinning(this->camera, Pco::defaultHorzBin, Pco::defaultVertBin);
+        this->setIntegerParam(this->ADBinX, Pco::defaultHorzBin);
+        this->setIntegerParam(this->ADBinY, Pco::defaultVertBin);
+
+        // Set the default ROI (apparently a must do step)
+        int roix1, roix2, roiy1, roiy2; // region of interest
+        // to maximise in x dimension
+        roix1 = Pco::defaultRoiMinX;
+        roix2 = this->camDescription.maxHorzRes/Pco::defaultHorzBin/
+                this->camDescription.roiHorSteps;
+        roix2 *= this->camDescription.roiHorSteps;
+        // to maximise in y dimension
+        roiy1 = Pco::defaultRoiMinY;
+        roiy2 = this->camDescription.maxVertRes/Pco::defaultVertBin/
+                this->camDescription.roiVertSteps;
+        roiy2 *= this->camDescription.roiVertSteps;
+        this->api->setRoi(this->camera,
+                (unsigned short)roix1, (unsigned short)roiy1,
+                (unsigned short)roix2, (unsigned short)roiy2);
+        this->setIntegerParam(this->ADMinX, roix1-1);
+        this->setIntegerParam(this->ADMinY, roiy1-1);
+        this->setIntegerParam(this->ADSizeX, roix2-roix1+1);
+        this->setIntegerParam(this->ADSizeY, roiy2-roiy1+1);
+
+        // Set initial trigger mode to auto
+        this->api->setTriggerMode(this->camera, DllApi::triggerExternal);
+
+        // Set the storage mode to FIFO
+        this->api->setStorageMode(this->camera, DllApi::storageModeFifoBuffer);
+
+        // Set our preferred time stamp mode.
+        if((this->camDescription.generalCaps & DllApi::generalCapsNoTimestamp) != 0)
+        {
+            this->api->setTimestampMode(this->camera, DllApi::timestampModeOff);
+        }
+        else if((this->camDescription.generalCaps & DllApi::generalCapsTimestampAsciiOnly) != 0)
+        {
+            this->api->setTimestampMode(this->camera, DllApi::timestampModeAscii);
+        }
+        else
+        {
+            this->api->setTimestampMode(this->camera, DllApi::timestampModeBinaryAndAscii);
+        }
+
+        // Set the acquire mode.
+        this->api->setAcquireMode(this->camera, DllApi::acquireModeAuto);
+        this->setIntegerParam(this->handleAcquireMode, DllApi::acquireModeAuto);
+
+        // Set the delay and exposure times
+        this->api->setDelayExposureTime(this->camera,
+                Pco::defaultDelayTime, Pco::defaultExposureTime,
+                DllApi::timebaseMilliseconds, DllApi::timebaseMilliseconds);
+        this->setDoubleParam(this->ADAcquireTime,
+                Pco::defaultExposureTime * Pco::oneMillisecond);
+
+        // Set the gain
+        if(this->camDescription.convFact > 0)
+        {
+            this->api->setConversionFactor(this->camera, this->camDescription.convFact);
+            this->setDoubleParam(this->ADGain, this->camDescription.convFact);
+        }
+
+        // Set the ADC mode for the cameras that support it
+        if(this->camType == DllApi::cameraType1600 ||
+                this->camType == DllApi::cameraType2000 ||
+                this->camType == DllApi::cameraType4000)
+        {
+            this->api->setAdcOperation(this->camera, DllApi::adcModeSingle);
+        }
+
+        // Default data type
+        this->setIntegerParam(this->NDDataType, NDUInt16);
+
+        // Lets have a look at the status of the camera
+        unsigned short recordingState;
+        this->api->getRecordingState(this->camera, &recordingState);
+
+        // refresh everything
+        this->pollCameraNoAcquisition();
+        this->pollCamera();
+    }
+    catch(PcoException&)
+    {
+        //result = false;
+    }
     }
     // Update EPICS
     callParamCallbacks();
@@ -1045,6 +1061,11 @@ asynStatus Pco::writeInt32(asynUser *pasynUser, epicsInt32 value)
             setStringParam(handleStateRecord, "");
             setIntegerParam(handleClearStateRecord, 0);
         }
+    }
+    else if(parameter == this->handleCoolingSetpoint)
+    {
+        this->setCoolingSetpoint();
+        this->callParamCallbacks();
     }
 
     // Show other components
@@ -1286,6 +1307,45 @@ void Pco::setCameraClock() throw(PcoException)
     this->api->setDateTime(this->camera, &currentTime);
     // Record the year for timestamp correction purposes
     this->cameraYear = currentTime.tm_year;
+}
+
+/**
+ * Set the camera cooling set point.  This function expects
+ * the lock to already be taken.
+ */
+void Pco::setCoolingSetpoint()
+{
+    int minCoolingSetpoint;
+    int maxCoolingSetpoint;
+    int desiredCoolingSetpoint;
+    this->getIntegerParam(this->handleCoolingSetpoint, &desiredCoolingSetpoint);
+    this->getIntegerParam(this->handleMinCoolingSetpoint, &desiredMinCoolingSetpoint);
+    this->getIntegerParam(this->handleMaxCoolingSetpoint, &desiredMaxCoolingSetpoint);
+    if(minCoolingSetpoint == 0 && maxCoolingSetpoint == 0)
+    {
+        // Min and max = 0 means there is no cooling available for this camera.
+    }
+    else
+    {
+        try
+        {
+            this->api->setCoolingSetpoint(this->camera, (short)desiredCoolingSetpoint);
+        }
+        catch(PcoException&)
+        {
+            // Not much we can do with this error
+        }
+        try
+        {
+            short actualCoolingSetpoint;
+            this->api->getCoolingSetpoint(this->camera, &actualCoolingSetpoint);
+            this->setIntegerParam(this->handleCoolingSetpoint, &actualCoolingSetpoint);
+        }
+        catch(PcoException&)
+        {
+            // Not much we can do with this error
+        }
+    }
 }
 
 /**

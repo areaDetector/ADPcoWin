@@ -69,6 +69,10 @@ protected:
     int handleXCamSize;
     int handleYCamSize;
     int handleCamlinkClock;
+    int handleMinCoolingSetpoint;
+    int handleMaxCoolingSetpoint;
+    int handleDefaultCoolingSetpoint;
+    int handleCoolingSetpoint;
 
 // Parameter names
 private:
@@ -103,6 +107,10 @@ private:
     static const char* nameXCamSize;
     static const char* nameYCamSize;
     static const char* nameCamlinkClock;
+    static const char* nameMinCoolingSetpoint;
+    static const char* nameMaxCoolingSetpoint;
+    static const char* nameDefaultCoolingSetpoint;
+    static const char* nameCoolingSetpoint;
 
 // Constants
 public:
@@ -264,6 +272,7 @@ private:
     void freeImageBuffers() throw();
     void adjustTransferParamsAndLut() throw(PcoException);
     void setCameraClock() throw(PcoException);
+    void setCoolingSetpoint();
     void addAvailableBuffer(int index) throw(PcoException);
     void addAvailableBufferAll() throw(PcoException);
     bool receiveImages() throw();
