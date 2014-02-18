@@ -48,8 +48,8 @@ protected:
     virtual int doGetSizes(Handle handle, Sizes* sizes);
     virtual int doSetDateTime(Handle handle, struct tm* currentTime);
     virtual int doGetTemperature(Handle handle, short* ccd, short* camera, short* psu);
-    virtual int doSetCoolingSetpoint(Handle handle, int setPoint);
-    virtual int doGetCoolingSetpoint(Handle handle, int* setPoint);
+    virtual int doSetCoolingSetpoint(Handle handle, short setPoint);
+    virtual int doGetCoolingSetpoint(Handle handle, short* setPoint);
     virtual int doSetPixelRate(Handle handle, unsigned long pixRate);
     virtual int doGetPixelRate(Handle handle, unsigned long* pixRate);
     virtual int doGetBitAlignment(Handle handle, unsigned short* bitAlignment);

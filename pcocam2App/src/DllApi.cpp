@@ -268,7 +268,7 @@ void DllApi::getTemperature(Handle handle, short* ccd,
 /**
  * Set the camera sensor cooling setpoint.
  */
-void DllApi::setCoolingSetpoint(Handle handle, int setPoint) throw(PcoException)
+void DllApi::setCoolingSetpoint(Handle handle, short setPoint) throw(PcoException)
 {
     int result = doSetCoolingSetpoint(handle, setPoint);
     *this->trace << "DllApi->SetCoolingSetpoint(" << handle << ", " <<
@@ -282,7 +282,7 @@ void DllApi::setCoolingSetpoint(Handle handle, int setPoint) throw(PcoException)
 /**
  * Get the camera sensor cooling setpoint.
  */
-void DllApi::getCoolingSetpoint(Handle handle, int* setPoint) throw(PcoException)
+void DllApi::getCoolingSetpoint(Handle handle, short* setPoint) throw(PcoException)
 {
     int result = doGetCoolingSetpoint(handle, setPoint);
     *this->trace << "DllApi->GetCoolingSetpoint(" << handle << ", " <<
