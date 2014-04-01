@@ -35,7 +35,7 @@ public:
         cameraTypeEdgeGl=0x1310};
     enum {triggerAuto=0x0000, triggerSoftware=0x0001, triggerExternal=0x0002,
         triggerExternalExposure=0x0003, triggerSourceHdsdi=0x0102,
-        triggerExternalSynchronised=0x0004};
+        triggerExternalSynchronised=0x0004, triggerExternalOnly=0x0005};
     enum {storageModeRecorder=0, storageModeFifoBuffer=1};
     enum {timestampModeOff=0, timestampModeBinary=1,
         timestampModeBinaryAndAscii=2, timestampModeAscii=3};

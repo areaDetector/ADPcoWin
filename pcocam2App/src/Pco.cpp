@@ -1567,14 +1567,28 @@ void Pco::cfgTimestampMode() throw(PcoException)
 }
 
 /**
- * Configure the trigger mode
+ * Configure the trigger mode.
+ * Handle the external only trigger mode by translating to the
+ * regular external trigger mode.
  */
 void Pco::cfgTriggerMode() throw(PcoException)
 {
     unsigned short v;
-    this->api->setTriggerMode(this->camera, this->triggerMode);
-    this->api->getTriggerMode(this->camera, &v);
-    this->triggerMode = (int)v;
+    if(this->triggerMode == DllApi::triggerExternalOnly)
+    {
+        this->api->setTriggerMode(this->camera, DllApi::triggerExternal);
+        this->api->getTriggerMode(this->camera, &v);
+        if(v != DllApi::triggerExternal)
+        {
+            this->triggerMode = (int)v;
+        }
+    }
+    else
+    {
+        this->api->setTriggerMode(this->camera, this->triggerMode);
+        this->api->getTriggerMode(this->camera, &v);
+        this->triggerMode = (int)v;
+    }
 }
 
 /**

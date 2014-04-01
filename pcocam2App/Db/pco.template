@@ -23,6 +23,8 @@ record(mbbo, "$(P)$(R)TriggerMode")
     field(TWVL, "2")
     field(THST, "Ext Pulse")
     field(THVL, "3")
+    field(FRST, "Ext Only")
+    field(FRVL, "5")
 }
 
 record(mbbi, "$(P)$(R)TriggerMode_RBV")
@@ -35,6 +37,8 @@ record(mbbi, "$(P)$(R)TriggerMode_RBV")
     field(TWVL, "2")
     field(THST, "Ext Pulse")
     field(THVL, "3")
+    field(FRST, "Ext Only")
+    field(FRVL, "5")
 }
 
 
