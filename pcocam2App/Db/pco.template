@@ -507,4 +507,49 @@ record(ai, "$(P)$(R)Gain_RBV")
    field(DISA, "1")
 }
 
+# CCD Cooling parameters
 
+record(ai, "$(P)$(R)MINCOOLINGSETPOINT_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_MINCOOLINGSETPOINT")
+    field(PREC, "0")
+    field(EGU, "C")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)MAXCOOLINGSETPOINT_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_MAXCOOLINGSETPOINT")
+    field(PREC, "0")
+    field(EGU, "C")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)DEFAULTCOOLINGSETPOINT_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DEFAULTCOOLINGSETPOINT")
+    field(PREC, "0")
+    field(EGU, "C")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)COOLINGSETPOINT_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_COOLINGSETPOINT")
+    field(PREC, "0")
+    field(EGU, "C")
+    field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)$(R)COOLINGSETPOINT")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_COOLINGSETPOINT")
+    field(VAL, "0")
+    field(PREC, "0")
+    field(EGU,  "C")
+}
