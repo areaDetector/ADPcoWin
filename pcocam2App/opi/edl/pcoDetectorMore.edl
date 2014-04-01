@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 614
-y 252
+x 190
+y 297
 w 390
-h 357
+h 496
 font "arial-bold-r-12.0"
 ctlFont "arial-bold-r-12.0"
 btnFont "arial-bold-r-12.0"
@@ -33,7 +33,7 @@ major 4
 minor 0
 release 0
 x 5
-y 180
+y 320
 w 380
 h 140
 lineColor index 14
@@ -49,7 +49,7 @@ release 0
 x 5
 y 55
 w 380
-h 100
+h 235
 lineColor index 14
 fillColor index 3
 endObjectProperties
@@ -59,7 +59,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 5
 y 45
 w 169
@@ -98,7 +98,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 20
 y 75
 w 83
@@ -137,7 +137,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 20
 y 100
 w 116
@@ -241,7 +241,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 20
 y 125
 w 83
@@ -276,7 +276,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 75
 y 10
 w 128
@@ -298,7 +298,7 @@ major 4
 minor 1
 release 0
 x 305
-y 330
+y 470
 w 80
 h 20
 fgColor index 46
@@ -315,9 +315,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 5
-y 170
+y 310
 w 179
 h 13
 font "arial-medium-r-12.0"
@@ -337,7 +337,7 @@ major 4
 minor 0
 release 0
 x 345
-y 195
+y 335
 w 25
 h 25
 controlPv "$(P)$(R)DIO:TRIG"
@@ -354,7 +354,7 @@ major 4
 minor 0
 release 0
 x 345
-y 225
+y 365
 w 25
 h 25
 controlPv "$(P)$(R)DIO:EXPOSING"
@@ -371,7 +371,7 @@ major 4
 minor 0
 release 0
 x 345
-y 255
+y 395
 w 25
 h 25
 controlPv "$(P)$(R)DIO:BUSY"
@@ -386,9 +386,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 295
-y 195
+y 335
 w 50
 h 25
 font "arial-bold-r-12.0"
@@ -405,9 +405,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 285
-y 225
+y 365
 w 65
 h 25
 font "arial-bold-r-12.0"
@@ -424,9 +424,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 305
-y 255
+y 395
 w 40
 h 25
 font "arial-bold-r-12.0"
@@ -443,9 +443,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
-y 195
+y 335
 w 90
 h 25
 font "arial-bold-r-12.0"
@@ -464,7 +464,7 @@ major 10
 minor 0
 release 0
 x 100
-y 195
+y 335
 w 75
 h 25
 controlPv "$(P)$(R)DIO:TRIG.HIGH"
@@ -482,9 +482,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 20
-y 285
+y 425
 w 115
 h 25
 font "arial-bold-r-12.0"
@@ -500,10 +500,10 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 140
-y 285
+y 425
 w 75
 h 25
 fgColor index 25
@@ -527,7 +527,7 @@ major 4
 minor 0
 release 0
 x 220
-y 285
+y 425
 w 25
 h 25
 controlPv "$(P)$(R)DIO:CAPTURE"
@@ -542,9 +542,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
-y 235
+y 375
 w 250
 h 45
 font "arial-bold-r-12.0"
@@ -556,5 +556,179 @@ value {
   "the camera trigger mode must be set"
   "to \"Soft + Ext\" and camera armed."
 }
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 155
+w 99
+h 13
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Min Cooler Temp"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 185
+w 101
+h 13
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Max Cooler Temp"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 215
+w 118
+h 13
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Default Cooler Temp"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 245
+w 94
+h 13
+font "arial-bold-r-12.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Cooler Set Point"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 155
+y 150
+w 105
+h 20
+controlPv "$(P)$(R)MINCOOLINGSETPOINT_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "arial-bold-r-12.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 155
+y 180
+w 105
+h 20
+controlPv "$(P)$(R)MAXCOOLINGSETPOINT_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "arial-bold-r-12.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 155
+y 210
+w 105
+h 20
+controlPv "$(P)$(R)DEFAULTCOOLINGSETPOINT_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "arial-bold-r-12.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 210
+y 240
+w 50
+h 20
+controlPv "$(P)$(R)COOLINGSETPOINT_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "arial-bold-r-12.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 155
+y 240
+w 45
+h 25
+controlPv "$(P)$(R)COOLINGSETPOINT"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-12.0"
 endObjectProperties
 
