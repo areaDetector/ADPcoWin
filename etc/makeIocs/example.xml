@@ -1,3 +1,6 @@
 <?xml version="1.0" ?>
-<components arch="linux-x86">
+<components arch="windows-x64">
+	<EPICS_BASE.EpicsEnvSet key="EPICS_CA_MAX_ARRAY_BYTES" name="EPICS_CA_MAX_ARRAY_BYTES" value="50000000"/>
+	<pcocam2.pcocam2 ADDR="0" P="PCOCAM" PORT="pco.cam" R=":TEST" TIMEOUT="1"/>
+	<adUtil.gdaPlugins ARRFTVL="LONG" ARRTYPE="Int32" CAM="pco.cam" HTTP_PORT="8090" NELEMENTS="11902500" P="PCOCAM" PORTPREFIX="pco" XSIZE="3450" YSIZE="3450" name="gdaT"/>
 </components>

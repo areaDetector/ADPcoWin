@@ -53,6 +53,12 @@ const char* Pco::nameMinCoolingSetpoint = "PCO_MINCOOLINGSETPOINT";
 const char* Pco::nameMaxCoolingSetpoint = "PCO_MAXCOOLINGSETPOINT";
 const char* Pco::nameDefaultCoolingSetpoint = "PCO_DEFAULTCOOLINGSETPOINT";
 const char* Pco::nameCoolingSetpoint = "PCO_COOLINGSETPOINT";
+const char* Pco::nameDelayTimeMin = "PCO_DELAYTIMEMIN";
+const char* Pco::nameDelayTimeMax = "PCO_DELAYTIMEMAX";
+const char* Pco::nameDelayTimeStep = "PCO_DELAYTIMESTEP";
+const char* Pco::nameExpTimeMin = "PCO_EXPTIMEMIN";
+const char* Pco::nameExpTimeMax = "PCO_EXPTIMEMAX";
+const char* Pco::nameExpTimeStep = "PCO_EXPTIMESTEP";
 
 /** Constants
  */
@@ -162,6 +168,12 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->createParam(Pco::nameMaxCoolingSetpoint, asynParamInt32, &this->handleMaxCoolingSetpoint);
     this->createParam(Pco::nameDefaultCoolingSetpoint, asynParamInt32, &this->handleDefaultCoolingSetpoint);
     this->createParam(Pco::nameCoolingSetpoint, asynParamInt32, &this->handleCoolingSetpoint);
+    this->createParam(Pco::nameDelayTimeMin, asynParamFloat64, &this->handleDelayTimeMin);
+    this->createParam(Pco::nameDelayTimeMax, asynParamFloat64, &this->handleDelayTimeMax);
+    this->createParam(Pco::nameDelayTimeStep, asynParamFloat64, &this->handleDelayTimeStep);
+    this->createParam(Pco::nameExpTimeMin, asynParamFloat64, &this->handleExpTimeMin);
+    this->createParam(Pco::nameExpTimeMax, asynParamFloat64, &this->handleExpTimeMax);
+    this->createParam(Pco::nameExpTimeStep, asynParamFloat64, &this->handleExpTimeStep);
     // ...and initialise them
     this->setIntegerParam(this->NDDataType, NDUInt16);
     this->setIntegerParam(this->ADNumExposures, 1);
@@ -650,18 +662,26 @@ bool Pco::connectToCamera()
         // Get more camera information
         this->api->getTransferParameters(this->camera, &this->camTransfer);
         this->api->getSizes(this->camera, &this->camSizes);
-        this->setIntegerParam(ADMaxSizeX, (int)this->camSizes.xResActual);
-        this->setIntegerParam(ADMaxSizeY, (int)this->camSizes.yResActual);
-        this->setIntegerParam(ADSizeX, (int)this->camSizes.xResActual);
-        this->setIntegerParam(ADSizeY, (int)this->camSizes.yResActual);
+        this->setIntegerParam(this->ADMaxSizeX, (int)this->camSizes.xResActual);
+        this->setIntegerParam(this->ADMaxSizeY, (int)this->camSizes.yResActual);
+        this->setIntegerParam(this->ADSizeX, (int)this->camSizes.xResActual);
+        this->setIntegerParam(this->ADSizeY, (int)this->camSizes.yResActual);
         this->setIntegerParam(this->handleCamlinkClock, (int)this->camTransfer.clockFrequency);
 
         // Initialise the cooling setpoint information
-        this->setIntegerParam(handleMinCoolingSetpoint, this->camDescription.minCoolingSetpoint);
-        this->setIntegerParam(handleMaxCoolingSetpoint, this->camDescription.maxCoolingSetpoint);
-        this->setIntegerParam(handleDefaultCoolingSetpoint, this->camDescription.defaultCoolingSetpoint);
-        this->setIntegerParam(handleCoolingSetpoint, this->camDescription.defaultCoolingSetpoint);
+        this->setIntegerParam(this->handleMinCoolingSetpoint, this->camDescription.minCoolingSetpoint);
+        this->setIntegerParam(this->handleMaxCoolingSetpoint, this->camDescription.maxCoolingSetpoint);
+        this->setIntegerParam(this->handleDefaultCoolingSetpoint, this->camDescription.defaultCoolingSetpoint);
+        this->setIntegerParam(this->handleCoolingSetpoint, this->camDescription.defaultCoolingSetpoint);
         this->setCoolingSetpoint();
+
+        // Acquisition timing parameters
+        this->setDoubleParam(this->handleDelayTimeMin, (double)this->camDescription.minDelayNs * 1e-9);
+        this->setDoubleParam(this->handleDelayTimeMax, (double)this->camDescription.maxDelayMs * 1e-3);
+        this->setDoubleParam(this->handleDelayTimeStep, (double)this->camDescription.minDelayStepNs * 1e-9);
+        this->setDoubleParam(this->handleExpTimeMin, (double)this->camDescription.minExposureNs * 1e-9);
+        this->setDoubleParam(this->handleExpTimeMax, (double)this->camDescription.maxExposureMs * 1e-3);
+        this->setDoubleParam(this->handleExpTimeStep, (double)this->camDescription.minExposureStepNs * 1e-9);
 
         // Update area detector information strings
         switch(this->camType)
@@ -1409,6 +1429,10 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         this->getIntegerParam(this->NDDataType, &this->dataType);
         this->getIntegerParam(this->ADReverseX, &this->reverseX);
         this->getIntegerParam(this->ADReverseY, &this->reverseY);
+        this->getDoubleParam(this->handleExpTimeMin, &this->minExposureTime);
+        this->getDoubleParam(this->handleExpTimeMax, &this->maxExposureTime);
+        this->getDoubleParam(this->handleDelayTimeMin, &this->minDelayTime);
+        this->getDoubleParam(this->handleDelayTimeMax, &this->maxDelayTime);
 
         // Configure the camera (reading back the actual settings)
         this->cfgBinningAndRoi();    // Also sets camera image size
@@ -1783,10 +1807,28 @@ void Pco::cfgAcquisitionTimes() throw(PcoException)
     // Work out the delay time to achieve the desired period.  Note that the
     // configured delay time is used unless it is zero, in which case the
     // acquisition period is used.
+    double exposureTime = this->exposureTime;
     double delayTime = this->delayTime;
     if(delayTime == 0.0)
     {
         delayTime = std::max(this->acquisitionPeriod - this->exposureTime, 0.0);
+    }
+    // Check them against the camera's constraints;
+    if(delayTime < this->minDelayTime)
+    {
+        delayTime = this->minDelayTime;
+    }
+    if(delayTime > this->maxDelayTime)
+    {
+        delayTime = this->maxDelayTime;
+    }
+    if(exposureTime < this->minExposureTime)
+    {
+        exposureTime = this->minExposureTime;
+    }
+    if(exposureTime > this->maxExposureTime)
+    {
+        exposureTime = this->maxExposureTime;
     }
     // Work out the best ranges to use to represent to the camera
     unsigned short exposureBase;
@@ -1819,7 +1861,7 @@ void Pco::cfgAcquisitionTimes() throw(PcoException)
     }
     // Set the camera
     delay = (unsigned long)(delayTime * DllApi::timebaseScaleFactor[delayBase]);
-    exposure = (unsigned long)(this->exposureTime * DllApi::timebaseScaleFactor[exposureBase]);
+    exposure = (unsigned long)(exposureTime * DllApi::timebaseScaleFactor[exposureBase]);
     this->api->setDelayExposureTime(this->camera, delay, exposure,
             delayBase, exposureBase);
     // Read back what the camera is actually set to

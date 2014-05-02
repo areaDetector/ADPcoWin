@@ -105,6 +105,7 @@ public:
 protected:
     enum {numberOfRunningEvents = DllApi::maxNumBuffers+1};
     enum {numberOfWaitingEvents = 1};
+    enum {waitTimeoutMs = 1000};
     enum {stopEventIndex=0, firstBufferEventIndex=1};
 
 

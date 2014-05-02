@@ -553,3 +553,59 @@ record(ao, "$(P)$(R)COOLINGSETPOINT")
     field(PREC, "0")
     field(EGU,  "C")
 }
+
+# Exposure control parameter ranges
+
+record(ai, "$(P)$(R)DELAYTIMEMIN_RBV")
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DELAYTIMEMIN")
+    field(PREC, "4")
+    field(EGU, "s")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)DELAYTIMEMAX_RBV")
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DELAYTIMEMAX")
+    field(PREC, "4")
+    field(EGU, "s")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)DELAYTIMESTEP_RBV")
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DELAYTIMESTEP")
+    field(PREC, "4")
+    field(EGU, "s")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)EXPTIMEMIN_RBV")
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_EXPTIMEMIN")
+    field(PREC, "4")
+    field(EGU, "s")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)EXPTIMEMAX_RBV")
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_EXPTIMEMAX")
+    field(PREC, "4")
+    field(EGU, "s")
+    field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)EXPTIMESTEP_RBV")
+{
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_EXPTIMESTEP")
+    field(PREC, "4")
+    field(EGU, "s")
+    field(SCAN, "I/O Intr")
+}

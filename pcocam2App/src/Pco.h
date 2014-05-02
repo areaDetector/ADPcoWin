@@ -73,6 +73,12 @@ protected:
     int handleMaxCoolingSetpoint;
     int handleDefaultCoolingSetpoint;
     int handleCoolingSetpoint;
+    int handleDelayTimeMin;
+    int handleDelayTimeMax;
+    int handleDelayTimeStep;
+    int handleExpTimeMin;
+    int handleExpTimeMax;
+    int handleExpTimeStep;
 
 // Parameter names
 private:
@@ -111,6 +117,12 @@ private:
     static const char* nameMaxCoolingSetpoint;
     static const char* nameDefaultCoolingSetpoint;
     static const char* nameCoolingSetpoint;
+    static const char* nameDelayTimeMin;
+    static const char* nameDelayTimeMax;
+    static const char* nameDelayTimeStep;
+    static const char* nameExpTimeMin;
+    static const char* nameExpTimeMax;
+    static const char* nameExpTimeStep;
 
 // Constants
 public:
@@ -220,6 +232,10 @@ private:
     double exposureTime;
     double acquisitionPeriod;
     double delayTime;
+    double minExposureTime;
+    double maxExposureTime;
+    double minDelayTime;
+    double maxDelayTime;
     int reverseX;
     int reverseY;
     int adcMode;
