@@ -195,6 +195,12 @@ int PcoApi::doGetCameraDescription(Handle handle, Description* description)
         description->minCoolingSetpoint = info.sMinCoolSetDESC;
         description->maxCoolingSetpoint = info.sMaxCoolSetDESC;
         description->defaultCoolingSetpoint = info.sDefaultCoolSetDESC;
+        description->minDelayNs = info.dwMinDelayDESC;
+        description->maxDelayMs = info.dwMaxDelayDESC;
+        description->minDelayStepNs = info.dwMinDelayStepDESC;
+        description->minExposureNs = info.dwMinExposureDESC;
+        description->maxExposureMs = info.dwMaxExposureDESC;
+        description->minExposureStepNs = info.dwMinExposureStepDESC;
     }
     return result;
 }
