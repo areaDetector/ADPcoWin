@@ -7,14 +7,14 @@ from iocbuilder.modules.areaDetector import AreaDetector, _ADBase, _ADBaseTempla
 class _pcocam2(AutoSubstitution):
     TemplateFile="pco.template"
     SubstitutionOverwrites = [_ADBaseTemplate]
-    
+
 class pcocam2(_ADBase):
     """Create a PCO camera detector"""
     _SpecificTemplate = _pcocam2
     def __init__(self, BUFFERS=50, MEMORY=-1, **args):
         self.__super.__init__(**args)
         self.__dict__.update(locals())
-        
+
     # __init__ arguments
     ArgInfo = _ADBase.ArgInfo + _SpecificTemplate.ArgInfo + makeArgInfo(__init__,
         BUFFERS = Simple('Maximum number of NDArray buffers to be created', int),
@@ -31,8 +31,8 @@ class pcocam2(_ADBase):
         SysLibFileList += ['windowscodecs', 'Comdlg32', 'Winspool', 'Comctl32', 'nafxcw']
         DbdFileList += ['pcocam2Support', 'pcocam2HardwareSupport']
         MakefileStringList += ['%(ioc_name)s_LDFLAGS_WIN32 += /NOD:nafxcwd.lib /NOD:nafxcw.lib']
-    
+
     def Initialise(self):
-        print '  pcoConfig( %(PORT)10s, %(BUFFERS)10d, %(MEMORY)9d )' % self.__dict__
-        print '  pcoApiConfig( %(PORT)10s )' % self.__dict__
+        print 'pcoConfig("%(PORT)s", %(BUFFERS)d, %(MEMORY)d)' % self.__dict__
+        print 'pcoApiConfig("%(PORT)s")' % self.__dict__
 
