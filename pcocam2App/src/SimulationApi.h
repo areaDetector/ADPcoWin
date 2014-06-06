@@ -14,7 +14,7 @@
 #define SIMULATIONAPI_H_
 
 #include <string>
-#include <epicsMessageQueue.h>
+#include "epicsMessageQueue.h"
 #include "StateMachine.h"
 #include "DllApi.h"
 class Pco;
@@ -92,6 +92,7 @@ protected:
     virtual int doGetActiveRamSegment(Handle handle, unsigned short* segment);
     virtual int doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount);
+    virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier);
 
 // Override of StateMachine::User
 public:

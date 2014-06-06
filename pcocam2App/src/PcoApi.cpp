@@ -13,8 +13,8 @@
 #include "PcoApi.h"
 #include "TraceStream.h"
 #include "Pco.h"
-#include <epicsExport.h>
-#include <iocsh.h>
+#include "epicsExport.h"
+#include "iocsh.h"
 #include "sc2_SDKStructures.h"
 #include "SC2_SDKAddendum.h"
 #include "sc2_defs.h"
@@ -641,6 +641,15 @@ int PcoApi::doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
             maxImageCount);
 }
 
+/**
+ * Set the active lookup table
+ */
+int PcoApi::doSetActiveLookupTable(Handle handle, unsigned short identifier)
+{
+	unsigned short p1 = identifier;
+	unsigned short p2 = 0;
+    return PCO_SetActiveLookupTable(handle, &p1, &p2);
+}
 
 // C entry point for iocinit
 extern "C" int pcoApiConfig(const char* portName)

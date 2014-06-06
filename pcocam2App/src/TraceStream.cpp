@@ -1,7 +1,7 @@
 #include "TraceStream.h"
 #include <stdio.h>
 #include <stdarg.h>
-#include <epicsStdio.h>
+#include "epicsStdio.h"
 
 /** A mutex that prevents trace messages from
  * multiple threads getting mixed.

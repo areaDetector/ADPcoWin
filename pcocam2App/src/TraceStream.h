@@ -7,8 +7,8 @@
 #include <cstdlib>
 #include <locale>
 #include <vector>
-#include <asynDriver.h>
-#include <epicsMutex.h>
+#include "asynDriver.h"
+#include "epicsMutex.h"
 
 class TraceBuf: public std::streambuf
 {

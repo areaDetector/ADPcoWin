@@ -13,8 +13,8 @@
 #include "SimulationApi.h"
 #include "TraceStream.h"
 #include "Pco.h"
-#include <epicsExport.h>
-#include <iocsh.h>
+#include "epicsExport.h"
+#include "iocsh.h"
 
 /**
  * Parameter names
@@ -1525,6 +1525,14 @@ int SimulationApi::doGetNumberOfImagesInSegment(Handle handle, unsigned short se
 {
     *validImageCount = 0;
     *maxImageCount = 0;
+    return DllApi::errorNone;
+}
+
+/**
+ * Set the active lookup table
+ */
+int SimulationApi::doSetActiveLookupTable(Handle handle, unsigned short identifier)
+{
     return DllApi::errorNone;
 }
 
