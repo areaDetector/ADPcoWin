@@ -1196,7 +1196,11 @@ void Pco::frameReceived(int bufferNumber)
         ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
                 this->xCamSize*this->yCamSize*sizeof(unsigned short));
         // Post the NDarray to the state machine thread
-        this->receivedFrameQueue.send(&image, sizeof(NDArray*));
+        if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
+        {
+        	// Failed to put on queue, better free the NDArray to avoid leaks
+        	image->release();
+        }
         this->post(Pco::requestImageReceived);
     }
     // Give the buffer back to the API
