@@ -11,10 +11,10 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdarg>
-#include <epicsExport.h>
-#include <epicsThread.h>
-#include <iocsh.h>
-#include <db_access.h>
+#include "epicsExport.h"
+#include "epicsThread.h"
+#include "iocsh.h"
+#include "db_access.h"
 #include <iostream>
 
 /** Parameter names */
@@ -59,6 +59,12 @@ const char* Pco::nameDelayTimeStep = "PCO_DELAYTIMESTEP";
 const char* Pco::nameExpTimeMin = "PCO_EXPTIMEMIN";
 const char* Pco::nameExpTimeMax = "PCO_EXPTIMEMAX";
 const char* Pco::nameExpTimeStep = "PCO_EXPTIMESTEP";
+const char* Pco::nameMaxBinHorz = "PCO_MAXBINHORZ";
+const char* Pco::nameMaxBinVert = "PCO_MAXBINVERT";
+const char* Pco::nameBinHorzStepping = "PCO_BINHORZSTEPPING";
+const char* Pco::nameBinVertStepping = "PCO_BINVERTSTEPPING";
+const char* Pco::nameRoiHorzSteps = "PCO_ROIHORZSTEPS";
+const char* Pco::nameRoiVertSteps = "PCO_ROIVERTSTEPS";
 
 /** Constants
  */
@@ -174,6 +180,13 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->createParam(Pco::nameExpTimeMin, asynParamFloat64, &this->handleExpTimeMin);
     this->createParam(Pco::nameExpTimeMax, asynParamFloat64, &this->handleExpTimeMax);
     this->createParam(Pco::nameExpTimeStep, asynParamFloat64, &this->handleExpTimeStep);
+    this->createParam(Pco::nameMaxBinHorz, asynParamInt32, &this->handleMaxBinHorz);
+    this->createParam(Pco::nameMaxBinVert, asynParamInt32, &this->handleMaxBinVert);
+    this->createParam(Pco::nameBinHorzStepping, asynParamInt32, &this->handleBinHorzStepping);
+    this->createParam(Pco::nameBinVertStepping, asynParamInt32, &this->handleBinVertStepping);
+    this->createParam(Pco::nameRoiHorzSteps, asynParamInt32, &this->handleRoiHorzSteps);
+    this->createParam(Pco::nameRoiVertSteps, asynParamInt32, &this->handleRoiVertSteps);
+
     // ...and initialise them
     this->setIntegerParam(this->NDDataType, NDUInt16);
     this->setIntegerParam(this->ADNumExposures, 1);
@@ -205,6 +218,12 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->setIntegerParam(this->handleMaxCoolingSetpoint, 0);
     this->setIntegerParam(this->handleDefaultCoolingSetpoint, 0);
     this->setIntegerParam(this->handleCoolingSetpoint, 0);
+    this->setIntegerParam(this->handleMaxBinHorz, 0);
+    this->setIntegerParam(this->handleMaxBinVert, 0);
+    this->setIntegerParam(this->handleBinHorzStepping, 0);
+    this->setIntegerParam(this->handleBinVertStepping, 0);
+    this->setIntegerParam(this->handleRoiHorzSteps, 0);
+    this->setIntegerParam(this->handleRoiVertSteps, 0);
     // We are not connected to a camera
     this->camera = NULL;
     // Initialise the buffers
@@ -652,6 +671,14 @@ bool Pco::connectToCamera()
         {
             // Swallow errors from this
         }
+
+        // Record binning and roi capabilities
+        this->setIntegerParam(this->handleMaxBinHorz, (int)this->camDescription.maxBinHorz);
+        this->setIntegerParam(this->handleMaxBinVert, (int)this->camDescription.maxBinVert);
+        this->setIntegerParam(this->handleBinHorzStepping, (int)this->camDescription.binHorzStepping);
+        this->setIntegerParam(this->handleBinVertStepping, (int)this->camDescription.binVertStepping);
+        this->setIntegerParam(this->handleRoiHorzSteps, (int)this->camDescription.roiHorSteps);
+        this->setIntegerParam(this->handleRoiVertSteps, (int)this->camDescription.roiVertSteps);
 
         // Build the set of binning values
         this->setValidBinning(this->availBinX, this->camDescription.maxBinHorz,
@@ -1102,10 +1129,19 @@ asynStatus Pco::writeInt32(asynUser *pasynUser, epicsInt32 value)
  */
 asynStatus Pco::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
-    //int parameter = pasynUser->reason;
+    int parameter = pasynUser->reason;
 
     // Base class does most of the work including updating the parameters
     asynStatus status = ADDriver::writeFloat64(pasynUser, value);
+
+    if(parameter == this->ADTemperature)
+    {
+        // Interpret an attempt to set the temperature as setting the
+        // cooling set point
+        this->setIntegerParam(this->handleCoolingSetpoint, (int)value);
+        this->setCoolingSetpoint();
+        this->callParamCallbacks();
+    }
 
     return status;
 }
@@ -1162,12 +1198,7 @@ void Pco::frameReceived(int bufferNumber)
                 this->xCamSize*this->yCamSize*sizeof(unsigned short));
         // Post the NDarray to the state machine thread
         this->receivedFrameQueue.send(&image, sizeof(NDArray*));
-// JAT: Not sure why we don't always post the message but not doing was causing
-//      the Dimax to get stuck when using hardware trigger.
-//        if(this->receivedFrameQueue.pending() <= 1)
-        {
-            this->post(Pco::requestImageReceived);
-        }
+        this->post(Pco::requestImageReceived);
     }
     // Give the buffer back to the API
     this->lock();
@@ -1194,7 +1225,8 @@ asynUser* Pco::getAsynUser()
 void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
 {
     // How big?
-    int bufferSize = this->xCamSize * this->yCamSize * sizeof(short);
+    //int bufferSize = this->xCamSize * this->yCamSize * sizeof(short);
+	int bufferSize = this->camSizes.xResActual * this->camSizes.yResActual;
     // Now allocate the memory and tell the SDK
     try
     {
@@ -1205,19 +1237,18 @@ void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
                 delete[] this->buffers[i].buffer;
             }
             this->buffers[i].buffer = new unsigned short[bufferSize];
-            // JAT: For the Dimax we have freed the buffers so we must reallocated
-            //      from scratch rather than just the memory.
             this->buffers[i].bufferNumber = DllApi::bufferUnallocated;
             this->buffers[i].eventHandle = NULL;
             this->api->allocateBuffer(this->camera, &this->buffers[i].bufferNumber,
-                    bufferSize, &this->buffers[i].buffer, &this->buffers[i].eventHandle);
+                    bufferSize * sizeof(short), &this->buffers[i].buffer,
+                    &this->buffers[i].eventHandle);
             this->buffers[i].ready = true;
             assert(this->buffers[i].bufferNumber == i);
         }
     }
     catch(std::bad_alloc& e)
     {
-        // Recover from memory allocate=ion failure
+        // Recover from memory allocation failure
         this->freeImageBuffers();
         throw e;
     }
@@ -1264,6 +1295,7 @@ void Pco::freeImageBuffers() throw()
  */
 void Pco::adjustTransferParamsAndLut() throw(PcoException)
 {
+	unsigned short lutIdentifier = 0;
     // Configure according to camera type
     switch(this->camType)
     {
@@ -1276,6 +1308,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
             // Works in global and rolling modes
             this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12 | 
                 DllApi:: sccmosFormatTopCenterBottomCenter;
+            lutIdentifier = 0;
         }
         else 
         {
@@ -1286,17 +1319,20 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
                 // PCO_CL_DATAFORMAT_5x12 (data shifted 2 LSBs lost)
                 this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12L | 
                     DllApi::sccmosFormatTopCenterBottomCenter;
+                lutIdentifier = 0x1612;
             } 
             else 
             {
                 // Doesn't work in global, works in rolling
                 this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x16 | 
-                    DllApi::sccmosFormatTopCenterBottomCenter; 
+                    DllApi::sccmosFormatTopCenterBottomCenter;
+                lutIdentifier = 0;
             }
         }
         this->camTransfer.baudRate = Pco::edgeBaudRate;
         this->api->setTransferParameters(this->camera, &this->camTransfer);
         this->api->getTransferParameters(this->camera, &this->camTransfer);
+        this->api->setActiveLookupTable(this->camera, lutIdentifier);
         
         // The original did this, but I currently don't think it is required
         //// Report current LUT config
@@ -1477,13 +1513,13 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         // Make sure the pco camera clock is correct
         this->setCameraClock();
 
-        // Now Arm the camera, so it is ready to take images, all settings should have been made by now
-        this->api->arm(this->camera);
-
         // Give the buffers to the camera
         this->addAvailableBufferAll();
         this->lastImageNumber = 0;
         this->lastImageNumberValid = false;
+
+        // Now Arm the camera, so it is ready to take images, all settings should have been made by now
+        this->api->arm(this->camera);
 
         // Start the camera recording
         this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
@@ -1657,8 +1693,8 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
     this->swBinY = this->reqBinY;
 #endif
     this->api->setBinning(this->camera, this->hwBinX, this->hwBinY);
-    this->xCamSize = this->xMaxSize / this->hwBinX;
-    this->yCamSize = this->yMaxSize / this->hwBinY;
+    this->xCamSize = this->camSizes.xResActual / this->hwBinX;
+    this->yCamSize = this->camSizes.yResActual / this->hwBinY;
 
     // Make requested ROI valid
     this->reqRoiStartX = std::max(this->reqRoiStartX, 0);

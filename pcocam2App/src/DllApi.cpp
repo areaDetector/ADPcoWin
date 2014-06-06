@@ -808,3 +808,17 @@ void DllApi::getNumberOfImagesInSegment(Handle handle, unsigned short segment,
     }
 }
 
+/**
+ * Set the active lookup table
+ */
+void DllApi::setActiveLookupTable(Handle handle, unsigned short identifier) throw(PcoException)
+{
+    int result = doSetActiveLookupTable(handle, identifier);
+    *this->trace << "DllApi->SetActiveLookupTable(" << handle << ", " <<
+        identifier << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setActiveLookupTable", result);
+    }
+}
+

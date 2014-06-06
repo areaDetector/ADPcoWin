@@ -609,3 +609,61 @@ record(ai, "$(P)$(R)EXPTIMESTEP_RBV")
     field(EGU, "s")
     field(SCAN, "I/O Intr")
 }
+
+# Binning and ROI capabilities
+
+record(longin, "$(P)$(R)MAXBINHORZ_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_MAXBINHORZ")
+    field(SCAN, "I/O Intr")
+}
+
+record(longin, "$(P)$(R)MAXBINVERT_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_MAXBINVERT")
+    field(SCAN, "I/O Intr")
+}
+
+record(bi, "$(P)$(R)BINHORZSTEPPING_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BINHORZSTEPPING")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Binary")
+    field(ONAM, "Linear")
+}
+
+record(bi, "$(P)$(R)BINVERTSTEPPING_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BINVERTSTEPPING")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Binary")
+    field(ONAM, "Linear")
+}
+
+record(longin, "$(P)$(R)ROIHORZSTEPS_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROIHORZSTEPS")
+    field(SCAN, "I/O Intr")
+}
+
+record(longin, "$(P)$(R)ROIVERTSTEPS_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROIVERTSTEPS")
+    field(SCAN, "I/O Intr")
+}
+
+# Extend the precision of the acquisition time PVs
+record(ao, "$(P)$(R)AcquireTime")
+{
+   field(PREC, "5")
+}
+record(ai, "$(P)$(R)AcquireTime_RBV")
+{
+   field(PREC, "5")
+}

@@ -14,7 +14,7 @@
 #define DLLAPI_H_
 
 #include <string>
-#include <asynPortDriver.h>
+#include "asynPortDriver.h"
 #include <PcoException.h>
 class Pco;
 class TraceStream;
@@ -72,16 +72,16 @@ public:
     typedef void* Handle;
     struct Description
     {
-        unsigned short maxHorzRes;      // Maxmimum horz. resolution in std.mode
-        unsigned short maxVertRes;      // Maxmimum vert. resolution in std.mode // 10
+        unsigned short maxHorzRes;      // Maximum horz. resolution in std.mode
+        unsigned short maxVertRes;      // Maximum vert. resolution in std.mode // 10
         unsigned short dynResolution;   // Dynamic resolution of ADC in bit
-        unsigned short maxBinHorz;      // Maxmimum horz. binning
-        unsigned short maxBinVert;      // Maxmimum vert. binning
+        unsigned short maxBinHorz;      // Maximum horz. binning
+        unsigned short maxBinVert;      // Maximum vert. binning
         unsigned short binHorzStepping; // Horz. bin. stepping (0:bin, 1:lin)    // 20
         unsigned short binVertStepping; // Vert. bin. stepping (0:bin, 1:lin)
         unsigned short roiHorSteps;     // Minimum granularity of ROI in pixels
         unsigned short roiVertSteps;    // Minimum granularity of ROI in pixels
-        unsigned long pixelRate[descriptionNumPixelRates];    // Possible pixelrates in Hz  // 48
+        unsigned long pixelRate[descriptionNumPixelRates];    // Possible pixel rates in Hz  // 48
         unsigned short convFact;        // Possible conversion factor in e/cnt   // 136
         unsigned long generalCaps;      // General capabilities
         unsigned long minDelayNs;       // Minimum delay time in ns
@@ -90,14 +90,14 @@ public:
         unsigned long minExposureNs;    // Minimum exposure time in ns
         unsigned long maxExposureMs;    // Maximum exposure time in ms           // 200
         unsigned long minExposureStepNs;// Minimum stepping of exposure time in ns
-        short minCoolingSetpoint;       // Minimum cooling setpoint
-        short maxCoolingSetpoint;       // Maximum cooling setpoint
-        short defaultCoolingSetpoint;   // Default cooling setpoint
+        short minCoolingSetpoint;       // Minimum cooling set point
+        short maxCoolingSetpoint;       // Maximum cooling set point
+        short defaultCoolingSetpoint;   // Default cooling set point
     };
     struct Transfer
     {
-        unsigned long baudRate;         // serial baudrate: 9600, 19200, 38400, 56400, 115200
-        unsigned long clockFrequency;   // Pixelclock in Hz: 40000000,66000000,80000000
+        unsigned long baudRate;         // serial baud rate: 9600, 19200, 38400, 56400, 115200
+        unsigned long clockFrequency;   // Pixel clock in Hz: 40000000,66000000,80000000
         unsigned long camlinkLines;     // Usage of CameraLink CC1-CC4 lines, use value returned by Get
         unsigned long dataFormat;       // camlinkDataFormat | sccmosFormat (enums above)
         unsigned long transmit;         // single or continuous transmitting images, 0-single, 1-continuous
@@ -177,6 +177,7 @@ protected:
     virtual int doGetActiveRamSegment(Handle handle, unsigned short* segment) = 0;
     virtual int doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount) = 0;
+    virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier) = 0;
 
 // API for Pco class
 public:
@@ -244,6 +245,7 @@ public:
     void getActiveRamSegment(Handle handle, unsigned short* segment) throw(PcoException);
     void getNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount) throw(PcoException);
+    void setActiveLookupTable(Handle handle, unsigned short identifier) throw(PcoException);
     virtual void writeInt32(asynUser *pasynUser, epicsInt32 value) {}
 
 // Members

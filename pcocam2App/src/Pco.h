@@ -9,7 +9,7 @@
 #ifndef PCO_H_
 #define PCO_H_
 
-#include <ADDriver.h>
+#include "ADDriver.h"
 #include <string>
 #include <map>
 #include <set>
@@ -79,6 +79,12 @@ protected:
     int handleExpTimeMin;
     int handleExpTimeMax;
     int handleExpTimeStep;
+    int handleMaxBinHorz;
+    int handleMaxBinVert;
+    int handleBinHorzStepping;
+    int handleBinVertStepping;
+    int handleRoiHorzSteps;
+    int handleRoiVertSteps;
 
 // Parameter names
 private:
@@ -123,6 +129,12 @@ private:
     static const char* nameExpTimeMin;
     static const char* nameExpTimeMax;
     static const char* nameExpTimeStep;
+    static const char* nameMaxBinHorz;
+    static const char* nameMaxBinVert;
+    static const char* nameBinHorzStepping;
+    static const char* nameBinVertStepping;
+    static const char* nameRoiHorzSteps;
+    static const char* nameRoiVertSteps;
 
 // Constants
 public:

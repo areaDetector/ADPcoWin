@@ -6,10 +6,10 @@
 #define __STATE_MACHINE_H
 
 #include <string>
-#include <epicsMessageQueue.h>
-#include <epicsThread.h>
-#include <epicsTimer.h>
-#include <asynPortDriver.h>
+#include "epicsMessageQueue.h"
+#include "epicsThread.h"
+#include "epicsTimer.h"
+#include "asynPortDriver.h"
 class TraceStream;
 
 class StateMachine: public epicsThreadRunable

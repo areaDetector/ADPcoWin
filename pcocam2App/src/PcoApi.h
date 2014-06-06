@@ -14,13 +14,13 @@
 #define PCOAPI_H_
 
 #include <string>
-#include <epicsMessageQueue.h>
+#include "epicsMessageQueue.h"
 #include "DllApi.h"
-#include <afxwin.h>
-#include <windows.h>
+#include "afxwin.h"
+#include "windows.h"
 #include <stdio.h>
-#include <winsock2.h>
-#include <epicsThread.h>
+#include "winsock2.h"
+#include "epicsThread.h"
 class Pco;
 class TraceStream;
 
@@ -96,6 +96,7 @@ protected:
     virtual int doGetActiveRamSegment(Handle handle, unsigned short* segment);
     virtual int doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount);
+    virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier);
 
 // Overrides of epicsThreadRunable
 public:
