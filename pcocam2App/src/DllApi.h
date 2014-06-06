@@ -52,6 +52,7 @@ public:
         camlinkDataFormat3x8=0x03, camlinkDataFormat4x16=0x04, camlinkDataFormat5x16=0x05,
         camlinkDataFormat5x12=0x07, camlinkDataFormat10x8=0x08, camlinkDataFormat5x12L=0x09,
         camlinkDataFormat5x12R=0x0a};
+    enum {camlinkLutNone=0, camLinkLutSqrt=0x1612};
     enum {sccmosFormatMask=0xff00, sccmosFormatTopBottom=0x0000,
         sccmosFormatTopCenterBottomCenter=0x0100, sccmosFormatCenterTopCenterBottom=0x0200,
         sccmosFormatCenterTopBottomCenter=0x0300, sccmosFormatTopCenterCenterBottom=0x0400};

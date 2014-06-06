@@ -953,8 +953,7 @@ void Pco::setValidBinning(std::set<int>& valid, int max, int step) throw()
     int bin = 1;
     while(bin <= max)
     {
-//printf("%d,", bin);
-        this->availBinX.insert(bin);
+        valid.insert(bin);
         if(step == DllApi::binSteppingLinear)
         {
             bin += 1;
@@ -1308,7 +1307,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
             // Works in global and rolling modes
             this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12 | 
                 DllApi:: sccmosFormatTopCenterBottomCenter;
-            lutIdentifier = 0;
+            lutIdentifier = DllApi::camlinkLutNone;
         }
         else 
         {
@@ -1319,31 +1318,20 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
                 // PCO_CL_DATAFORMAT_5x12 (data shifted 2 LSBs lost)
                 this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12L | 
                     DllApi::sccmosFormatTopCenterBottomCenter;
-                lutIdentifier = 0x1612;
+                lutIdentifier = DllApi::camLinkLutSqrt;
             } 
             else 
             {
                 // Doesn't work in global, works in rolling
                 this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x16 | 
                     DllApi::sccmosFormatTopCenterBottomCenter;
-                lutIdentifier = 0;
+                lutIdentifier = DllApi::camlinkLutNone;
             }
         }
         this->camTransfer.baudRate = Pco::edgeBaudRate;
         this->api->setTransferParameters(this->camera, &this->camTransfer);
         this->api->getTransferParameters(this->camera, &this->camTransfer);
         this->api->setActiveLookupTable(this->camera, lutIdentifier);
-        
-        // The original did this, but I currently don't think it is required
-        //// Report current LUT config
-        //WORD lutID;
-        //WORD lutOffset;
-        //GetActiveLookupTable(hCamera, &lutID, &lutOffset);
-        //asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW, "ActiveLookupTable ID:%d Offset:%d\n", lutID, lutOffset);
-        //   
-        //// TODO Add call to PCO_SetActiveLookupTable to define compression for 12 bit data transfer)
-        ////   This doesnt seem to be required despite what the manual says
-            
         break;
     default:
         break;
