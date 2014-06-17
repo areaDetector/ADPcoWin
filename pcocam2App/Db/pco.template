@@ -677,3 +677,22 @@ record(ai, "$(P)$(R)AcquirePeriod_RBV")
 {
    field(PREC, "5")
 }
+
+# Reboot command
+record(bo, "$(P)$(R)REBOOT")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_REBOOT")
+    field(ZNAM, "Running")
+    field(ONAM, "Booting")
+}
+record(bi, "$(P)$(R)REBOOT_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_REBOOT")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Running")
+    field(ONAM, "Booting")
+}
+
+

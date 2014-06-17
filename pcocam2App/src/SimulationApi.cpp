@@ -1536,6 +1536,15 @@ int SimulationApi::doSetActiveLookupTable(Handle handle, unsigned short identifi
     return DllApi::errorNone;
 }
 
+/**
+ * Set driver timeouts
+ */
+int SimulationApi::doSetTimeouts(Handle handle, unsigned int commandTimeout,
+		unsigned int imageTimeout, unsigned int transferTimeout)
+{
+    return DllApi::errorNone;
+}
+
 // C entry point for iocinit
 extern "C" int simulationApiConfig(const char* portName)
 {

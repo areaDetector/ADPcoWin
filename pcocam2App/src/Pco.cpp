@@ -65,6 +65,7 @@ const char* Pco::nameBinHorzStepping = "PCO_BINHORZSTEPPING";
 const char* Pco::nameBinVertStepping = "PCO_BINVERTSTEPPING";
 const char* Pco::nameRoiHorzSteps = "PCO_ROIHORZSTEPS";
 const char* Pco::nameRoiVertSteps = "PCO_ROIVERTSTEPS";
+const char* Pco::nameReboot = "PCO_REBOOT";
 
 /** Constants
  */
@@ -73,6 +74,7 @@ const int Pco::traceFlagsPcoState = 0x0200;
 const int Pco::requestQueueCapacity = 10;
 const int Pco::numHandles = 300;
 const double Pco::reconnectPeriod = 5.0;
+const double Pco::rebootPeriod = 10.0;
 const double Pco::connectPeriod = 1.0;
 const double Pco::statusPollPeriod = 2.0;
 const double Pco::acquisitionStatusPollPeriod = 5.0;
@@ -101,9 +103,9 @@ const int Pco::statusMessageSize = 256;
 /** State machine strings
  */
 const char* Pco::eventNames[] = {"Initialise", "TimerExpiry", "Acquire",
-    "Stop", "Arm", "ImageReceived", "Disarm", "Trigger"};
+    "Stop", "Arm", "ImageReceived", "Disarm", "Trigger", "Reboot"};
 const char* Pco::stateNames[] =  {"Uninitialised", "Unconnected", "Idle",
-    "Armed", "Acquiring", "UnarmedAcquiring", "ExternalAcquiring"};
+    "Armed", "Acquiring", "UnarmedAcquiring", "ExternalAcquiring", "Rebooting"};
 
 /** The PCO object map
  */
@@ -186,6 +188,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->createParam(Pco::nameBinVertStepping, asynParamInt32, &this->handleBinVertStepping);
     this->createParam(Pco::nameRoiHorzSteps, asynParamInt32, &this->handleRoiHorzSteps);
     this->createParam(Pco::nameRoiVertSteps, asynParamInt32, &this->handleRoiVertSteps);
+    this->createParam(Pco::nameReboot, asynParamInt32, &this->handleReboot);
 
     // ...and initialise them
     this->setIntegerParam(this->NDDataType, NDUInt16);
@@ -224,6 +227,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->setIntegerParam(this->handleBinVertStepping, 0);
     this->setIntegerParam(this->handleRoiHorzSteps, 0);
     this->setIntegerParam(this->handleRoiVertSteps, 0);
+    this->setIntegerParam(this->handleReboot, 1);
     // We are not connected to a camera
     this->camera = NULL;
     // Initialise the buffers
@@ -325,6 +329,7 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
             {
                 if(this->connectToCamera())
                 {
+                	this->initialiseCamera();
                     this->stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
                     this->discardImages();
                     state = Pco::stateIdle;
@@ -335,6 +340,15 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->stateMachine->startTimer(Pco::reconnectPeriod, Pco::requestTimerExpiry);
                     state = Pco::stateUnconnected;
                 }
+            }
+            break;
+        case Pco::stateRebooting:
+            if(event == Pco::requestTimerExpiry)
+            {
+				this->initialiseCamera();
+				this->stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
+				this->discardImages();
+				state = Pco::stateIdle;
             }
             break;
         case Pco::stateIdle:
@@ -400,8 +414,8 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     //Rather than just going to idle, this was an attempt to clear the camera
                     //of the state it seems to get into when the ROI goes wrong, bit it didn't 
                     //have the desired effect.
-                    //this->api->closeCamera(this->camera);
                     //this->api->rebootCamera(this->camera);
+                    //this->api->closeCamera(this->camera);
                     //this->camera = 0;
                     //this->stateMachine->startTimer(Pco::reconnectPeriod, Pco::requestTimerExpiry);
                     //state = Pco::stateUnconnected;
@@ -410,6 +424,17 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
             else if(event == Pco::requestImageReceived)
             {
                 this->discardImages();
+            }
+            else if(event == Pco::requestReboot)
+            {
+            	// We need to stop the poll timer and discard any events that have
+            	// already been passed to the state machine
+            	this->stateMachine->stopTimer();
+            	this->stateMachine->clear();
+            	// Now do the reboot
+            	this->doReboot();
+                this->stateMachine->startTimer(Pco::rebootPeriod, Pco::requestTimerExpiry);
+                state = Pco::stateUnconnected;
             }
             break;
         case Pco::stateArmed:
@@ -594,6 +619,25 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
 }
 
 /**
+ * Reboot the camera
+ */
+void Pco::doReboot()
+{
+	this->api->setTimeouts(this->camera, 2000, 3000, 250);
+	switch(this->camType)
+	{
+	case DllApi::cameraTypeEdge:
+	case DllApi::cameraTypeEdgeGl:
+		this->api->rebootCamera(this->camera);
+		break;
+	default:
+		break;
+	}
+    this->api->closeCamera(this->camera);
+    this->camera = 0;
+}
+
+/**
  * Output a message to the status PV.
  * \param[in] text The message to output
  */
@@ -636,11 +680,20 @@ bool Pco::connectToCamera()
     {
         result = false;
     }
+    this->unlock();
+    return result;
+}
+
+/** Initialise the camera
+ * \return Returns true for success
+ */
+bool Pco::initialiseCamera()
+{
+    bool result = true;
+    this->lock();
     // Initialise the camera if it opened
-    if(result)
-    {
-        try
-        {
+	try
+	{
         // Get various camera data
         this->api->getGeneral(this->camera);
         this->api->getCameraType(this->camera, &this->camType);
@@ -752,40 +805,6 @@ bool Pco::connectToCamera()
 
         // Handle the pixel rates
         this->initialisePixelRate();
-#if 0
-        // Find the highest pixel rate the camera supports
-        unsigned long pixRate = 0;
-        int pixRateIndex = 0;
-        for(int i = 0; i<DllApi::descriptionNumPixelRates; i++)
-        {
-            if(this->camDescription.pixelRate[i] > pixRate)
-            {
-                pixRate = this->camDescription.pixelRate[i];
-                pixRateIndex = i;
-            } 
-        }
-        if(pixRate > 0)
-        {
-            this->api->setPixelRate(this->camera, pixRate);
-        }
-        this->api->getPixelRate(this->camera, &pixRate);
-        // Use the available rates as enum values
-        this->pixRateNumEnums = 0;
-        for(int i=0; i<DllApi::descriptionNumPixelRates; i++)
-        {
-            if(this->camDescription.pixelRate[i] > 0)
-            {
-                epicsSnprintf(this->pixRateEnumStrings[this->pixRateNumEnums], MAX_ENUM_STRING_SIZE,
-                    "%ld Hz", this->camDescription.pixelRate[i]);
-                this->pixRateEnumValues[this->pixRateNumEnums] = i;
-                this->pixRateEnumSeverities[this->pixRateNumEnums] = 0;
-                this->pixRateNumEnums++;
-            }
-        }
-        this->doCallbacksEnum(this->pixRateEnumStrings, this->pixRateEnumValues, this->pixRateEnumSeverities,
-            this->pixRateNumEnums,  this->handlePixRate, 0);
-        this->setIntegerParam(this->handlePixRate, pixRateIndex);
-#endif
 
         // Make Edge specific function calls
         if(this->camType == DllApi::cameraTypeEdge || this->camType == DllApi::cameraTypeEdgeGl)
@@ -872,6 +891,9 @@ bool Pco::connectToCamera()
         // Default data type
         this->setIntegerParam(this->NDDataType, NDUInt16);
 
+        // Camera booted
+        this->setIntegerParam(this->handleReboot, 0);
+
         // Lets have a look at the status of the camera
         unsigned short recordingState;
         this->api->getRecordingState(this->camera, &recordingState);
@@ -882,8 +904,7 @@ bool Pco::connectToCamera()
     }
     catch(PcoException&)
     {
-        //result = false;
-    }
+        result = false;
     }
     // Update EPICS
     callParamCallbacks();
@@ -1112,6 +1133,10 @@ asynStatus Pco::writeInt32(asynUser *pasynUser, epicsInt32 value)
     {
         this->setCoolingSetpoint();
         this->callParamCallbacks();
+    }
+    else if(parameter == this->handleReboot)
+    {
+    	this->post(Pco::requestReboot);
     }
 
     // Show other components

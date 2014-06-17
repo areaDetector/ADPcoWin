@@ -85,6 +85,7 @@ protected:
     int handleBinVertStepping;
     int handleRoiHorzSteps;
     int handleRoiVertSteps;
+    int handleReboot;
 
 // Parameter names
 private:
@@ -135,6 +136,7 @@ private:
     static const char* nameBinVertStepping;
     static const char* nameRoiHorzSteps;
     static const char* nameRoiVertSteps;
+    static const char* nameReboot;
 
 // Constants
 public:
@@ -142,6 +144,7 @@ public:
     static const int traceFlagsPcoState;
     static const int requestQueueCapacity;
     static const int numHandles;
+    static const double rebootPeriod;
     static const double reconnectPeriod;
     static const double connectPeriod;
     static const double statusPollPeriod;
@@ -174,9 +177,10 @@ public:
 public:
     enum Request {requestInitialise=0, requestTimerExpiry, requestAcquire,
         requestStop, requestArm, requestImageReceived, requestDisarm,
-        requestTrigger};
+        requestTrigger, requestReboot};
     enum State {stateUninitialised=0, stateUnconnected, stateIdle,
-        stateArmed, stateAcquiring, statedUnarmedAcquiring, stateExternalAcquiring};
+        stateArmed, stateAcquiring, statedUnarmedAcquiring, stateExternalAcquiring,
+    	stateRebooting};
 
 // API for use by component classes
 public:
@@ -290,6 +294,7 @@ public:
 // Utility functions
 private:
     bool connectToCamera();
+    bool initialiseCamera();
     bool pollCameraNoAcquisition();
     bool pollCamera();
     void doArm() throw(std::bad_alloc, PcoException);
@@ -324,6 +329,7 @@ private:
             NDArray* addArray) throw();
     void initialisePixelRate();
     void outputStatusMessage(const char* text);
+    void doReboot();
 };
 
 #endif

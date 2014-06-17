@@ -179,6 +179,8 @@ protected:
     virtual int doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount) = 0;
     virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier) = 0;
+    virtual int doSetTimeouts(Handle handle, unsigned int commandTimeout,
+    		unsigned int imageTimeout, unsigned int transferTimeout) = 0;
 
 // API for Pco class
 public:
@@ -247,6 +249,8 @@ public:
     void getNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount) throw(PcoException);
     void setActiveLookupTable(Handle handle, unsigned short identifier) throw(PcoException);
+    void setTimeouts(Handle handle, unsigned int commandTimeout,
+    		unsigned int imageTimeout, unsigned int transferTimeout);
     virtual void writeInt32(asynUser *pasynUser, epicsInt32 value) {}
 
 // Members

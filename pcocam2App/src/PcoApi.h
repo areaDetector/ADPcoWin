@@ -97,6 +97,8 @@ protected:
     virtual int doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount);
     virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier);
+    virtual int doSetTimeouts(Handle handle, unsigned int commandTimeout,
+    		unsigned int imageTimeout, unsigned int transferTimeout);
 
 // Overrides of epicsThreadRunable
 public:
