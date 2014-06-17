@@ -43,8 +43,8 @@ DllApi::~DllApi()
 void DllApi::openCamera(Handle* handle, unsigned short camNum) throw(PcoException)
 {
     int result = doOpenCamera(handle, camNum);
-    *this->trace << "DllApi->OpenCamera(" << *handle << ", " <<
-            camNum << ") = " << result << std::endl;
+    this->trace->printf("DllApi->OpenCamera(%p, %hu) = 0x%x\n",
+            handle, camNum, result);
     if(result != DllApi::errorNone)
     {
         throw PcoException("openCamera", result);
@@ -85,8 +85,8 @@ void DllApi::rebootCamera(Handle handle) throw(PcoException)
 void DllApi::getGeneral(Handle handle) throw(PcoException)
 {
     int result = doGetGeneral(handle);
-    *this->trace << "DllApi->GetGeneral(" << handle << ") = " <<
-            result << std::endl;
+    this->trace->printf("DllApi->GetGeneral(%p) = 0x%x\n",
+            handle, result);
     if(result != DllApi::errorNone)
     {
         throw PcoException("getGeneral", result);
@@ -400,9 +400,8 @@ void DllApi::setRoi(Handle handle, unsigned short x0, unsigned short y0,
         unsigned short x1, unsigned short y1) throw(PcoException)
 {
     int result = doSetRoi(handle, x0, y0, x1, y1);
-    *this->trace << "DllApi->SetRoi(" << handle << ", " <<
-        x0 << "," << y0 << ", " << x1 << "," << y1 << ") = " <<
-        result << std::endl;
+    this->trace->printf("DllApi->SetRoi(%p, %hu, %hu, %hu, %hu) = 0x%x\n",
+    		handle, x0, y0, x1, y1, result);
     if(result != DllApi::errorNone)
     {
         throw PcoException("setRoi", result);
@@ -635,8 +634,8 @@ void DllApi::getRecordingState(Handle handle, unsigned short* state) throw(PcoEx
 void DllApi::setRecordingState(Handle handle, unsigned short state) throw(PcoException)
 {
     int result = doSetRecordingState(handle, state);
-    *this->trace << "DllApi->SetRecordingState(" << handle << ", " <<
-        state << ") = " << result << std::endl;
+    this->trace->printf("DllApi->SetRecordingState(%p, %hu) = 0x%x\n",
+    		handle, state, result);
     if(result != DllApi::errorNone)
     {
         throw PcoException("setRecordingState", result);
@@ -710,8 +709,8 @@ void DllApi::camlinkSetImageParameters(Handle handle, unsigned short xRes, unsig
 void DllApi::arm(Handle handle) throw(PcoException)
 {
     int result = doArm(handle);
-    *this->trace << "DllApi->Arm(" << handle <<
-        ") = " << result << std::endl;
+    this->trace->printf("DllApi->Arm(%p) = 0x%x\n",
+    		handle, result);
     if(result != DllApi::errorNone)
     {
         throw PcoException("arm", result);
@@ -726,7 +725,7 @@ void DllApi::addBufferEx(Handle handle, unsigned long firstImage, unsigned long 
     unsigned short bitRes) throw(PcoException)
 {
     int result = doAddBufferEx(handle, firstImage, lastImage, bufferNumber, xRes, yRes, bitRes);
-    this->trace->printf("DllApi->AddBufferEx(%p, %lu, %lu, %hd, %hu, %hu, %hu) = %x\n",
+    this->trace->printf("DllApi->AddBufferEx(%p, %lu, %lu, %hd, %hu, %hu, %hu) = 0x%x\n",
             handle, firstImage, lastImage, bufferNumber, xRes, yRes, bitRes, result);
     if(result != DllApi::errorNone)
     {
@@ -741,7 +740,7 @@ void DllApi::getBufferStatus(Handle handle, short bufferNumber, unsigned long* s
     unsigned long* statusDrv) throw(PcoException)
 {
     int result = doGetBufferStatus(handle, bufferNumber, statusDll, statusDrv);
-    this->trace->printf("DllApi->GetBufferStatus(%p, %hd, %lx, %lx) = %x\n",
+    this->trace->printf("DllApi->GetBufferStatus(%p, %hd, %lx, %lx) = 0x%x\n",
             handle, bufferNumber, *statusDll, *statusDrv, result);
     if(result != DllApi::errorNone)
     {
@@ -822,3 +821,17 @@ void DllApi::setActiveLookupTable(Handle handle, unsigned short identifier) thro
     }
 }
 
+/**
+ * Set the driver timeouts
+ */
+void DllApi::setTimeouts(Handle handle, unsigned int commandTimeout,
+		unsigned int imageTimeout, unsigned int transferTimeout)
+{
+    int result = doSetTimeouts(handle, commandTimeout, imageTimeout, transferTimeout);
+    this->trace->printf("DllApi->SetTimeouts(%p, %u, %u, %u) = 0x%x\n",
+            handle, commandTimeout, imageTimeout, transferTimeout, result);
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setTimeouts", result);
+    }
+}

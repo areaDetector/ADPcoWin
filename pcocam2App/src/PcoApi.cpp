@@ -130,6 +130,19 @@ int PcoApi::doCloseCamera(Handle handle)
  */
 int PcoApi::doRebootCamera(Handle handle)
 {
+//	HANDLE h;
+//	// Force the PCO libraries to be loaded
+//	h = ::LoadLibrary("sc2_cl_me4.dll");
+//	printf("####Load sc2_cl_me4.dll = %p\n", h);
+//	h = ::LoadLibrary("PCO_CDlg.dll");
+//	printf("####Load PCO_CDlg.dll = %p\n", h);
+//	h = ::LoadLibrary("PCO_Conv.dll");
+//	printf("####Load PCO_Conv.dll = %p\n", h);
+//	h = ::LoadLibrary("SC2_DLG.dll");
+//	printf("####Load SC2_DLG.dll = %p\n", h);
+//	h = ::LoadLibrary("SC2_Cam.dll");
+//	printf("####Load SC2_Cam.dll = %p\n", h);
+
     return PCO_RebootCamera(handle);
 }
 
@@ -639,6 +652,19 @@ int PcoApi::doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
 {
     return PCO_GetNumberOfImagesInSegment(handle, segment, validImageCount,
             maxImageCount);
+}
+
+/**
+ * Set driver timeouts
+ */
+int PcoApi::doSetTimeouts(Handle handle, unsigned int commandTimeout,
+		unsigned int imageTimeout, unsigned int transferTimeout)
+{
+	unsigned int buff[3];
+	buff[0] = commandTimeout;
+	buff[1] = imageTimeout;
+	buff[2] = transferTimeout;
+    return PCO_SetTimeouts(handle, &buff, sizeof(buff));
 }
 
 /**
