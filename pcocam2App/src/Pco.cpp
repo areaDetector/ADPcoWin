@@ -411,14 +411,6 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->errorTrace << "Failed to arm due DLL error, " << e.what() << std::endl;
                     state = Pco::stateIdle;
                     this->outputStatusMessage(e.what());
-                    //Rather than just going to idle, this was an attempt to clear the camera
-                    //of the state it seems to get into when the ROI goes wrong, bit it didn't 
-                    //have the desired effect.
-                    //this->api->rebootCamera(this->camera);
-                    //this->api->closeCamera(this->camera);
-                    //this->camera = 0;
-                    //this->stateMachine->startTimer(Pco::reconnectPeriod, Pco::requestTimerExpiry);
-                    //state = Pco::stateUnconnected;
                 }
             }
             else if(event == Pco::requestImageReceived)
@@ -564,18 +556,9 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
             }
             else if(event == Pco::requestStop)
             {
-// It looks like a stop request should drop us completely back to the idle state
-//                if(this->triggerMode != DllApi::triggerAuto)
-                {
-                    this->acquisitionComplete();
-                    this->doDisarm();
-                    state = Pco::stateIdle;
-                }
-//                else
-//                {
-//                    this->acquisitionComplete();
-//                    state = Pco::stateArmed;
-//                }
+				this->acquisitionComplete();
+				this->doDisarm();
+				state = Pco::stateIdle;
             }
             break;
         case Pco::statedUnarmedAcquiring:
@@ -952,13 +935,7 @@ void Pco::initialisePixelRate()
     // Give the enum strings to the PV
     this->doCallbacksEnum(this->pixRateEnumStrings, this->pixRateEnumValues, this->pixRateEnumSeverities,
         this->pixRateNumEnums,  this->handlePixRate, 0);
-    // Select the maximum rate
-    if(this->pixRateMax > 0)
-    {
-        this->pixRate = this->pixRateMax;
-        this->pixRateValue = this->pixRateMaxValue;
-        this->api->setPixelRate(this->camera, this->pixRate);
-    }
+    // Get the current rate
     unsigned long r;
     this->api->getPixelRate(this->camera, &r);
     this->pixRate = (int)r;
@@ -1253,7 +1230,6 @@ asynUser* Pco::getAsynUser()
 void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
 {
     // How big?
-    //int bufferSize = this->xCamSize * this->yCamSize * sizeof(short);
 	int bufferSize = this->camSizes.xResActual * this->camSizes.yResActual;
     // Now allocate the memory and tell the SDK
     try
@@ -1670,14 +1646,10 @@ void Pco::cfgTriggerMode() throw(PcoException)
 
 /**
  * Configure the binning and region of interest.
- *   Note: Currently avoids using the hardware as
- *   the subsequent AddBufferEx returns an error.
  */
 void Pco::cfgBinningAndRoi() throw(PcoException)
 {
     // Work out the software and hardware binning
-#if 1
-    // Hardware version, see comment above
     if(this->availBinX.find(this->reqBinX) == this->availBinX.end())
     {
         // Not a binning the camera can do
@@ -1702,13 +1674,6 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
         this->hwBinY = this->reqBinY;
         this->swBinY = Pco::defaultHorzBin;
     }
-#else
-    // Software only version
-    this->hwBinX = 1;
-    this->hwBinY = 1;
-    this->swBinX = this->reqBinX;
-    this->swBinY = this->reqBinY;
-#endif
     this->api->setBinning(this->camera, this->hwBinX, this->hwBinY);
     this->xCamSize = this->camSizes.xResActual / this->hwBinX;
     this->yCamSize = this->camSizes.yResActual / this->hwBinY;
@@ -1724,19 +1689,10 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
     this->reqRoiSizeY = std::min(this->reqRoiSizeY, this->yCamSize-this->reqRoiStartY);
 
     // Get the desired hardware ROI (zero based, end not inclusive)
-#if 1
-    // Hardware version, see comment above
     this->hwRoiX1 = this->reqRoiStartX;
     this->hwRoiX2 = this->reqRoiStartX+this->reqRoiSizeX;
     this->hwRoiY1 = this->reqRoiStartY;
     this->hwRoiY2 = this->reqRoiStartY+this->reqRoiSizeY;
-#else
-    // Software only version
-    this->hwRoiX1 = 0;
-    this->hwRoiX2 = this->xMaxSize;
-    this->hwRoiY1 = 0;
-    this->hwRoiY2 = this->yMaxSize;
-#endif
 
     // Enforce horizontal symmetry requirements
     if(this->adcMode == DllApi::adcModeDual ||
@@ -1831,24 +1787,6 @@ void Pco::cfgPixelRate() throw(PcoException)
     unsigned long v;
     this->api->getPixelRate(this->camera, &v);
     this->pixRate = (int)v;
-    
-#if 0
-    bool valid = false;
-    int maxRate = 0;
-    for(int j=0; j<DllApi::descriptionNumPixelRates && !valid; j++ )
-    {
-        maxRate = std::max(maxRate, (int)this->camDescription.pixelRate[j]);
-        valid = (int)this->camDescription.pixelRate[j] == this->pixRate && this->pixRate > 0;
-    }
-    if(!valid)
-    {
-        this->pixRate = maxRate;
-    }
-    this->api->setPixelRate(this->camera, (unsigned long)this->pixRate);
-    unsigned long v;
-    this->api->getPixelRate(this->camera, &v);
-    this->pixRate = (int)v;
-#endif
 }
 
 /**
@@ -2081,9 +2019,6 @@ bool Pco::receiveImages() throw()
         this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
         if(image != NULL)
         {
-//printf("#### Image: %04x %04x %04x %04x\n",
-//        (int)((unsigned short*)image->pData)[0], (int)((unsigned short*)image->pData)[1],
-//        (int)((unsigned short*)image->pData)[2], (int)((unsigned short*)image->pData)[3]);
             // What is the number of the image?  If the image does not
             // contain the BCD image number
             // use the dead reckoning number instead.
@@ -2094,8 +2029,6 @@ bool Pco::receiveImages() throw()
                 imageNumber = this->extractImageNumber(
                         (unsigned short*)image->pData);
             }
-//printf("#### imageNumber=%d, lastImageNumberValid=%d\n",
-//        (int)imageNumber, (int)this->lastImageNumberValid);
             // If this is the image we are expecting?
             if(this->lastImageNumberValid && imageNumber != this->lastImageNumber+1)
             {
@@ -2109,13 +2042,6 @@ bool Pco::receiveImages() throw()
             // Do software ROI, binning and reversal if required
             if(this->roiRequired)
             {
-//printf("#### Performing s/w processing\n");
-//printf("     dim=0, size=%d, offset=%d, binning=%d, reverse=%d\n",
-//        (int)this->arrayDims[0].size, (int)this->arrayDims[0].offset,
-//        (int)this->arrayDims[0].binning, (int)this->arrayDims[0].reverse);
-//printf("     dim=1, size=%d, offset=%d, binning=%d, reverse=%d\n",
-//        (int)this->arrayDims[1].size, (int)this->arrayDims[1].offset,
-//        (int)this->arrayDims[1].binning, (int)this->arrayDims[1].reverse);
                 NDArray* scratch;
                 this->pNDArrayPool->convert(image, &scratch,
                         (NDDataType_t)this->dataType, this->arrayDims);
@@ -2187,7 +2113,6 @@ bool Pco::receiveImages() throw()
                     this->numImagesCounter++;
                 }
                 // Pass the array on
-//printf("#### Frame handled\n");
                 this->doCallbacksGenericPointer(image, NDArrayData, 0);
                 image->release();
             }
