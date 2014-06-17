@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1078
-y 295
+x 3657
+y 675
 w 392
-h 692
+h 764
 font "arial-bold-r-12.0"
 ctlFont "arial-bold-r-12.0"
 btnFont "arial-bold-r-12.0"
@@ -33,7 +33,7 @@ major 4
 minor 0
 release 0
 x 5
-y 515
+y 585
 w 380
 h 140
 lineColor index 14
@@ -49,7 +49,7 @@ release 0
 x 5
 y 55
 w 380
-h 410
+h 510
 lineColor index 14
 fillColor index 3
 endObjectProperties
@@ -238,7 +238,7 @@ major 4
 minor 1
 release 0
 x 305
-y 665
+y 735
 w 80
 h 20
 fgColor index 46
@@ -257,7 +257,7 @@ major 4
 minor 1
 release 0
 x 5
-y 505
+y 575
 w 179
 h 13
 font "arial-medium-r-12.0"
@@ -277,7 +277,7 @@ major 4
 minor 0
 release 0
 x 345
-y 530
+y 600
 w 25
 h 25
 controlPv "$(P)$(R)DIO:TRIG"
@@ -294,7 +294,7 @@ major 4
 minor 0
 release 0
 x 345
-y 560
+y 630
 w 25
 h 25
 controlPv "$(P)$(R)DIO:EXPOSING"
@@ -311,7 +311,7 @@ major 4
 minor 0
 release 0
 x 345
-y 590
+y 660
 w 25
 h 25
 controlPv "$(P)$(R)DIO:BUSY"
@@ -328,7 +328,7 @@ major 4
 minor 1
 release 0
 x 295
-y 530
+y 600
 w 50
 h 25
 font "arial-bold-r-12.0"
@@ -347,7 +347,7 @@ major 4
 minor 1
 release 0
 x 285
-y 560
+y 630
 w 65
 h 25
 font "arial-bold-r-12.0"
@@ -366,7 +366,7 @@ major 4
 minor 1
 release 0
 x 305
-y 590
+y 660
 w 40
 h 25
 font "arial-bold-r-12.0"
@@ -385,7 +385,7 @@ major 4
 minor 1
 release 0
 x 15
-y 530
+y 600
 w 90
 h 25
 font "arial-bold-r-12.0"
@@ -404,7 +404,7 @@ major 10
 minor 0
 release 0
 x 100
-y 530
+y 600
 w 75
 h 25
 controlPv "$(P)$(R)DIO:TRIG.HIGH"
@@ -424,7 +424,7 @@ major 4
 minor 1
 release 0
 x 20
-y 620
+y 690
 w 115
 h 25
 font "arial-bold-r-12.0"
@@ -443,7 +443,7 @@ major 4
 minor 0
 release 0
 x 140
-y 620
+y 690
 w 75
 h 25
 fgColor index 25
@@ -467,7 +467,7 @@ major 4
 minor 0
 release 0
 x 220
-y 620
+y 690
 w 25
 h 25
 controlPv "$(P)$(R)DIO:CAPTURE"
@@ -484,7 +484,7 @@ major 4
 minor 1
 release 0
 x 15
-y 570
+y 640
 w 250
 h 45
 font "arial-bold-r-12.0"
@@ -1130,6 +1130,240 @@ bgColor index 3
 useDisplayBg
 value {
   "Vertical"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 195
+y 470
+w 45
+h 15
+controlPv "$(P)$(R)HWBINX_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 195
+y 490
+w 45
+h 15
+controlPv "$(P)$(R)HWBINY_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 320
+y 470
+w 45
+h 15
+controlPv "$(P)$(R)HWROIX1_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 320
+y 490
+w 45
+h 15
+controlPv "$(P)$(R)HWROIY1_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 320
+y 510
+w 45
+h 15
+controlPv "$(P)$(R)HWROIX2_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 320
+y 530
+w 45
+h 15
+controlPv "$(P)$(R)HWROIY2_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 130
+y 470
+w 52
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "H/W Bin X"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 130
+y 490
+w 53
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "H/W Bin Y"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 255
+y 470
+w 58
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "H/W Roi X1"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 255
+y 490
+w 59
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "H/W Roi Y1"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 255
+y 510
+w 58
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "H/W Roi X2"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 255
+y 530
+w 59
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "H/W Roi Y2"
 }
 autoSize
 endObjectProperties
