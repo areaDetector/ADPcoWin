@@ -67,6 +67,7 @@ public:
     enum {bufferUnallocated=-1};
     enum {binSteppingLinearBinary=0, binSteppingLinear=1};
     enum {bitAlignmentMsb=0, bitAlignmentLsb=1};
+    enum {transferTransmitEnable=1, transferTransmitLongGap=2};
 
 // Types
 public:

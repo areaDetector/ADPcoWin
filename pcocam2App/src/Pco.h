@@ -86,6 +86,7 @@ protected:
     int handleRoiHorzSteps;
     int handleRoiVertSteps;
     int handleReboot;
+    int handleCamlinkLongGap;
 
 // Parameter names
 private:
@@ -137,6 +138,7 @@ private:
     static const char* nameRoiHorzSteps;
     static const char* nameRoiVertSteps;
     static const char* nameReboot;
+    static const char* nameCamlinkLongGap;
 
 // Constants
 public:
@@ -252,6 +254,7 @@ private:
     double maxExposureTime;
     double minDelayTime;
     double maxDelayTime;
+    int camlinkLongGap;
     int reverseX;
     int reverseY;
     int adcMode;

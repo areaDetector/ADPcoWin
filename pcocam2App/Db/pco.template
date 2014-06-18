@@ -695,4 +695,20 @@ record(bi, "$(P)$(R)REBOOT_RBV")
     field(ONAM, "Booting")
 }
 
+# Camlink Long Gap mode
+record(bo, "$(P)$(R)CAMLINKLONGGAP")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAMLINKLONGGAP")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+}
+record(bi, "$(P)$(R)CAMLINKLONGGAP_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAMLINKLONGGAP")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+}
 
