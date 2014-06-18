@@ -66,6 +66,7 @@ const char* Pco::nameBinVertStepping = "PCO_BINVERTSTEPPING";
 const char* Pco::nameRoiHorzSteps = "PCO_ROIHORZSTEPS";
 const char* Pco::nameRoiVertSteps = "PCO_ROIVERTSTEPS";
 const char* Pco::nameReboot = "PCO_REBOOT";
+const char* Pco::nameCamlinkLongGap = "PCO_CAMLINKLONGGAP";
 
 /** Constants
  */
@@ -189,6 +190,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->createParam(Pco::nameRoiHorzSteps, asynParamInt32, &this->handleRoiHorzSteps);
     this->createParam(Pco::nameRoiVertSteps, asynParamInt32, &this->handleRoiVertSteps);
     this->createParam(Pco::nameReboot, asynParamInt32, &this->handleReboot);
+    this->createParam(Pco::nameCamlinkLongGap, asynParamInt32, &this->handleCamlinkLongGap);
 
     // ...and initialise them
     this->setIntegerParam(this->NDDataType, NDUInt16);
@@ -227,7 +229,9 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->setIntegerParam(this->handleBinVertStepping, 0);
     this->setIntegerParam(this->handleRoiHorzSteps, 0);
     this->setIntegerParam(this->handleRoiVertSteps, 0);
+    this->setIntegerParam(this->handlePixRate, 0);
     this->setIntegerParam(this->handleReboot, 1);
+    this->setIntegerParam(this->handleCamlinkLongGap, 1);
     // We are not connected to a camera
     this->camera = NULL;
     // Initialise the buffers
@@ -912,6 +916,11 @@ bool Pco::initialiseCamera()
  */
 void Pco::initialisePixelRate()
 {
+    // Get the current rate
+    unsigned long r;
+    this->api->getPixelRate(this->camera, &r);
+    this->pixRate = (int)r;
+    this->pixRateValue = 0;
     // Work out the information
     this->pixRateMax = 0;
     this->pixRateMaxValue = 0;
@@ -930,15 +939,16 @@ void Pco::initialisePixelRate()
                 this->pixRateMaxValue = this->pixRateNumEnums;
             }
             this->pixRateNumEnums++;
+            if(this->camDescription.pixelRate[i] == this->pixRate)
+            {
+            	this->pixRateValue = i;
+            }
+
         }
     }
     // Give the enum strings to the PV
     this->doCallbacksEnum(this->pixRateEnumStrings, this->pixRateEnumValues, this->pixRateEnumSeverities,
         this->pixRateNumEnums,  this->handlePixRate, 0);
-    // Get the current rate
-    unsigned long r;
-    this->api->getPixelRate(this->camera, &r);
-    this->pixRate = (int)r;
     this->setIntegerParam(this->handlePixRate, this->pixRateValue);
 }
 
@@ -1334,6 +1344,11 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
             }
         }
         this->camTransfer.baudRate = Pco::edgeBaudRate;
+        this->camTransfer.transmit = DllApi::transferTransmitEnable;
+        if(this->camlinkLongGap)
+        {
+        	this->camTransfer.transmit |= DllApi::transferTransmitLongGap;
+        }
         this->api->setTransferParameters(this->camera, &this->camTransfer);
         this->api->getTransferParameters(this->camera, &this->camTransfer);
         this->api->setActiveLookupTable(this->camera, lutIdentifier);
@@ -1462,6 +1477,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         this->getDoubleParam(this->handleExpTimeMax, &this->maxExposureTime);
         this->getDoubleParam(this->handleDelayTimeMin, &this->minDelayTime);
         this->getDoubleParam(this->handleDelayTimeMax, &this->maxDelayTime);
+        this->getIntegerParam(this->handleCamlinkLongGap, &this->camlinkLongGap);
 
         // Configure the camera (reading back the actual settings)
         this->cfgBinningAndRoi();    // Also sets camera image size
@@ -2030,7 +2046,7 @@ bool Pco::receiveImages() throw()
                         (unsigned short*)image->pData);
             }
             // If this is the image we are expecting?
-            if(this->lastImageNumberValid && imageNumber != this->lastImageNumber+1)
+            if(imageNumber != this->lastImageNumber+1)
             {
                 this->missingFrames++;
                 printf("Missing frame, got=%ld, exp=%ld\n", imageNumber, this->lastImageNumber+1);
