@@ -1533,6 +1533,22 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         // Start the camera recording
         this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 
+        // Wait for the camera to admit that it is recording.  This is an attempt
+        // to fix a reported problem where the camera is not quite ready for an
+        // acquisition after the arm.
+        unsigned short recordingState;
+        int recordingCountDown = Pco::recordingStateRetry;
+        this->api->getRecordingState(this->camera, &recordingState);
+        while(recordingState != DllApi::recorderStateOn && recordingCountDown > 0)
+        {
+        	stateTrace << "#### Waiting for recording state ready(" << recordingCountDown << ")" << std::endl;
+            this->unlock();
+            epicsThreadSleep(0.1);
+            this->lock();
+            this->api->getRecordingState(this->camera, &recordingState);
+            recordingCountDown--;
+        }
+
         // The PCO4000 appears to output 1,2 or 3 dodgy frames immediately on
         // getting the arm.  This bit of code tries to drop them.
         if(this->camType == DllApi::cameraType4000)
