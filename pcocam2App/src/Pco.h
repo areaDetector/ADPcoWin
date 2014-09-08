@@ -175,6 +175,7 @@ public:
     static const double triggerRetryPeriod;
     static const int statusMessageSize;
     enum {xDimension=0, yDimension=1, numDimensions=2};
+    enum {recordingStateRetry=10};
 // Types
 public:
     enum Request {requestInitialise=0, requestTimerExpiry, requestAcquire,
