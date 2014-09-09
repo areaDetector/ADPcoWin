@@ -62,6 +62,7 @@ public:
     virtual void run();
     int pending();
     void clear();
+    bool isState(int s);
 };
 
 #endif

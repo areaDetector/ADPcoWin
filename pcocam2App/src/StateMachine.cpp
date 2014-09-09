@@ -203,3 +203,11 @@ void StateMachine::run()
     }
 }
 
+/**
+ * Returns true if the state machine is currently in the given state.
+ */
+bool StateMachine::isState(int s)
+{
+    return this->state == s;
+}
+
