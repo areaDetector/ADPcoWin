@@ -1190,30 +1190,34 @@ void Pco::post(Request req)
  */
 void Pco::frameReceived(int bufferNumber)
 {
-    // Get an ND array
-    size_t maxDims[] = {this->xCamSize, this->yCamSize};
-    NDArray* image = this->pNDArrayPool->alloc(sizeof(maxDims)/sizeof(size_t),
-            maxDims, NDUInt16, 0, NULL);
-    if(image == NULL)
+    // Drop frames if we are idle
+    if(!this->stateMachine->isState(stateIdle))
     {
-        // Out of area detector NDArrays
-        this->lock();
-        this->setIntegerParam(this->handleOutOfNDArrays, ++this->outOfNDArrays);
-        this->callParamCallbacks();
-        this->unlock();
-    }
-    else
-    {
-        // Copy the image into an NDArray
-        ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
-                this->xCamSize*this->yCamSize*sizeof(unsigned short));
-        // Post the NDarray to the state machine thread
-        if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
+        // Get an ND array
+        size_t maxDims[] = {this->xCamSize, this->yCamSize};
+        NDArray* image = this->pNDArrayPool->alloc(sizeof(maxDims)/sizeof(size_t),
+                maxDims, NDUInt16, 0, NULL);
+        if(image == NULL)
         {
-        	// Failed to put on queue, better free the NDArray to avoid leaks
-        	image->release();
+            // Out of area detector NDArrays
+            this->lock();
+            this->setIntegerParam(this->handleOutOfNDArrays, ++this->outOfNDArrays);
+            this->callParamCallbacks();
+            this->unlock();
         }
-        this->post(Pco::requestImageReceived);
+        else
+        {
+            // Copy the image into an NDArray
+            ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
+                    this->xCamSize*this->yCamSize*sizeof(unsigned short));
+            // Post the NDarray to the state machine thread
+            if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
+            {
+            	// Failed to put on queue, better free the NDArray to avoid leaks
+        	image->release();
+            }
+            this->post(Pco::requestImageReceived);
+        }
     }
     // Give the buffer back to the API
     this->lock();
@@ -1533,22 +1537,6 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
         // Start the camera recording
         this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 
-        // Wait for the camera to admit that it is recording.  This is an attempt
-        // to fix a reported problem where the camera is not quite ready for an
-        // acquisition after the arm.
-        unsigned short recordingState;
-        int recordingCountDown = Pco::recordingStateRetry;
-        this->api->getRecordingState(this->camera, &recordingState);
-        while(recordingState != DllApi::recorderStateOn && recordingCountDown > 0)
-        {
-        	stateTrace << "#### Waiting for recording state ready(" << recordingCountDown << ")" << std::endl;
-            this->unlock();
-            epicsThreadSleep(0.1);
-            this->lock();
-            this->api->getRecordingState(this->camera, &recordingState);
-            recordingCountDown--;
-        }
-
         // The PCO4000 appears to output 1,2 or 3 dodgy frames immediately on
         // getting the arm.  This bit of code tries to drop them.
         if(this->camType == DllApi::cameraType4000)
@@ -1557,7 +1545,6 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
             epicsThreadSleep(0.3);
             this->lock();
             this->discardImages();        // Dump any images
-            this->stateMachine->clear();  // Dump any frame received messages
         }
         
         // Update EPICS
