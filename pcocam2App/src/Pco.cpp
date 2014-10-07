@@ -2152,7 +2152,14 @@ bool Pco::receiveImages() throw()
  */
 long Pco::bcdToInt(unsigned short pixel) throw()
 {
-    int shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
+    int shiftLowBcd = 0;
+    int bitAlignment;
+    this->getIntegerParam(this->handleBitAlignment, &bitAlignment);
+    if(bitAlignment == DllApi::bitAlignmentMsb)
+    {
+        // In MSB mode, need to shift down
+        shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
+    }
     int shiftHighBcd = shiftLowBcd + Pco::bitsPerNybble;
     long p1 = (pixel>>shiftLowBcd)&(Pco::nybbleMask);
     long p2 = (pixel>>shiftHighBcd)&(Pco::nybbleMask);
