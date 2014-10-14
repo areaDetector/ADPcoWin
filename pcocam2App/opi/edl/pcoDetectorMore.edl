@@ -3,9 +3,9 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 3661
-y 700
-w 392
+x 437
+y 75
+w 796
 h 764
 font "arial-bold-r-12.0"
 ctlFont "arial-bold-r-12.0"
@@ -59,7 +59,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 5
 y 45
 w 169
@@ -98,7 +98,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 75
 w 83
@@ -137,7 +137,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 100
 w 116
@@ -204,7 +204,7 @@ minor 0
 release 0
 x 0
 y 0
-w 390
+w 795
 h 35
 lineColor index 48
 fill
@@ -216,9 +216,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
-x 75
-y 10
+release 0
+x 320
+y 5
 w 128
 h 21
 font "arial-bold-r-18.0"
@@ -255,7 +255,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 5
 y 575
 w 179
@@ -326,7 +326,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 295
 y 600
 w 50
@@ -345,7 +345,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 285
 y 630
 w 65
@@ -364,7 +364,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 305
 y 660
 w 40
@@ -383,7 +383,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 15
 y 600
 w 90
@@ -422,7 +422,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 690
 w 115
@@ -440,7 +440,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 1
+minor 0
 release 0
 x 140
 y 690
@@ -482,7 +482,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 15
 y 640
 w 250
@@ -503,7 +503,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 155
 w 99
@@ -523,7 +523,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 185
 w 101
@@ -543,7 +543,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 215
 w 118
@@ -563,7 +563,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 245
 w 94
@@ -677,7 +677,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 280
 w 74
@@ -760,7 +760,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 305
 w 78
@@ -780,7 +780,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 330
 w 78
@@ -800,7 +800,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 205
 y 280
 w 75
@@ -883,7 +883,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 205
 y 305
 w 79
@@ -903,7 +903,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 205
 y 330
 w 79
@@ -981,7 +981,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 45
 y 385
 w 63
@@ -1001,7 +1001,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 45
 y 410
 w 62
@@ -1021,7 +1021,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 45
 y 435
 w 69
@@ -1099,7 +1099,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 140
 y 365
 w 51
@@ -1119,7 +1119,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 240
 y 365
 w 39
@@ -1253,7 +1253,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 130
 y 470
 w 52
@@ -1273,7 +1273,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 130
 y 490
 w 53
@@ -1293,7 +1293,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 255
 y 470
 w 58
@@ -1313,7 +1313,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 255
 y 490
 w 59
@@ -1333,7 +1333,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 255
 y 510
 w 58
@@ -1353,7 +1353,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 255
 y 530
 w 59
@@ -1396,7 +1396,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 1
+release 0
 x 20
 y 125
 w 112
@@ -1409,5 +1409,65 @@ value {
   "Camlink Long Gap"
 }
 autoSize
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 395
+y 55
+w 380
+h 510
+lineColor index 14
+fillColor index 3
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 395
+y 45
+w 92
+h 13
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 5
+value {
+  "  PCO ganging  "
+}
+autoSize
+border
+endObjectProperties
+
+# (Embedded Window)
+object activePipClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 400
+y 65
+w 370
+h 495
+fgColor index 14
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+displaySource "menu"
+filePv "$(P)$(R)GANGMODE_RBV"
+file "PCO_Gang_None.edl"
+sizeOfs 5
+numDsps 3
+displayFileName {
+  0 "PCO_Gang_None.edl"
+  1 "PCO_Gang_Server.edl"
+  2 "PCO_Gang_Client.edl"
+}
 endObjectProperties
 

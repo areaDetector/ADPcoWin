@@ -21,9 +21,17 @@ pcocam2_SRCS += DllApi.cpp
 pcocam2_SRCS += NDArrayException.cpp
 pcocam2_SRCS += StateMachine.cpp
 pcocam2_SRCS += TraceStream.cpp
+pcocam2_SRCS += GangServer.cpp
+pcocam2_SRCS += GangClient.cpp
+pcocam2_SRCS += GangConnection.cpp
+pcocam2_SRCS += GangConfig.cpp
+pcocam2_SRCS += GangMemberConfig.cpp
+pcocam2_SRCS += GangServerConfig.cpp
+pcocam2_SRCS += SocketProtocol.cpp
 pcocam2_SRCS += PcoException.cpp
 pcocam2_SRCS_WIN32 += PcoApi.cpp
 pcocam2_SRCS += SimulationApi.cpp
+pcocam2_SRCS += TakeLock.cpp
 
 # Include path to vendor headers
 USR_INCLUDES_WIN32 += -I../include/

@@ -17,9 +17,19 @@
 #include "DllApi.h"
 #include "TraceStream.h"
 #include "NDArrayException.h"
+class GangServer;
+class GangConnection;
+class GangConfig;
+class GangMemberConfig;
+class GangClient;
 
 class Pco: public ADDriver, public StateMachine::User
 {
+friend class GangConfig;
+friend class GangMemberConfig;
+friend class GangConnection;
+friend class GangServer;
+friend class GangClient;
 // Construction
 public:
     Pco(const char* portName, int maxBuffers, size_t maxMemory);
@@ -87,6 +97,9 @@ protected:
     int handleRoiVertSteps;
     int handleReboot;
     int handleCamlinkLongGap;
+    int handleArm;
+    int handleDisarm;
+    int handleGangMode;
 
 // Parameter names
 private:
@@ -139,10 +152,14 @@ private:
     static const char* nameRoiVertSteps;
     static const char* nameReboot;
     static const char* nameCamlinkLongGap;
+    static const char* nameArm;
+    static const char* nameDisarm;
+    static const char* nameGangMode;
 
 // Constants
 public:
     static const int traceFlagsDllApi;
+    static const int traceFlagsGang;
     static const int traceFlagsPcoState;
     static const int requestQueueCapacity;
     static const int numHandles;
@@ -176,11 +193,12 @@ public:
     static const int statusMessageSize;
     enum {xDimension=0, yDimension=1, numDimensions=2};
     enum {recordingStateRetry=10};
+    enum {gangModeNone=0, gangModeServer=1, gangModeConnection=2};
 // Types
 public:
     enum Request {requestInitialise=0, requestTimerExpiry, requestAcquire,
         requestStop, requestArm, requestImageReceived, requestDisarm,
-        requestTrigger, requestReboot};
+        requestTrigger, requestReboot, requestMakeImages};
     enum State {stateUninitialised=0, stateUnconnected, stateIdle,
         stateArmed, stateAcquiring, statedUnarmedAcquiring, stateExternalAcquiring,
     	stateRebooting};
@@ -192,6 +210,10 @@ public:
     void trace(int flags, const char* format, ...);
     asynUser* getAsynUser();
     void registerDllApi(DllApi* api);
+    void registerGangServer(GangServer* gangServer);
+    void registerGangConnection(GangConnection* gangConnection);
+    NDArray* allocArray(int sizeX, int sizeY, NDDataType_t dataType);
+    void imageComplete(NDArray* image);
 
 // Member variables
 private:
@@ -210,6 +232,7 @@ private:
     TraceStream errorTrace;
 public:
     TraceStream apiTrace;
+    TraceStream gangTrace;
 private:
     TraceStream stateTrace;
     struct
@@ -291,6 +314,8 @@ private:
     int misplacedBuffers;
     int missingFrames;
     int driverLibraryErrors;
+    GangServer* gangServer;
+    GangConnection* gangConnection;
 public:
     static std::map<std::string, Pco*> thePcos;
     static Pco* getPco(const char* portName);
@@ -334,6 +359,7 @@ private:
     void initialisePixelRate();
     void outputStatusMessage(const char* text);
     void doReboot();
+    bool makeImages();
 };
 
 #endif
