@@ -12,9 +12,10 @@ include $(TOP)/configure/CONFIG
 # templates like this
 #
 DB += pco.template
+DB += pco_gangconnection.template
+DB += pco_gangserver.template
 DB += PCO_dio_logic.template
 DB += PCO_dio_sim.template
-
 
 #----------------------------------------------------
 # In a Diamond IOC Application, build db files from

@@ -16,6 +16,8 @@
 #include "iocsh.h"
 #include "db_access.h"
 #include <iostream>
+#include "GangServer.h"
+#include "GangConnection.h"
 
 /** Parameter names */
 const char* Pco::namePixRate = "PCO_PIX_RATE";
@@ -67,10 +69,14 @@ const char* Pco::nameRoiHorzSteps = "PCO_ROIHORZSTEPS";
 const char* Pco::nameRoiVertSteps = "PCO_ROIVERTSTEPS";
 const char* Pco::nameReboot = "PCO_REBOOT";
 const char* Pco::nameCamlinkLongGap = "PCO_CAMLINKLONGGAP";
+const char* Pco::nameArm = "PCO_ARM";
+const char* Pco::nameDisarm = "PCO_DISARM";
+const char* Pco::nameGangMode = "PCO_GANGMODE";
 
 /** Constants
  */
 const int Pco::traceFlagsDllApi = 0x0100;
+const int Pco::traceFlagsGang = 0x0400;
 const int Pco::traceFlagsPcoState = 0x0200;
 const int Pco::requestQueueCapacity = 10;
 const int Pco::numHandles = 300;
@@ -104,7 +110,7 @@ const int Pco::statusMessageSize = 256;
 /** State machine strings
  */
 const char* Pco::eventNames[] = {"Initialise", "TimerExpiry", "Acquire",
-    "Stop", "Arm", "ImageReceived", "Disarm", "Trigger", "Reboot"};
+    "Stop", "Arm", "ImageReceived", "Disarm", "Trigger", "Reboot", "MakeImages"};
 const char* Pco::stateNames[] =  {"Uninitialised", "Unconnected", "Idle",
     "Armed", "Acquiring", "UnarmedAcquiring", "ExternalAcquiring", "Rebooting"};
 
@@ -135,8 +141,11 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , api(NULL)
 , errorTrace(getAsynUser(), ASYN_TRACE_ERROR)
 , apiTrace(getAsynUser(), Pco::traceFlagsDllApi)
+, gangTrace(getAsynUser(), Pco::traceFlagsGang)
 , stateTrace(getAsynUser(), Pco::traceFlagsPcoState)
 , receivedFrameQueue(maxBuffers, sizeof(NDArray*))
+, gangServer(NULL)
+, gangConnection(NULL)
 {
     // Put in global map
     Pco::thePcos[portName] = this;
@@ -191,6 +200,9 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->createParam(Pco::nameRoiVertSteps, asynParamInt32, &this->handleRoiVertSteps);
     this->createParam(Pco::nameReboot, asynParamInt32, &this->handleReboot);
     this->createParam(Pco::nameCamlinkLongGap, asynParamInt32, &this->handleCamlinkLongGap);
+    this->createParam(Pco::nameArm, asynParamInt32, &this->handleArm);
+    this->createParam(Pco::nameDisarm, asynParamInt32, &this->handleDisarm);
+    this->createParam(Pco::nameGangMode, asynParamInt32, &this->handleGangMode);
 
     // ...and initialise them
     this->setIntegerParam(this->NDDataType, NDUInt16);
@@ -232,6 +244,9 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     this->setIntegerParam(this->handlePixRate, 0);
     this->setIntegerParam(this->handleReboot, 1);
     this->setIntegerParam(this->handleCamlinkLongGap, 1);
+    this->setIntegerParam(this->handleArm, 0);
+    this->setIntegerParam(this->handleDisarm, 0);
+    this->setIntegerParam(this->handleGangMode, gangModeNone);
     // We are not connected to a camera
     this->camera = NULL;
     // Initialise the buffers
@@ -513,6 +528,24 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     state = Pco::stateArmed;
                 }
             }
+            else if(event == Pco::requestMakeImages)
+            {
+            	if(!this->makeImages())
+            	{
+            		state = Pco::stateAcquiring;
+            	}
+                else if(this->triggerMode != DllApi::triggerSoftware)
+                {
+                    this->acquisitionComplete();
+                    this->doDisarm();
+                    state = Pco::stateIdle;
+                }
+                else
+                {
+                    this->acquisitionComplete();
+                    state = Pco::stateArmed;
+                }
+            }
             else if(event == Pco::requestTrigger)
             {
                 this->startCamera();
@@ -558,6 +591,24 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     state = Pco::stateArmed;
                 }
             }
+            else if(event == Pco::requestMakeImages)
+            {
+            	if(!this->makeImages())
+            	{
+            		state = Pco::stateExternalAcquiring;
+            	}
+                else if(this->triggerMode != DllApi::triggerSoftware)
+                {
+                    this->acquisitionComplete();
+                    this->doDisarm();
+                    state = Pco::stateIdle;
+                }
+                else
+                {
+                    this->acquisitionComplete();
+                    state = Pco::stateArmed;
+                }
+            }
             else if(event == Pco::requestStop)
             {
 				this->acquisitionComplete();
@@ -579,6 +630,20 @@ int Pco::doTransition(StateMachine* machine, int state, int event)
                     this->startCamera();
                     state = Pco::statedUnarmedAcquiring;
                 }
+                else
+                {
+                    this->acquisitionComplete();
+                    this->doDisarm();
+                    this->discardImages();
+                    state = Pco::stateIdle;
+                }
+            }
+            else if(event == Pco::requestMakeImages)
+            {
+            	if(!this->makeImages())
+            	{
+            		state = Pco::statedUnarmedAcquiring;
+            	}
                 else
                 {
                     this->acquisitionComplete();
@@ -939,7 +1004,7 @@ void Pco::initialisePixelRate()
                 this->pixRateMaxValue = this->pixRateNumEnums;
             }
             this->pixRateNumEnums++;
-            if(this->camDescription.pixelRate[i] == this->pixRate)
+            if((int)this->camDescription.pixelRate[i] == this->pixRate)
             {
             	this->pixRateValue = i;
             }
@@ -1089,11 +1154,19 @@ asynStatus Pco::writeInt32(asynUser *pasynUser, epicsInt32 value)
         {
             // Start an acquisition
             this->post(Pco::requestAcquire);
+        	if(gangServer)
+        	{
+        		gangServer->start();
+        	}
         }
         else if(!value)
         {
             // Stop the acquisition
             this->post(Pco::requestStop);
+        	if(gangServer)
+        	{
+        		gangServer->stop();
+        	}
         }
     }
     else if(parameter == this->handleArmMode)
@@ -1102,10 +1175,42 @@ asynStatus Pco::writeInt32(asynUser *pasynUser, epicsInt32 value)
         if(value)
         {
             this->post(Pco::requestArm);
+        	if(gangServer)
+        	{
+        		gangServer->arm();
+        	}
         }
         else
         {
             this->post(Pco::requestDisarm);
+        	if(gangServer)
+        	{
+        		gangServer->disarm();
+        	}
+        }
+    }
+    else if(parameter == this->handleArm)
+    {
+        // Perform an arm
+        if(value)
+        {
+            this->post(Pco::requestArm);
+        	if(gangServer)
+        	{
+        		gangServer->arm();
+        	}
+        }
+    }
+    else if(parameter == this->handleDisarm)
+    {
+        // Perform a disarm
+        if(value)
+        {
+            this->post(Pco::requestDisarm);
+        	if(gangServer)
+        	{
+        		gangServer->disarm();
+        	}
         }
     }
     else if(parameter == this->handleClearStateRecord)
@@ -1128,6 +1233,14 @@ asynStatus Pco::writeInt32(asynUser *pasynUser, epicsInt32 value)
 
     // Show other components
     this->api->writeInt32(pasynUser, value);
+    if(this->gangServer)
+    {
+    	this->gangServer->writeInt32(parameter, value);
+    }
+    if(this->gangConnection)
+    {
+    	this->gangConnection->writeInt32(parameter, value);
+    }
 
     return status;
 }
@@ -1186,6 +1299,25 @@ void Pco::post(Request req)
 }
 
 /**
+ * Allocate an ND array
+ */
+NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
+{
+    size_t maxDims[] = {sizeX, sizeY};
+    NDArray* image = this->pNDArrayPool->alloc(sizeof(maxDims)/sizeof(size_t),
+            maxDims, dataType, 0, NULL);
+    if(image == NULL)
+    {
+        // Out of area detector NDArrays
+        this->lock();
+        this->setIntegerParam(this->handleOutOfNDArrays, ++this->outOfNDArrays);
+        this->callParamCallbacks();
+        this->unlock();
+    }
+    return image;
+}
+
+/**
  * A frame has been received
  */
 void Pco::frameReceived(int bufferNumber)
@@ -1194,18 +1326,8 @@ void Pco::frameReceived(int bufferNumber)
     if(!this->stateMachine->isState(stateIdle))
     {
         // Get an ND array
-        size_t maxDims[] = {this->xCamSize, this->yCamSize};
-        NDArray* image = this->pNDArrayPool->alloc(sizeof(maxDims)/sizeof(size_t),
-                maxDims, NDUInt16, 0, NULL);
-        if(image == NULL)
-        {
-            // Out of area detector NDArrays
-            this->lock();
-            this->setIntegerParam(this->handleOutOfNDArrays, ++this->outOfNDArrays);
-            this->callParamCallbacks();
-            this->unlock();
-        }
-        else
+    	NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+        if(image != NULL)
         {
             // Copy the image into an NDArray
             ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
@@ -1214,7 +1336,7 @@ void Pco::frameReceived(int bufferNumber)
             if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
             {
             	// Failed to put on queue, better free the NDArray to avoid leaks
-        	image->release();
+            	image->release();
             }
             this->post(Pco::requestImageReceived);
         }
@@ -1546,19 +1668,22 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
             this->lock();
             this->discardImages();        // Dump any images
         }
-        
+
         // Update EPICS
+        this->setIntegerParam(this->handleArm, 0);
         this->callParamCallbacks();
         this->unlock();
     }
     catch(PcoException& e)
     {
+        this->setIntegerParam(this->handleArm, 0);
         this->callParamCallbacks();
         this->unlock();
         throw e;
     }
     catch(std::bad_alloc& e)
     {
+        this->setIntegerParam(this->handleArm, 0);
         this->callParamCallbacks();
         this->unlock();
         throw e;
@@ -1943,6 +2068,7 @@ void Pco::doDisarm() throw()
 {
     this->lock();
     this->setIntegerParam(this->handleArmMode, 0);
+    this->setIntegerParam(this->handleDisarm, 0);
     this->callParamCallbacks();
     try
     {
@@ -2031,7 +2157,8 @@ bool Pco::receiveImages() throw()
     // returned by getBufferStatus will already be clear.  However, for
     // buffers that do have data ready return a statusDrv of zero.
     while(this->receivedFrameQueue.pending() > 0 &&
-            this->numImagesCounter < this->numImages)
+    		(this->imageMode == ADImageContinuous ||
+            this->numImagesCounter < this->numImages))
     {
         // Get the image
         NDArray* image = NULL;
@@ -2125,26 +2252,61 @@ bool Pco::receiveImages() throw()
                 image->timeStamp = imageTime.secPastEpoch +
                         imageTime.nsec / Pco::oneNanosecond;
                 this->getAttributes(image->pAttributeList);
-                // Update statistics
-                this->arrayCounter++;
-                if(this->imageMode != ADImageContinuous)
+                // Show the image to the gang system
+                if(this->gangConnection)
                 {
-                    this->numImagesCounter++;
+                	this->gangConnection->sendImage(image, this->numImagesCounter);
                 }
-                // Pass the array on
-                this->doCallbacksGenericPointer(image, NDArrayData, 0);
-                image->release();
+                if(!this->gangServer ||
+                		!gangServer->imageReceived(this->numImagesCounter, image))
+                {
+                	// Gang system did not consume it, pass it on now
+                	imageComplete(image);
+                }
             }
         }
     }
     this->lock();
-    this->setIntegerParam(this->NDArrayCounter, arrayCounter);
-    this->setIntegerParam(this->ADNumImagesCounter, this->numImagesCounter);
     this->setIntegerParam(this->ADNumExposuresCounter, this->numExposuresCounter);
     this->setIntegerParam(this->handleImageNumber, this->lastImageNumber);
     this->callParamCallbacks();
     this->unlock();
-    return this->numImagesCounter >= this->numImages;
+    return this->imageMode != ADImageContinuous &&
+    		this->numImagesCounter >= this->numImages;
+}
+
+/**
+ * An image has been completed, pass it on.
+ */
+void Pco::imageComplete(NDArray* image)
+{
+    // Update statistics
+    this->arrayCounter++;
+    this->numImagesCounter++;
+    // Pass the array on
+    this->doCallbacksGenericPointer(image, NDArrayData, 0);
+    image->release();
+    this->lock();
+    this->setIntegerParam(this->NDArrayCounter, arrayCounter);
+    this->setIntegerParam(this->ADNumImagesCounter, this->numImagesCounter);
+    this->callParamCallbacks();
+    this->unlock();
+}
+
+/**
+ * Handle the construction of images in the ganged mode.
+ * Returns true if the acquisition is complete.
+ */
+bool Pco::makeImages()
+{
+	bool result = false;
+	if(this->gangServer)
+	{
+		gangServer->makeCompleteImages();
+		result = this->imageMode != ADImageContinuous &&
+				this->numImagesCounter >= this->numImages;
+	}
+	return result;
 }
 
 /**
@@ -2210,6 +2372,29 @@ void Pco::extractImageTimeStamp(epicsTimeStamp* imageTime,
 #endif
         
     epicsTimeFromTM (imageTime, &ct, nanoSec );
+}
+
+/**
+ * Register the gang server object
+ */
+void Pco::registerGangServer(GangServer* gangServer)
+{
+	this->gangServer = gangServer;
+	lock();
+	setIntegerParam(handleGangMode, gangModeServer);
+	unlock();
+}
+
+
+/**
+ * Register the gang client object
+ */
+void Pco::registerGangConnection(GangConnection* gangConnection)
+{
+	this->gangConnection = gangConnection;
+	lock();
+	setIntegerParam(handleGangMode, gangModeConnection);
+	unlock();
 }
 
 /**

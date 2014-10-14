@@ -245,31 +245,50 @@ record(mbbi, "$(P)$(R)ACQUIRE_MODE_RBV")
 }
 
 # % gdatag, mbbinary, rw, $(PORT)_pcocam, ARM_MODE, Set arm mode
-record(mbbo, "$(P)$(R)ARM_MODE") 
+record(bo, "$(P)$(R)ARM_MODE")
 {
     field(DESC, "arm mode select")
     field(DTYP, "asynInt32")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ARM_MODE")
-    field(ZRST, "Disarmed")
-    field(ZRVL, "0")
-    field(ONVL, "1")
-    field(ONST, "Armed")
-    field(IVOA, "Don't drive outputs")
+    field(ZNAM, "Disarmed")
+    field(ONAM, "Armed")
     field(VAL,  "0")
     field(PINI, "YES")
 }
 
 # % gdatag, mbbinary, ro, $(PORT)_pcocam, ARM_MODE_RBV, Readback for arm mode
-record(mbbi, "$(P)$(R)ARM_MODE_RBV") 
+record(bi, "$(P)$(R)ARM_MODE_RBV")
 {
     field(DESC, "arm mode select")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ARM_MODE")
-    field(ZRST, "Disarmed")
-    field(ZRVL, "0")
-    field(ONVL, "1")
-    field(ONST, "Armed")
+    field(ZNAM, "Disarmed")
+    field(ONAM, "Armed")
     field(SCAN, "I/O Intr")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, ARM_MODE, Set arm mode
+record(busy, "$(P)$(R)ARM")
+{
+    field(DESC, "arm")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ARM")
+    field(ZNAM, "Idle")
+    field(ONAM, "Arming")
+    field(VAL,  "0")
+    field(PINI, "YES")
+}
+
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, ARM_MODE, Set arm mode
+record(busy, "$(P)$(R)DISARM")
+{
+    field(DESC, "disarm")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DISARM")
+    field(ZNAM, "Idle")
+    field(ONAM, "Disarming")
+    field(VAL,  "0")
+    field(PINI, "YES")
 }
 
 # % gdatag, pv, rw, $(PORT)_pcocam, DELAY_TIME, Set delay time
@@ -712,3 +731,16 @@ record(bi, "$(P)$(R)CAMLINKLONGGAP_RBV")
     field(ONAM, "Enabled")
 }
 
+# The gang mode
+record(mbbi, "$(P)$(R)GANGMODE_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_GANGMODE")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "None")
+    field(ZRVL, "0")
+    field(ONST, "Server")
+    field(ONVL, "1")
+    field(TWST, "Connection")
+    field(TWVL, "2")
+}

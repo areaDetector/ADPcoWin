@@ -382,23 +382,29 @@ void SimulationApi::generateFrame()
         {
             // The frame number
             int dynResolution;
+            int bitAlignment;
             this->pco->getIntegerParam(this->handleDynResolution, &dynResolution);
-            int shiftLowBcd = Pco::bitsPerShortWord - dynResolution;
+            this->pco->getIntegerParam(this->handleBitAlignment, &bitAlignment);
+            int shiftLowBcd = 0;
+            if(bitAlignment == DllApi::bitAlignmentMsb)
+            {
+                shiftLowBcd = Pco::bitsPerShortWord - dynResolution;
+            }
             int shiftHighBcd = shiftLowBcd + Pco::bitsPerNybble;
             unsigned long n = this->frameNumber;
             unsigned long divisor = Pco::bcdDigitValue * Pco::bcdDigitValue *
                     Pco::bcdDigitValue * Pco::bcdDigitValue * Pco::bcdDigitValue *
-                    Pco::bcdDigitValue * Pco::bcdDigitValue * Pco::bcdDigitValue;
+                    Pco::bcdDigitValue * Pco::bcdDigitValue;
             for(int i=0; i<Pco::bcdPixelLength; i++)
             {
                 unsigned long n0 = n / divisor;
                 n -= n0 * divisor;
-                divisor /= 10;
+                divisor /= Pco::bcdDigitValue;
                 unsigned long n1 = n / divisor;
                 n -= n1 * divisor;
-                divisor /= 10;
+                divisor /= Pco::bcdDigitValue;
                 unsigned short pixel = (unsigned short)((n1 << shiftLowBcd) | (n0 << shiftHighBcd));
-                this->buffers[bufferNumber].buffer[Pco::bcdPixelLength-i-1] = pixel;
+                this->buffers[bufferNumber].buffer[i] = pixel;
             }
             // TODO: The time
         }
@@ -596,6 +602,12 @@ int SimulationApi::doGetCameraDescription(Handle handle, Description* descriptio
         description->minCoolingSetpoint = 0;
         description->maxCoolingSetpoint = 0;
         description->defaultCoolingSetpoint = 0;
+        description->minDelayNs = 0;
+        description->maxDelayMs = 10000;
+        description->minDelayStepNs = 1;
+        description->minExposureNs = 1000;
+        description->maxExposureMs= 10000;
+        description->minExposureStepNs = 1;
         result = DllApi::errorNone;
     }
     return result;
@@ -1324,12 +1336,13 @@ int SimulationApi::doAllocateBuffer(Handle handle, short* bufferNumber, unsigned
     int result = DllApi::errorAny;
     int connected;
     int open;
+    bool found = false;
     this->pco->getIntegerParam(this->handleConnected, &connected);
     this->pco->getIntegerParam(this->handleOpen, &open);
     if(connected && open)
     {
         // Identify a buffer number
-        bool found = *bufferNumber != DllApi::bufferUnallocated;
+        found = *bufferNumber != DllApi::bufferUnallocated;
         for(int i=0; i<DllApi::maxNumBuffers && !found; i++)
         {
             if((this->buffers[i].status & DllApi::statusDllBufferAllocated) == 0)
@@ -1505,6 +1518,7 @@ int SimulationApi::doFreeBuffer(Handle handle, short bufferNumber)
         delete[] this->buffers[bufferNumber].buffer;
         this->buffers[bufferNumber].buffer = NULL;
     }
+    this->buffers[bufferNumber].status = 0;
     return DllApi::errorNone;
 }
 
