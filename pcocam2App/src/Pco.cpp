@@ -1180,6 +1180,12 @@ void Pco::initialisePixelRate()
 
         }
     }
+    std::cout << "#### numEnums=" << this->pixRateNumEnums;
+    for(int i=0; i<this->pixRateNumEnums; i++)
+    {
+    	std::cout << " " << this->pixRateEnumStrings[i] << "[" << this->pixRateEnumValues[i] << "]";
+    }
+    std::cout << std::endl;
     // Give the enum strings to the PV
     this->doCallbacksEnum(this->pixRateEnumStrings, this->pixRateEnumValues, this->pixRateEnumSeverities,
         this->pixRateNumEnums,  paramPixRate.getHandle(), 0);
