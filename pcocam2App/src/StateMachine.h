@@ -22,6 +22,7 @@ public:
         virtual ~User() {}
         virtual int doTransition(StateMachine* machine, int state, int event) = 0;
     };
+    enum StateSelector {firstState=0, secondState, thirdState, fourthState};
 public:
     class Timer: public epicsTimerNotify
     {

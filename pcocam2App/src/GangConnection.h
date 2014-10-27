@@ -13,10 +13,15 @@
 #include "SocketProtocol.h"
 #include "GangConfig.h"
 #include "GangServerConfig.h"
+#include "GangServer.h"
+#include "IntegerParam.h"
+#include "EnumParam.h"
+#include "StringParam.h"
+#include "TakeLock.h"
 class GangServer;
 class TraceStream;
 class Pco;
-class GangMembeConfig;
+class GangMemberConfig;
 class NDArray;
 
 class GangConnection : public SocketProtocol
@@ -30,24 +35,19 @@ public:
 	virtual void connected();
 	virtual void disconnected();
 	virtual void* getDataBuffer(char tag, int parameter, size_t dataSize);
-	void writeInt32(int parameter, int value);
-	void sendMemberConfig();
+	void sendMemberConfig(TakeLock& takeLock);
 	void sendImage(NDArray* image, int sequence);
 private:
 	Pco* pco;
 	TraceStream* trace;
-	static const char* nameConnected;
-	static const char* nameServerIp;
-	static const char* nameServerPort;
-	static const char* namePositionX;
-	static const char* namePositionY;
-	static const char* nameFunction;
-	int handleConnected;
-	int handleServerIp;
-	int handleServerPort;
-	int handlePositionX;
-	int handlePositionY;
-	int handleFunction;
+	IntegerParam paramIsConnected;
+	StringParam paramServerIp;
+	IntegerParam paramServerPort;
+	IntegerParam paramPositionX;
+	IntegerParam paramPositionY;
+	EnumParam<GangServer::GangFunction> paramGangFunction;
+	IntegerParam paramADSizeX;
+	IntegerParam paramADSizeY;
 	GangConfig config;
 	GangServerConfig serverConfig;
 };

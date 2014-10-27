@@ -14,13 +14,14 @@
 class GangConnection;
 class GangClient;
 class Pco;
+class TakeLock;
 
 class GangMemberConfig {
 public:
 	GangMemberConfig();
 	~GangMemberConfig();
-	void fromPco(Pco* pco, GangConnection* connection);
-	void toPco(Pco* pco, GangClient* client);
+	void fromPco(Pco* pco, GangConnection* connection, TakeLock& takeLock);
+	void toPco(Pco* pco, GangClient* client, TakeLock& takeLock);
 	void* data();
 private:
 	int positionX;

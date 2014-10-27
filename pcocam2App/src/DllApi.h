@@ -252,7 +252,6 @@ public:
     void setActiveLookupTable(Handle handle, unsigned short identifier) throw(PcoException);
     void setTimeouts(Handle handle, unsigned int commandTimeout,
     		unsigned int imageTimeout, unsigned int transferTimeout);
-    virtual void writeInt32(asynUser *pasynUser, epicsInt32 value) {}
 
 // Members
 protected:

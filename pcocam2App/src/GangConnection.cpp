@@ -16,14 +16,7 @@
 #include "epicsExport.h"
 #include "iocsh.h"
 #include "NDArray.h"
-
-// Area detector parameter names
-const char* GangConnection::nameConnected = "PCO_GANGCONN_CONNECTED";
-const char* GangConnection::nameServerIp = "PCO_GANGCONN_SERVERIP";
-const char* GangConnection::nameServerPort = "PCO_GANGCONN_SERVERPORT";
-const char* GangConnection::namePositionX = "PCO_GANGCONN_POSITIONX";
-const char* GangConnection::namePositionY = "PCO_GANGCONN_POSITIONY";
-const char* GangConnection::nameFunction = "PCO_GANGCONN_FUNCTION";
+#include "FreeLock.h"
 
 // Constructor
 // When used at the client end, the server is NULL
@@ -32,21 +25,19 @@ GangConnection::GangConnection(Pco* pco, TraceStream* trace, const char* serverI
 	: SocketProtocol("GangConnection", "pco_gang")
 	, pco(pco)
 	, trace(trace)
+    , paramIsConnected(pco, "PCO_GANGCONN_CONNECTED", 0)
+    , paramServerIp(pco, "PCO_GANGCONN_SERVERIP", serverIp)
+    , paramServerPort(pco, "PCO_GANGCONN_SERVERPORT", serverPort)
+    , paramPositionX(pco, "PCO_GANGCONN_POSITIONX", 0,
+		new AsynParam::Notify<GangConnection>(this, &GangConnection::sendMemberConfig))
+    , paramPositionY(pco, "PCO_GANGCONN_POSITIONY", 0,
+    		new AsynParam::Notify<GangConnection>(this, &GangConnection::sendMemberConfig))
+    , paramGangFunction(pco, "PCO_GANGCONN_FUNCTION", GangServer::gangFunctionOff)
+	, paramADSizeX(pco->paramADSizeX,
+			new AsynParam::Notify<GangConnection>(this, &GangConnection::sendMemberConfig))
+	, paramADSizeY(pco->paramADSizeY,
+			new AsynParam::Notify<GangConnection>(this, &GangConnection::sendMemberConfig))
 {
-	// Create the parameters
-	pco->createParam(nameConnected, asynParamInt32, &handleConnected);
-	pco->createParam(nameServerIp, asynParamOctet, &handleServerIp);
-	pco->createParam(nameServerPort, asynParamInt32, &handleServerPort);
-	pco->createParam(namePositionX, asynParamInt32, &handlePositionX);
-	pco->createParam(namePositionY, asynParamInt32, &handlePositionY);
-	pco->createParam(nameFunction, asynParamInt32, &handleFunction);
-	// Initialise the parameters
-	pco->setIntegerParam(handleConnected, 0);
-	pco->setStringParam(handleServerIp, serverIp);
-	pco->setIntegerParam(handleServerPort, serverPort);
-	pco->setIntegerParam(handlePositionX, 0);
-	pco->setIntegerParam(handlePositionY, 0);
-	pco->setIntegerParam(handleFunction, GangServer::gangFunctionOff);
 	// Start the connection
 	pco->registerGangConnection(this);
 	client(serverIp, serverPort);
@@ -58,33 +49,21 @@ GangConnection::~GangConnection()
 {
 }
 
-// Parameter write handler
-void GangConnection::writeInt32(int parameter, int value)
-{
-    if(parameter == handlePositionX || parameter == handlePositionY ||
-    		parameter == pco->ADSizeX || parameter == pco->ADSizeY)
-    {
-    	sendMemberConfig();
-    }
-}
-
 // Send this member's configuration to the server
-void GangConnection::sendMemberConfig()
+void GangConnection::sendMemberConfig(TakeLock& takeLock)
 {
 	GangMemberConfig config;
-	config.fromPco(pco, this);
+	config.fromPco(pco, this, takeLock);
 	transmit('m', 0, config.data(), sizeof(GangMemberConfig));
 }
 
 // Send an image to the server
 void GangConnection::sendImage(NDArray* image, int sequence)
 {
-	pco->lock();
-	int gangFunction;
-	pco->getIntegerParam(handleFunction, &gangFunction);
-	pco->unlock();
-	if(gangFunction == GangServer::gangFunctionFull)
+	TakeLock takeLock(pco);
+	if(paramGangFunction == GangServer::gangFunctionFull)
 	{
+		FreeLock freeLock(takeLock);
 		NDArrayInfo arrayInfo;
 		image->getInfo(&arrayInfo);
 		transmit('i', sequence, image->pData, arrayInfo.totalBytes);
@@ -94,11 +73,12 @@ void GangConnection::sendImage(NDArray* image, int sequence)
 // A message has been received from the peer.
 void GangConnection::receive(char tag, int parameter, void* data, size_t dataSize)
 {
+	TakeLock takeLock(pco);
 	switch(tag)
 	{
 	case 'a':
 		*trace << "Gang client received arm" << std::endl;
-		config.toPco(pco);
+		config.toPco(pco, takeLock);
         pco->post(Pco::requestArm);
         break;
 	case 'd':
@@ -107,7 +87,7 @@ void GangConnection::receive(char tag, int parameter, void* data, size_t dataSiz
         break;
 	case 's':
 		*trace << "Gang client received start" << std::endl;
-		config.toPco(pco);
+		config.toPco(pco, takeLock);
         pco->post(Pco::requestAcquire);
 		break;
 	case 'x':
@@ -116,7 +96,7 @@ void GangConnection::receive(char tag, int parameter, void* data, size_t dataSiz
 		break;
 	case 'c':
 		*trace << "Gang client received server config" << std::endl;
-		serverConfig.toPco(pco, this);
+		serverConfig.toPco(pco, this, takeLock);
 		break;
 	}
 }
@@ -125,21 +105,17 @@ void GangConnection::receive(char tag, int parameter, void* data, size_t dataSiz
 void GangConnection::connected()
 {
 	*trace << "Gang client connected" << std::endl;
-	pco->lock();
-	pco->setIntegerParam(handleConnected, 1);
-	pco->callParamCallbacks();
-	pco->unlock();
-	sendMemberConfig();
+	TakeLock takeLock(pco);
+	paramIsConnected = 1;
+	sendMemberConfig(takeLock);
 }
 
 // This connection has broken
 void GangConnection::disconnected()
 {
 	*trace << "Gang client disconnected" << std::endl;
-	pco->lock();
-	pco->setIntegerParam(handleConnected, 0);
-	pco->callParamCallbacks();
-	pco->unlock();
+	TakeLock takeLock(pco);
+	paramIsConnected = 0;
 }
 
 // Get a buffer for the reception of a message data buffer

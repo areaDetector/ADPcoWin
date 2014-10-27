@@ -1,12 +1,12 @@
 /* TakeLock.cpp
  * See .h file header for description.
  *
- * Author:  Giles Knap
- *          Jonathan Thompson
+ * Author:  Jonathan Thompson
  *
  */
 
 #include "TakeLock.h"
+#include "FreeLock.h"
 #include "asynPortDriver.h"
 
 /**
@@ -16,30 +16,22 @@
 TakeLock::TakeLock(asynPortDriver* driver, bool alreadyTaken)
 	: driver(driver)
 	, initiallyTaken(alreadyTaken)
-	, locked(alreadyTaken)
 {
-	lock();
+	if(!alreadyTaken)
+	{
+		driver->lock();
+	}
 }
 
 /**
- * Constructor.  Use this constructor to create another take
- * lock that changes the state of the lock.
+ * Constructor.  Use this to take a lock that is represented by a FreeLock.
  */
-TakeLock::TakeLock(TakeLock& takeLock, bool unlock)
-	: driver(takeLock.driver)
-	, initiallyTaken(takeLock.locked)
-	, locked(takeLock.locked)
+TakeLock::TakeLock(FreeLock& freeLock)
+	: driver(freeLock.driver)
+	, initiallyTaken(false)
 {
-	if(unlock)
-	{
-		unlock();
-	}
-	else
-	{
-		lock();
-	}
+	driver->lock();
 }
-
 
 /**
  * Destructor.  Call parameter call backs (with the lock taken) and
@@ -47,50 +39,10 @@ TakeLock::TakeLock(TakeLock& takeLock, bool unlock)
  */
 TakeLock::~TakeLock()
 {
-	callParamCallbacks();
+	driver->callParamCallbacks();
 	if(!initiallyTaken)
 	{
-		unlock();
-	}
-}
-
-/**
- * Make sure the lock is taken.
- */
-void TakeLock::lock()
-{
-	if(!locked)
-	{
-		driver->lock();
-		locked = true;
-	}
-}
-
-/**
- * Make sure the lock is released.
- */
-void TakeLock::unlock()
-{
-	if(locked)
-	{
 		driver->unlock();
-		locked = false;
-	}
-}
-
-/**
- * Update EPICS parameters.  The function must be
- * called with the lock taken, so this is ensured and
- * the lock returned to its original state after.
- */
-void TakeLock::callParamCallbacks()
-{
-	bool wasLocked = locked;
-	lock();
-	driver->callParamCallbacks();
-	if(!wasLocked)
-	{
-		unlock();
 	}
 }
 

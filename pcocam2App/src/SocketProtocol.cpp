@@ -6,10 +6,18 @@
  */
 
 #include "SocketProtocol.h"
+#ifdef _WIN32
+#include <winsock2.h>
+#define socklen_t int
+#define RECVSIZE int
+#else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#define closesocket close
+#define RECVSIZE size_t
+#endif
 #include <errno.h>
 #include <cstring>
 #include <stdio.h>
@@ -65,7 +73,7 @@ SocketProtocol::~SocketProtocol()
     // Close any open socket
     if(state == STATE_LISTENCONN || state == STATE_SERVER || state == STATE_CLIENTCONN)
     {
-        close(this->fd);
+    	closesocket(this->fd);
     }
     delete this->txbuffer;
 }
@@ -86,7 +94,7 @@ void SocketProtocol::resetProtocol()
  */
 void SocketProtocol::run()
 {
-    int res;
+    long long res;
     struct sockaddr_in addr;
     socklen_t addrLen;
     struct hostent *host;
@@ -111,10 +119,10 @@ void SocketProtocol::run()
             {
                 // Avoid problems with address already in use
                 int reuse = 1;
-                ::setsockopt(this->fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int));
+                ::setsockopt(this->fd, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(int));
                 int siz = 5000000;
-                ::setsockopt(this->fd, SOL_SOCKET, SO_SNDBUF, &siz, sizeof(int));
-                ::setsockopt(this->fd, SOL_SOCKET, SO_RCVBUF, &siz, sizeof(int));
+                ::setsockopt(this->fd, SOL_SOCKET, SO_SNDBUF, (char*)&siz, sizeof(int));
+                ::setsockopt(this->fd, SOL_SOCKET, SO_RCVBUF, (char*)&siz, sizeof(int));
                 // Bind the socket
                 addr.sin_family = AF_INET;
                 addr.sin_addr.s_addr = INADDR_ANY;
@@ -131,7 +139,7 @@ void SocketProtocol::run()
                 {
                     // Socket bind failed, wait a while before trying again
                     perror("Bind failed\n");
-                    ::close(this->fd);
+                    closesocket(this->fd);
                     epicsThreadSleep(2.0);
                 }
             }
@@ -154,14 +162,14 @@ void SocketProtocol::run()
             break;
         case STATE_SERVER:
             // Try to receive the data we are currently expecting
-            n = ::recv(this->fd, this->buffer+this->bufferSize, this->requiredSize-this->bufferSize, 0);
+            n = ::recv(this->fd, this->buffer+this->bufferSize, (RECVSIZE)(this->requiredSize-this->bufferSize), 0);
             if(n == 0)
             {
                 printf("SocketProtocol::run: socket closed\n");
                 // Socket closed
                 this->state = STATE_IDLE;
                 this->resetProtocol();
-                ::close(this->fd);
+                closesocket(this->fd);
                 this->disconnected();
             }
             else if(n < 0)
@@ -171,7 +179,7 @@ void SocketProtocol::run()
                 // Close the socket and start again
                 this->state = STATE_IDLE;
                 this->resetProtocol();
-                ::close(this->fd);
+                closesocket(this->fd);
                 this->disconnected();
             }
             else
@@ -188,13 +196,13 @@ void SocketProtocol::run()
                 this->fd = ::socket(AF_INET, SOCK_STREAM, 0);
                 if(this->fd >= 0)
                 {
-                    bzero((char*)&addr, sizeof(addr));
+                    memset((char*)&addr, 0, sizeof(addr));
                     addr.sin_family = AF_INET;
                     addr.sin_port = htons(this->tcpPort);
-                    bcopy((char*)host->h_addr, (char*)&addr.sin_addr.s_addr, host->h_length);
+                    memmove((char*)&addr.sin_addr.s_addr, (char*)host->h_addr, host->h_length);
                     int siz = 5000000;
-                    ::setsockopt(this->fd, SOL_SOCKET, SO_SNDBUF, &siz, sizeof(int));
-                    ::setsockopt(this->fd, SOL_SOCKET, SO_RCVBUF, &siz, sizeof(int));
+                    ::setsockopt(this->fd, SOL_SOCKET, SO_SNDBUF, (char*)&siz, sizeof(int));
+                    ::setsockopt(this->fd, SOL_SOCKET, SO_RCVBUF, (char*)&siz, sizeof(int));
                     res = ::connect(this->fd, (struct sockaddr*)&addr, sizeof(addr));
                     if(res >= 0)
                     {
@@ -206,8 +214,7 @@ void SocketProtocol::run()
                     else
                     {
                         // Connection failed, wait a bit before trying again
-                        ::close(this->fd);
-                        //printf("Connect failed\n");
+                    	closesocket(this->fd);
                         epicsThreadSleep(5.0);
                     }
                 }
@@ -227,13 +234,13 @@ void SocketProtocol::run()
             break;
         case STATE_CLIENTCONN:
             // Try to receive the data we are currently expecting
-            n = recv(this->fd, this->buffer+this->bufferSize, this->requiredSize-this->bufferSize, 0);
+            n = recv(this->fd, this->buffer+this->bufferSize, (RECVSIZE)(this->requiredSize-this->bufferSize), 0);
             if(n == 0)
             {
                 // Socket closed
                 this->state = STATE_CLIENTDISC;
                 this->resetProtocol();
-                ::close(this->fd);
+                closesocket(this->fd);
                 this->disconnected();
             }
             else if(n < 0)
@@ -243,7 +250,7 @@ void SocketProtocol::run()
                 // Close the socket and try again
                 this->state = STATE_CLIENTDISC;
                 this->resetProtocol();
-                ::close(this->fd);
+                closesocket(this->fd);
                 this->disconnected();
             }
             else
@@ -341,7 +348,7 @@ void SocketProtocol::listen(int tcpPort)
 /** An incoming connection has been accepted on socket fd and can accept data
  * \param[in] fd The file descriptor of the accepted socket
  */
-void SocketProtocol::server(int fd)
+void SocketProtocol::server(long long fd)
 {
     if(this->state == STATE_IDLE)
     {
@@ -388,7 +395,7 @@ void SocketProtocol::transmit(char tag, int parameter, void* data, size_t dataSi
         headerData.dataSize = dataSize;
         memcpy(this->txbuffer+this->preambleSize, &headerData, sizeof(HeaderData));
         memcpy(this->txbuffer+this->preambleSize+sizeof(HeaderData), data, dataSize);
-        if(::send(fd, this->txbuffer, this->preambleSize+sizeof(HeaderData)+dataSize, 0) < 0)
+        if(::send(fd, this->txbuffer, (RECVSIZE)(this->preambleSize+sizeof(HeaderData)+dataSize), 0) < 0)
         {
             perror("SocketProtocol::transmit(header)");
         }

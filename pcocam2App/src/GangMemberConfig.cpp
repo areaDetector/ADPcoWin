@@ -28,21 +28,21 @@ GangMemberConfig::~GangMemberConfig()
 }
 
 // Fill the config object from the PCO object
-void GangMemberConfig::fromPco(Pco* pco, GangConnection* connection)
+void GangMemberConfig::fromPco(Pco* pco, GangConnection* connection, TakeLock& takeLock)
 {
-	pco->getIntegerParam(connection->handlePositionX, &positionX);
-	pco->getIntegerParam(connection->handlePositionY, &positionY);
-	pco->getIntegerParam(pco->ADSizeX, &sizeX);
-	pco->getIntegerParam(pco->ADSizeY, &sizeY);
+	positionX = connection->paramPositionX;
+	positionY = connection->paramPositionY;
+	sizeX = pco->paramADSizeX;
+	sizeY = pco->paramADSizeY;
 }
 
 // Transfer configuration information to the PCO object
-void GangMemberConfig::toPco(Pco* pco, GangClient* client)
+void GangMemberConfig::toPco(Pco* pco, GangClient* client, TakeLock& takeLock)
 {
-	pco->setIntegerParam(client->handlePositionX, positionX);
-	pco->setIntegerParam(client->handlePositionY, positionY);
-	pco->setIntegerParam(client->handleSizeX, sizeX);
-	pco->setIntegerParam(client->handleSizeY, sizeY);
+	client->paramPositionX = positionX;
+	client->paramPositionY = positionY;
+	client->paramSizeX = sizeX;
+	client->paramSizeY = sizeY;
 }
 
 // Return a pointer to the config data

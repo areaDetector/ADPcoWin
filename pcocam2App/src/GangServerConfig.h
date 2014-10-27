@@ -11,7 +11,7 @@
 #ifndef GANGSERVERCONFIG_H_
 #define GANGSERVERCONFIG_H_
 
-class GangServer;
+#include "GangServer.h"
 class GangConnection;
 class Pco;
 
@@ -19,11 +19,11 @@ class GangServerConfig {
 public:
 	GangServerConfig();
 	~GangServerConfig();
-	void toPco(Pco* pco, GangConnection* gangConnection);
-	void fromPco(Pco* pco, GangServer* gangServer);
+	void toPco(Pco* pco, GangConnection* gangConnection, TakeLock& takeLock);
+	void fromPco(Pco* pco, GangServer* gangServer, TakeLock& takeLock);
 	void* data();
 private:
-	int gangFunction;
+	GangServer::GangFunction gangFunction;
 };
 
 #endif /* GANGSERVERCONFIG_H_ */

@@ -9,7 +9,7 @@
 #ifndef PCO_H_
 #define PCO_H_
 
-#include "ADDriver.h"
+#include "ADDriverEx.h"
 #include <string>
 #include <map>
 #include <set>
@@ -17,144 +17,80 @@
 #include "DllApi.h"
 #include "TraceStream.h"
 #include "NDArrayException.h"
+#include "IntegerParam.h"
+#include "DoubleParam.h"
+#include "StringParam.h"
 class GangServer;
 class GangConnection;
-class GangConfig;
-class GangMemberConfig;
-class GangClient;
+class TakeLock;
 
-class Pco: public ADDriver, public StateMachine::User
+class Pco: public ADDriverEx, public StateMachine::User
 {
-friend class GangConfig;
-friend class GangMemberConfig;
-friend class GangConnection;
-friend class GangServer;
-friend class GangClient;
 // Construction
 public:
     Pco(const char* portName, int maxBuffers, size_t maxMemory);
     virtual ~Pco();
 
-// Overrides of ADDriver
-public:
-    virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
-    virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
-    virtual asynStatus writeOctet(asynUser *pasynUser,
-        const char *value, size_t nChars, size_t *nActual);
-
 // Override of StateMachine::User
 public:
     virtual int doTransition(StateMachine* machine, int state, int event);
 
-// Parameter handles
-protected:
-    int handlePixRate;
-    int handleAdcMode;
-    int handleCamRamUse;
-    int handleElectronicsTemp;
-    int handlePowerTemp;
-    int handleStorageMode;
-    int handleRecorderSubmode;
-    int handleTimestampMode;
-    int handleAcquireMode;
-    int handleDelayTime;
-    int handleArmMode;
-    int handleImageNumber;
-    int handleCameraSetup;
-    int handleBitAlignment;
-    int handleStateRecord;
-    int handleClearStateRecord;
-    int handleOutOfNDArrays;
-    int handleBufferQueueReadFailures;
-    int handleBuffersWithNoData;
-    int handleMisplacedBuffers;
-    int handleMissingFrames;
-    int handleDriverLibraryErrors;
-    int handleHwBinX;
-    int handleHwBinY;
-    int handleHwRoiX1;
-    int handleHwRoiY1;
-    int handleHwRoiX2;
-    int handleHwRoiY2;
-    int handleXCamSize;
-    int handleYCamSize;
-    int handleCamlinkClock;
-    int handleMinCoolingSetpoint;
-    int handleMaxCoolingSetpoint;
-    int handleDefaultCoolingSetpoint;
-    int handleCoolingSetpoint;
-    int handleDelayTimeMin;
-    int handleDelayTimeMax;
-    int handleDelayTimeStep;
-    int handleExpTimeMin;
-    int handleExpTimeMax;
-    int handleExpTimeStep;
-    int handleMaxBinHorz;
-    int handleMaxBinVert;
-    int handleBinHorzStepping;
-    int handleBinVertStepping;
-    int handleRoiHorzSteps;
-    int handleRoiVertSteps;
-    int handleReboot;
-    int handleCamlinkLongGap;
-    int handleArm;
-    int handleDisarm;
-    int handleGangMode;
-
-// Parameter names
-private:
-    static const char* namePixRate;
-    static const char* nameAdcMode;
-    static const char* nameCamRamUse;
-    static const char* nameElectronicsTemp;
-    static const char* namePowerTemp;
-    static const char* nameStorageMode;
-    static const char* nameRecorderSubmode;
-    static const char* nameTimestampMode;
-    static const char* nameAcquireMode;
-    static const char* nameDelayTime;
-    static const char* nameArmMode;
-    static const char* nameImageNumber;
-    static const char* nameCameraSetup;
-    static const char* nameBitAlignment;
-    static const char* nameStateRecord;
-    static const char* nameClearStateRecord;
-    static const char* nameOutOfNDArrays;
-    static const char* nameBufferQueueReadFailures;
-    static const char* nameBuffersWithNoData;
-    static const char* nameMisplacedBuffers;
-    static const char* nameMissingFrames;
-    static const char* nameDriverLibraryErrors;
-    static const char* nameHwBinX;
-    static const char* nameHwBinY;
-    static const char* nameHwRoiX1;
-    static const char* nameHwRoiY1;
-    static const char* nameHwRoiX2;
-    static const char* nameHwRoiY2;
-    static const char* nameXCamSize;
-    static const char* nameYCamSize;
-    static const char* nameCamlinkClock;
-    static const char* nameMinCoolingSetpoint;
-    static const char* nameMaxCoolingSetpoint;
-    static const char* nameDefaultCoolingSetpoint;
-    static const char* nameCoolingSetpoint;
-    static const char* nameDelayTimeMin;
-    static const char* nameDelayTimeMax;
-    static const char* nameDelayTimeStep;
-    static const char* nameExpTimeMin;
-    static const char* nameExpTimeMax;
-    static const char* nameExpTimeStep;
-    static const char* nameMaxBinHorz;
-    static const char* nameMaxBinVert;
-    static const char* nameBinHorzStepping;
-    static const char* nameBinVertStepping;
-    static const char* nameRoiHorzSteps;
-    static const char* nameRoiVertSteps;
-    static const char* nameReboot;
-    static const char* nameCamlinkLongGap;
-    static const char* nameArm;
-    static const char* nameDisarm;
-    static const char* nameGangMode;
+// Parameters
+public:
+    IntegerParam paramPixRate;
+    IntegerParam paramAdcMode;
+    IntegerParam paramCamRamUse;
+    DoubleParam paramElectronicsTemp;
+    DoubleParam paramPowerTemp;
+    IntegerParam paramStorageMode;
+    IntegerParam paramRecorderSubmode;
+    IntegerParam paramTimestampMode;
+    IntegerParam paramAcquireMode;
+    DoubleParam paramDelayTime;
+    IntegerParam paramArmMode;
+    IntegerParam paramImageNumber;
+    IntegerParam paramCameraSetup;
+    IntegerParam paramBitAlignment;
+    StringParam paramStateRecord;
+    IntegerParam paramClearStateRecord;
+    IntegerParam paramOutOfNDArrays;
+    IntegerParam paramBufferQueueReadFailures;
+    IntegerParam paramBuffersWithNoData;
+    IntegerParam paramMisplacedBuffers;
+    IntegerParam paramMissingFrames;
+    IntegerParam paramDriverLibraryErrors;
+    IntegerParam paramHwBinX;
+    IntegerParam paramHwBinY;
+    IntegerParam paramHwRoiX1;
+    IntegerParam paramHwRoiY1;
+    IntegerParam paramHwRoiX2;
+    IntegerParam paramHwRoiY2;
+    IntegerParam paramXCamSize;
+    IntegerParam paramYCamSize;
+    IntegerParam paramCamlinkClock;
+    IntegerParam paramMinCoolingSetpoint;
+    IntegerParam paramMaxCoolingSetpoint;
+    IntegerParam paramDefaultCoolingSetpoint;
+    IntegerParam paramCoolingSetpoint;
+    DoubleParam paramDelayTimeMin;
+    DoubleParam paramDelayTimeMax;
+    DoubleParam paramDelayTimeStep;
+    DoubleParam paramExpTimeMin;
+    DoubleParam paramExpTimeMax;
+    DoubleParam paramExpTimeStep;
+    IntegerParam paramMaxBinHorz;
+    IntegerParam paramMaxBinVert;
+    IntegerParam paramBinHorzStepping;
+    IntegerParam paramBinVertStepping;
+    IntegerParam paramRoiHorzSteps;
+    IntegerParam paramRoiVertSteps;
+    IntegerParam paramReboot;
+    IntegerParam paramCamlinkLongGap;
+    IntegerParam paramArm;
+    IntegerParam paramDisarm;
+    IntegerParam paramGangMode;
+	IntegerParam paramADAcquire;
+	DoubleParam paramADTemperature;
 
 // Constants
 public:
@@ -200,8 +136,7 @@ public:
         requestStop, requestArm, requestImageReceived, requestDisarm,
         requestTrigger, requestReboot, requestMakeImages};
     enum State {stateUninitialised=0, stateUnconnected, stateIdle,
-        stateArmed, stateAcquiring, statedUnarmedAcquiring, stateExternalAcquiring,
-    	stateRebooting};
+        stateArmed, stateAcquiring, statedUnarmedAcquiring, stateExternalAcquiring};
 
 // API for use by component classes
 public:
@@ -322,8 +257,7 @@ public:
 
 // Utility functions
 private:
-    bool connectToCamera();
-    bool initialiseCamera();
+    void initialiseCamera(TakeLock& takeLock);
     bool pollCameraNoAcquisition();
     bool pollCamera();
     void doArm() throw(std::bad_alloc, PcoException);
@@ -334,7 +268,6 @@ private:
     void freeImageBuffers() throw();
     void adjustTransferParamsAndLut() throw(PcoException);
     void setCameraClock() throw(PcoException);
-    void setCoolingSetpoint();
     void addAvailableBuffer(int index) throw(PcoException);
     void addAvailableBufferAll() throw(PcoException);
     bool receiveImages() throw();
@@ -360,6 +293,36 @@ private:
     void outputStatusMessage(const char* text);
     void doReboot();
     bool makeImages();
+    void onAcquire(TakeLock& takeLock);
+    void onArmMode(TakeLock& takeLock);
+    void onArm(TakeLock& takeLock);
+    void onDisarm(TakeLock& takeLock);
+    void onClearStateRecord(TakeLock& takeLock);
+    void onCoolingSetpoint(TakeLock& takeLock);
+    void onADTemperature(TakeLock& takeLock);
+    void onReboot(TakeLock& takeLock);
+
+public:
+    StateMachine::StateSelector smInitialiseWait();
+    StateMachine::StateSelector smConnectToCamera();
+    StateMachine::StateSelector smPollWhileIdle();
+    StateMachine::StateSelector smPollWhileAcquiring();
+    StateMachine::StateSelector smRequestArm();
+    StateMachine::StateSelector smArmAndAcquire();
+    StateMachine::StateSelector smAcquire();
+    StateMachine::StateSelector smDiscardImages();
+    StateMachine::StateSelector smRequestReboot();
+    StateMachine::StateSelector smFirstImageWhileArmed();
+    StateMachine::StateSelector smDisarmAndDiscard();
+    StateMachine::StateSelector smAcquireImage();
+    StateMachine::StateSelector smExternalAcquireImage();
+    StateMachine::StateSelector smUnarmedAcquireImage();
+    StateMachine::StateSelector smMakeGangedImage();
+    StateMachine::StateSelector smUnarmedMakeGangedImage();
+    StateMachine::StateSelector smTrigger();
+    StateMachine::StateSelector smStopAcquisition();
+    StateMachine::StateSelector smExternalStopAcquisition();
+
 };
 
 #endif

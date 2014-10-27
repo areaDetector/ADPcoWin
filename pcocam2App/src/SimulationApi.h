@@ -17,8 +17,11 @@
 #include "epicsMessageQueue.h"
 #include "StateMachine.h"
 #include "DllApi.h"
+#include "IntegerParam.h"
+#include "StringParam.h"
 class Pco;
 class TraceStream;
+class TakeLock;
 
 class SimulationApi: public DllApi, public StateMachine::User
 {
@@ -100,133 +103,67 @@ protected:
 public:
     virtual int doTransition(StateMachine* machine, int state, int event);
 
-// Overrides of asynPortDriver
-public:
-	virtual void writeInt32(asynUser *pasynUser, epicsInt32 value);
-
-// Parameter names
+// Parameters
 private:
-	static const char* nameConnected;
-    static const char* nameOpen;
-    static const char* nameCameraType;
-    static const char* nameMaxHorzRes;
-    static const char* nameMaxVertRes;
-    static const char* nameDynResolution;
-    static const char* nameMaxBinHorz;
-    static const char* nameMaxBinVert;
-    static const char* nameBinHorzStepping;
-    static const char* nameBinVertStepping;
-    static const char* nameRoiHorSteps;
-    static const char* nameRoiVertSteps;
-    static const char* namePixelRate;
-    static const char* nameConvFact;
-    static const char* nameGeneralCaps;
-	static const char* nameRamSize;
-	static const char* namePageSize;
-    static const char* nameBaudRate;      
-    static const char* nameClockFrequency;
-    static const char* nameCamlinkLines;  
-    static const char* nameDataFormat;    
-    static const char* nameTransmit;      
-    static const char* nameActualHorzRes;
-    static const char* nameActualVertRes;
-    static const char* nameTimeYear;
-    static const char* nameTimeMonth;
-    static const char* nameTimeDay;
-    static const char* nameTimeHour;
-    static const char* nameTimeMinute;
-    static const char* nameTimeSecond;
-    static const char* nameTempCcd;
-    static const char* nameTempCamera;
-    static const char* nameTempPsu;
-    static const char* nameBitAlignment;
-    static const char* nameEdgeGlobalShutter;
-    static const char* nameActualHorzBin;
-    static const char* nameActualVertBin;
-    static const char* nameActualRoiX0;
-    static const char* nameActualRoiY0;
-    static const char* nameActualRoiX1;
-    static const char* nameActualRoiY1;
-    static const char* nameTriggerMode;
-    static const char* nameStorageMode;
-    static const char* nameTimestampMode;
-    static const char* nameAcquireMode;
-    static const char* nameDelayTime;
-    static const char* nameDelayTimebase;
-    static const char* nameExposureTime;
-    static const char* nameExposureTimebase;
-    static const char* nameActualConvFact;
-    static const char* nameAdcOperation;
-    static const char* nameRecordingState;
-    static const char* nameRecorderSubmode;
-    static const char* nameCamlinkHorzRes;
-    static const char* nameCamlinkVertRes;
-    static const char* nameArmed;
-    static const char* nameStateRecord;
-    static const char* nameClearStateRecord;
-    static const char* nameExternalTrigger;
-
-// Parameter handles
-private:
-    int handleConnected;
-    int handleOpen;;
-    int handleCameraType;
-    int handleMaxHorzRes;
-    int handleMaxVertRes;
-    int handleDynResolution;
-    int handleMaxBinHorz;
-    int handleMaxBinVert;
-    int handleBinHorzStepping;
-    int handleBinVertStepping;
-    int handleRoiHorSteps;
-    int handleRoiVertSteps;
-    int handlePixelRate;
-    int handleConvFact;
-    int handleGeneralCaps;
-	int handleRamSize;
-	int handlePageSize;
-    int handleBaudRate;
-    int handleClockFrequency;
-    int handleCamlinkLines;  
-    int handleDataFormat;    
-    int handleTransmit;      
-    int handleActualHorzRes;
-    int handleActualVertRes;
-    int handleTimeYear;
-    int handleTimeMonth;
-    int handleTimeDay;
-    int handleTimeHour;
-    int handleTimeMinute;
-    int handleTimeSecond;
-    int handleTempCcd;
-    int handleTempCamera;
-    int handleTempPsu;
-    int handleBitAlignment;
-    int handleEdgeGlobalShutter;
-    int handleActualHorzBin;
-    int handleActualVertBin;
-    int handleActualRoiX0;
-    int handleActualRoiY0;
-    int handleActualRoiX1;
-    int handleActualRoiY1;
-    int handleTriggerMode;
-    int handleStorageMode;
-    int handleTimestampMode;
-    int handleAcquireMode;
-    int handleDelayTime;
-    int handleDelayTimebase;
-    int handleExposureTime;
-    int handleExposureTimebase;
-    int handleActualConvFact;
-    int handleAdcOperation;
-    int handleRecordingState;
-    int handleRecorderSubmode;
-    int handleCamlinkHorzRes;
-    int handleCamlinkVertRes;
-    int handleArmed;
-    int handleStateRecord;
-    int handleClearStateRecord;
-    int handleExternalTrigger;
+	IntegerParam paramConnected;
+	IntegerParam paramOpen;;
+	IntegerParam paramCameraType;
+	IntegerParam paramMaxHorzRes;
+	IntegerParam paramMaxVertRes;
+	IntegerParam paramDynResolution;
+	IntegerParam paramMaxBinHorz;
+	IntegerParam paramMaxBinVert;
+	IntegerParam paramBinHorzStepping;
+	IntegerParam paramBinVertStepping;
+	IntegerParam paramRoiHorSteps;
+	IntegerParam paramRoiVertSteps;
+	IntegerParam paramPixelRate;
+	IntegerParam paramConvFact;
+	IntegerParam paramGeneralCaps;
+	IntegerParam paramRamSize;
+	IntegerParam paramPageSize;
+	IntegerParam paramBaudRate;
+	IntegerParam paramClockFrequency;
+	IntegerParam paramCamlinkLines;
+	IntegerParam paramDataFormat;
+	IntegerParam paramTransmit;
+	IntegerParam paramActualHorzRes;
+	IntegerParam paramActualVertRes;
+	IntegerParam paramTimeYear;
+	IntegerParam paramTimeMonth;
+	IntegerParam paramTimeDay;
+	IntegerParam paramTimeHour;
+	IntegerParam paramTimeMinute;
+	IntegerParam paramTimeSecond;
+	IntegerParam paramTempCcd;
+	IntegerParam paramTempCamera;
+	IntegerParam paramTempPsu;
+	IntegerParam paramBitAlignment;
+	IntegerParam paramEdgeGlobalShutter;
+	IntegerParam paramActualHorzBin;
+	IntegerParam paramActualVertBin;
+	IntegerParam paramActualRoiX0;
+	IntegerParam paramActualRoiY0;
+	IntegerParam paramActualRoiX1;
+	IntegerParam paramActualRoiY1;
+	IntegerParam paramTriggerMode;
+	IntegerParam paramStorageMode;
+	IntegerParam paramTimestampMode;
+	IntegerParam paramAcquireMode;
+	IntegerParam paramDelayTime;
+	IntegerParam paramDelayTimebase;
+	IntegerParam paramExposureTime;
+	IntegerParam paramExposureTimebase;
+	IntegerParam paramActualConvFact;
+	IntegerParam paramAdcOperation;
+	IntegerParam paramRecordingState;
+	IntegerParam paramRecorderSubmode;
+	IntegerParam paramCamlinkHorzRes;
+	IntegerParam paramCamlinkVertRes;
+	IntegerParam paramArmed;
+	IntegerParam paramClearStateRecord;
+	IntegerParam paramExternalTrigger;
+	StringParam paramStateRecord;
 
 // Types
 public:
@@ -259,6 +196,8 @@ protected:
     void post(Request req);
     void generateFrame();
     void startTriggerTimer();
+    void onConnected(TakeLock& takeLock);
+    void onExternalTrigger(TakeLock& takeLock);
 };
 
 #endif /* SIMULATIONAPI_H_ */

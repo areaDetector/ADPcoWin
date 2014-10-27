@@ -14,22 +14,23 @@
 #include "GangServer.h"
 #include "GangConfig.h"
 #include "GangServerConfig.h"
+#include "TakeLock.h"
+#include "FreeLock.h"
 #include <sstream>
-
-// Area detector parameter names
-const char* GangClient::nameConnected = "PCO_GANGSERV_CONNECTED";
-const char* GangClient::nameUse = "PCO_GANGSERV_USE";
-const char* GangClient::namePositionX = "PCO_GANGSERV_POSITIONX";
-const char* GangClient::namePositionY = "PCO_GANGSERV_POSITIONY";
-const char* GangClient::nameSizeX = "PCO_GANGSERV_SIZEX";
-const char* GangClient::nameSizeY = "PCO_GANGSERV_SIZEY";
-const char* GangClient::nameQueueSize = "PCO_GANGSERV_QUEUESIZE";
 
 // Connection class constructor
 GangClient::Connection::Connection(GangClient* owner)
 	: SocketProtocol("GangClient", "pco_gang")
 	, owner(owner)
 {
+}
+
+// Make the asyn name from a string and an index number
+std::string GangClient::makeParamName(std::string name, int index)
+{
+	std::stringstream str;
+	str << name << index;
+	return str.str();
 }
 
 // Constructor
@@ -41,16 +42,16 @@ GangClient::GangClient(Pco* pco, TraceStream* trace, GangServer* gangServer,
 	, gangServer(gangServer)
 	, index(index)
 	, connection(NULL)
+	, paramConnected(pco, makeParamName("PCO_GANGSERV_CONNECTED", index).c_str(), 0)
+	, paramUse(pco, makeParamName("PCO_GANGSERV_USE", index).c_str(), 0)
+	, paramPositionX(pco, makeParamName("PCO_GANGSERV_POSITIONX", index).c_str(), 0)
+	, paramPositionY(pco, makeParamName("PCO_GANGSERV_POSITIONY", index).c_str(), 0)
+	, paramSizeX(pco, makeParamName("PCO_GANGSERV_SIZEX", index).c_str(), 0)
+	, paramSizeY(pco, makeParamName("PCO_GANGSERV_SIZEY", index).c_str(), 0)
+	, paramQueueSize(pco, makeParamName("PCO_GANGSERV_QUEUESIZE", index).c_str(), 0)
+	, paramNDDataType(pco->paramNDDataType)
 	, image(NULL)
 {
-	// Create the parameters
-	createIntegerParam(nameConnected, &handleConnected, 0);
-	createIntegerParam(nameUse, &handleUse, 0);
-	createIntegerParam(namePositionX, &handlePositionX, 0);
-	createIntegerParam(namePositionY, &handlePositionY, 0);
-	createIntegerParam(nameSizeX, &handleSizeX, 0);
-	createIntegerParam(nameSizeY, &handleSizeY, 0);
-	createIntegerParam(nameQueueSize, &handleQueueSize, 0);
 }
 
 // Destructor
@@ -69,48 +70,34 @@ void GangClient::clearImageQueue()
 	if(image)
 	{
 		image->release();
-		printf("####3 n=%d\n", pco->pNDArrayPool->numBuffers());
 	}
 	image = NULL;
 	std::list<std::pair<int, NDArray*> >::iterator pos;
 	for(pos=imageQueue.begin(); pos!=imageQueue.end(); ++pos)
 	{
 		pos->second->release();
-		printf("####3 n=%d\n", pco->pNDArrayPool->numBuffers());
 	}
 	imageQueue.clear();
 }
 
-// Create a parameter
-void GangClient::createIntegerParam(const char* name, int* handle, int initialValue)
-{
-	std::stringstream str;
-	str << name << index;
-	pco->createParam(str.str().c_str(), asynParamInt32, handle);
-	pco->setIntegerParam(*handle, initialValue);
-}
-
-
 // A message has been received from the peer.
 void GangClient::receive(char tag, int parameter, void* data, size_t dataSize)
 {
+	TakeLock takeLock(pco);
 	switch(tag)
 	{
 	case 'm':
-		gangMemberConfig.toPco(pco, this);
+		gangMemberConfig.toPco(pco, this, takeLock);
 		break;
 	case 'i':
 		// Place the image in the queue
+		printf("####imageReceived 1\n");
 		imageQueue.push_back(std::pair<int,NDArray*>(parameter, image));
 		image = NULL;
-		printf("####9 q=%d\n", (int)imageQueue.size());
 		// Get the main thread to forward any complete images
 	    pco->post(Pco::requestMakeImages);
 		// Update counters
-		pco->lock();
-		pco->setIntegerParam(handleQueueSize, (int)imageQueue.size());
-		pco->callParamCallbacks();
-		pco->unlock();
+		paramQueueSize = (int)imageQueue.size();
 		break;
 	}
 }
@@ -149,11 +136,9 @@ void GangClient::disconnected()
 {
 	if(connection)
 	{
-		pco->lock();
-		pco->setIntegerParam(handleConnected, 0);
-		pco->callParamCallbacks();
-		pco->unlock();
-		gangServer->disconnected(this);
+		TakeLock takeLock(pco);
+		paramConnected = 0;
+		gangServer->disconnected(takeLock, this);
 		delete connection;
 		connection = NULL;
 	}
@@ -169,28 +154,21 @@ void* GangClient::getDataBuffer(char tag, int parameter, size_t dataSize)
 		result = gangMemberConfig.data();
 		break;
 	case 'i':
-		pco->lock();
-		int sizeX;
-		int sizeY;
-		int dataType;
-		pco->getIntegerParam(handleSizeX, &sizeX);
-		pco->getIntegerParam(handleSizeY, &sizeY);
-		pco->getIntegerParam(pco->NDDataType, &dataType);
-		pco->unlock();
-		if(image)
 		{
-			image->release();
-			printf("####5 n=%d\n", pco->pNDArrayPool->numBuffers());
-		}
-		image = pco->allocArray(sizeX, sizeY, (NDDataType_t)dataType);
-		printf("####7 n=%d\n", pco->pNDArrayPool->numBuffers());
-		if(image)
-		{
-			NDArrayInfo arrayInfo;
-			image->getInfo(&arrayInfo);
-			if(arrayInfo.totalBytes >= dataSize)
+			TakeLock takeLock(pco);
+			if(image)
 			{
-				result = image->pData;
+				image->release();
+			}
+			image = pco->allocArray(paramSizeX, paramSizeY, paramNDDataType);
+			if(image)
+			{
+				NDArrayInfo arrayInfo;
+				image->getInfo(&arrayInfo);
+				if(arrayInfo.totalBytes >= dataSize)
+				{
+					result = image->pData;
+				}
 			}
 		}
 		break;
@@ -201,27 +179,18 @@ void* GangClient::getDataBuffer(char tag, int parameter, size_t dataSize)
 // Return true if this connection is up
 bool GangClient::isConnected()
 {
-	int connected;
-	pco->lock();
-	pco->getIntegerParam(handleConnected, &connected);
-	pco->unlock();
-	return connected != 0;
+	TakeLock takeLock(pco);
+	return paramConnected != 0;
 }
 
 // Return true if this connection is up and the client is to be used
-bool GangClient::isToBeUsed()
+bool GangClient::isToBeUsed(TakeLock& takeLock)
 {
-	int connected;
-	int use;
-	pco->lock();
-	pco->getIntegerParam(handleConnected, &connected);
-	pco->getIntegerParam(handleUse, &use);
-	pco->unlock();
-	return connected != 0 && use != 0;
+	return paramConnected != 0 && paramUse != 0;
 }
 
 // Create the connection object
-void GangClient::createConnection(int fd)
+void GangClient::createConnection(TakeLock& takeLock, long long fd)
 {
 	if(connection)
 	{
@@ -229,10 +198,7 @@ void GangClient::createConnection(int fd)
 	}
 	connection = new Connection(this);
 	connection->server(fd);
-	pco->lock();
-	pco->setIntegerParam(handleConnected, 1);
-	pco->callParamCallbacks();
-	pco->unlock();
+	paramConnected = 1;
 }
 
 // Send the arm message to the client
@@ -269,52 +235,34 @@ void GangClient::configure(GangServerConfig* config)
 
 // Adjust the given full image size so that this
 // client bit fits.
-void GangClient::determineImageSize(int& fullSizeX, int& fullSizeY)
+void GangClient::determineImageSize(TakeLock& takeLock, int& fullSizeX, int& fullSizeY)
 {
-	int positionX;
-	int positionY;
-	int sizeX;
-	int sizeY;
-	pco->lock();
-	pco->getIntegerParam(handlePositionX, &positionX);
-	pco->getIntegerParam(handlePositionY, &positionY);
-	pco->getIntegerParam(handleSizeX, &sizeX);
-	pco->getIntegerParam(handleSizeY, &sizeY);
-	pco->unlock();
-	if(positionX + sizeX > fullSizeX)
+	if(paramPositionX + paramSizeX > fullSizeX)
 	{
-		fullSizeX = positionX + sizeX;
+		fullSizeX = paramPositionX + paramSizeX;
 	}
-	if(positionY + sizeY > fullSizeY)
+	if(paramPositionY + paramSizeY > fullSizeY)
 	{
-		fullSizeY = positionY + sizeY;
+		fullSizeY = paramPositionY + paramSizeY;
 	}
 }
 
 // Insert the image with the sequence number into the out image at the
 // appropriate place.  Remove the image from the queue.
 // TODO: An improvement can be made by not assuming the image is at the head.
-void GangClient::useImage(int sequence, NDArray* outImage)
+void GangClient::useImage(TakeLock& takeLock, int sequence, NDArray* outImage)
 {
 	if(!imageQueue.empty())
 	{
-		// Get information
-		int positionX;
-		int positionY;
-		pco->lock();
-		pco->getIntegerParam(handlePositionX, &positionX);
-		pco->getIntegerParam(handlePositionY, &positionY);
-		pco->unlock();
 		// Copy and free the image
-		NDArray* inImage = imageQueue.front().second;
-		gangServer->insertImagePiece(outImage, inImage, positionX, positionY);
-		inImage->release();
-		printf("####6 n=%d\n", pco->pNDArrayPool->numBuffers());
-		imageQueue.pop_front();
+		{
+			FreeLock freeLock(takeLock);
+			NDArray* inImage = imageQueue.front().second;
+			gangServer->insertImagePiece(outImage, inImage, paramPositionX, paramPositionY);
+			inImage->release();
+			imageQueue.pop_front();
+		}
 		// Update counters
-		pco->lock();
-		pco->setIntegerParam(handleQueueSize, (int)imageQueue.size());
-		pco->callParamCallbacks();
-		pco->unlock();
+		paramQueueSize = (int)imageQueue.size();
 	}
 }
