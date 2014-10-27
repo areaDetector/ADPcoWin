@@ -35,28 +35,25 @@ void* GangConfig::data()
 }
 
 // Copy the configuration from the given PCO object
-void GangConfig::fromPco(Pco* pco)
+void GangConfig::fromPco(Pco* pco, TakeLock& takeLock)
 {
-	pco->getDoubleParam(pco->ADAcquireTime, &exposure);
-	pco->getDoubleParam(pco->ADAcquirePeriod, &acqPeriod);
-	pco->getIntegerParam(pco->ADNumExposures, &expPerImage);
-	pco->getIntegerParam(pco->ADNumImages, &numImages);
-	pco->getIntegerParam(pco->ADImageMode, &imageMode);
-	pco->getIntegerParam(pco->ADTriggerMode, &triggerMode);
-	pco->getIntegerParam(pco->NDDataType, &dataType);
+	exposure = pco->paramADAcquireTime;
+	acqPeriod = pco->paramADAcquirePeriod;
+	expPerImage = pco->paramADNumExposures;
+	numImages = pco->paramADNumImages;
+	imageMode = pco->paramADImageMode;
+	triggerMode= pco->paramADTriggerMode;
+	dataType = pco->paramNDDataType;
 }
 
 // Copy the configuration to the given PCO object
-void GangConfig::toPco(Pco* pco)
+void GangConfig::toPco(Pco* pco, TakeLock& takeLock)
 {
-	pco->lock();
-	pco->setDoubleParam(pco->ADAcquireTime, exposure);
-	pco->setDoubleParam(pco->ADAcquirePeriod, acqPeriod);
-	pco->setIntegerParam(pco->ADNumExposures, expPerImage);
-	pco->setIntegerParam(pco->ADNumImages, numImages);
-	pco->setIntegerParam(pco->ADImageMode, imageMode);
-	pco->setIntegerParam(pco->ADTriggerMode, triggerMode);
-	pco->setIntegerParam(pco->NDDataType, dataType);
-	pco->callParamCallbacks();
-	pco->unlock();
+	pco->paramADAcquireTime = exposure;
+	pco->paramADAcquirePeriod = acqPeriod;
+	pco->paramADNumExposures = expPerImage;
+	pco->paramADNumImages = numImages;
+	pco->paramADImageMode = imageMode;
+	pco->paramADTriggerMode = triggerMode;
+	pco->paramNDDataType = (NDDataType_t)dataType;
 }

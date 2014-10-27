@@ -54,7 +54,7 @@ private:
     };
 private:
     RxThread rxThread;
-    int fd;
+    long long fd;
     enum {STATE_IDLE=0, STATE_LISTENDISC, STATE_LISTENCONN, STATE_SERVER,
         STATE_CLIENTDISC, STATE_CLIENTCONN} state;
     epicsEventId initialiseEventId;
@@ -75,13 +75,13 @@ private:
 public:
     SocketProtocol(const char* name, const char* preamble);
     virtual ~SocketProtocol();
-    void server(int fd);
+    void server(long long fd);
     void client(const char* hostName, int tcpPort);
     void listen(int tcpPort);
     void transmit(char tag, int parameter, void* data, size_t dataSize);
     virtual void connected() {}
     virtual void disconnected() {}
-    virtual void accepted(int fd) {}
+    virtual void accepted(long long fd) {}
     virtual void* getDataBuffer(char tag, int parameter, size_t dataSize) {return NULL;}
     virtual void receive(char tag, int parameter, void* data, size_t dataSize) {}
 private:

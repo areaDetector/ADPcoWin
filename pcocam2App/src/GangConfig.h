@@ -12,13 +12,14 @@
 #define GANGCONFIG_H_
 
 class Pco;
+class TakeLock;
 
 class GangConfig {
 public:
 	GangConfig();
 	~GangConfig();
-	void fromPco(Pco* pco);
-	void toPco(Pco* pco);
+	void fromPco(Pco* pco, TakeLock& takeLock);
+	void toPco(Pco* pco, TakeLock& takeLock);
 	void *data();
 private:
 	double exposure;

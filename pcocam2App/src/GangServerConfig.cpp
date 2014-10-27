@@ -15,7 +15,7 @@
 
 // Constructor.
 GangServerConfig::GangServerConfig()
-	: gangFunction(0)
+	: gangFunction(GangServer::gangFunctionOff)
 {
 }
 
@@ -31,14 +31,14 @@ void* GangServerConfig::data()
 }
 
 // Get data from the PCO
-void GangServerConfig::fromPco(Pco* pco, GangServer* gangServer)
+void GangServerConfig::fromPco(Pco* pco, GangServer* gangServer, TakeLock& takeLock)
 {
-	pco->getIntegerParam(gangServer->handleFunction, &gangFunction);
+	gangFunction = gangServer->paramGangFunction;
 }
 
 // Write data to the PCO
-void GangServerConfig::toPco(Pco* pco, GangConnection* gangConnection)
+void GangServerConfig::toPco(Pco* pco, GangConnection* gangConnection, TakeLock& takeLock)
 {
-	pco->setIntegerParam(gangConnection->handleFunction, gangFunction);
+	gangConnection->paramGangFunction = gangFunction;
 }
 

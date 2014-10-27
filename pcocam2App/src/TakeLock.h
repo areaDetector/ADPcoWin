@@ -1,6 +1,5 @@
 /* TakeLock.h
  *
- * Revamped PCO area detector driver.
  * A class that tracks the acquisition of the lock belonging to
  * the asynPortDriver base class.  On destruction, parameter callbacks
  * are made and the lock is returned to its original state.  Use it
@@ -8,11 +7,6 @@
  * Then, when the instance goes out of scope, the lock is automatically
  * returned to its initial state.  This scoping mechanism allows
  * exceptions to be thrown without losing track of the lock.
- *
- * The lock() and unlock() functions are for the special cases
- * where the lock may be temporarily released while something that
- * takes time is performed.  They are not normally required, the
- * scoping does the whole job.
  *
  * It is a good idea to pass the TakeLock
  * object on to called functions that require the lock to be taken
@@ -23,8 +17,7 @@
  * (the writeXXX functions for example) by passing alreadyTaken as true.
  *
  *
- * Author:  Giles Knap
- *          Jonathan Thompson
+ * Author:  Jonathan Thompson
  *
  */
 
@@ -32,11 +25,13 @@
 #define TAKELOCK_H_
 
 class asynPortDriver;
+class FreeLock;
 
 class TakeLock {
+friend class FreeLock;
 public:
 	TakeLock(asynPortDriver* driver, bool alreadyTaken=false);
-	TakeLock(TakeLock& takeLock, bool unlock);
+	TakeLock(FreeLock& freeLock);
 	virtual ~TakeLock();
 	void lock();
 	void unlock();
@@ -47,7 +42,6 @@ private:
 	TakeLock& operator=(const TakeLock& other);
 	asynPortDriver* driver;
 	bool initiallyTaken;
-	bool locked;
 };
 
 #endif /* TAKELOCK_H_ */

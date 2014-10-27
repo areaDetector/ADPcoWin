@@ -19,6 +19,7 @@ DBD += pcocam2HardwareSupport.dbd
 pcocam2_SRCS += Pco.cpp
 pcocam2_SRCS += DllApi.cpp
 pcocam2_SRCS += NDArrayException.cpp
+pcocam2_SRCS += AsynException.cpp
 pcocam2_SRCS += StateMachine.cpp
 pcocam2_SRCS += TraceStream.cpp
 pcocam2_SRCS += GangServer.cpp
@@ -32,6 +33,13 @@ pcocam2_SRCS += PcoException.cpp
 pcocam2_SRCS_WIN32 += PcoApi.cpp
 pcocam2_SRCS += SimulationApi.cpp
 pcocam2_SRCS += TakeLock.cpp
+pcocam2_SRCS += FreeLock.cpp
+pcocam2_SRCS += IntegerParam.cpp
+pcocam2_SRCS += DoubleParam.cpp
+pcocam2_SRCS += StringParam.cpp
+pcocam2_SRCS += AsynParam.cpp
+pcocam2_SRCS += ADDriverEx.cpp
+pcocam2_SRCS += NdArrayRef.cpp
 
 # Include path to vendor headers
 USR_INCLUDES_WIN32 += -I../include/

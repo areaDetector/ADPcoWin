@@ -17,69 +17,6 @@
 #include "iocsh.h"
 
 /**
- * Parameter names
- */
-const char* SimulationApi::nameConnected = "SimConnected";
-const char* SimulationApi::nameOpen = "SimOpen";
-const char* SimulationApi::nameCameraType = "SimCameraType";
-const char* SimulationApi::nameMaxHorzRes = "SimMaxHorzRes";
-const char* SimulationApi::nameMaxVertRes = "SimMaxVertRes";
-const char* SimulationApi::nameDynResolution = "SimDynResolution";
-const char* SimulationApi::nameMaxBinHorz = "SimMaxBinHorz";
-const char* SimulationApi::nameMaxBinVert = "SimMaxBinVert";
-const char* SimulationApi::nameBinHorzStepping = "SimBinHorzStepping";
-const char* SimulationApi::nameBinVertStepping = "SimBinVertStepping";
-const char* SimulationApi::nameRoiHorSteps = "SimRoiHorSteps";
-const char* SimulationApi::nameRoiVertSteps = "SimRoiVertSteps";
-const char* SimulationApi::namePixelRate = "SimPixelRate";
-const char* SimulationApi::nameConvFact = "SimConvFact";
-const char* SimulationApi::nameGeneralCaps = "SimGeneralCaps";
-const char* SimulationApi::nameRamSize = "SimRamSize";
-const char* SimulationApi::namePageSize = "SimPageSize";
-const char* SimulationApi::nameBaudRate = "SimBaudRate";
-const char* SimulationApi::nameClockFrequency = "SimClockFrequency";
-const char* SimulationApi::nameCamlinkLines = "SimCamlinkLines";
-const char* SimulationApi::nameDataFormat = "SimDataFormat";
-const char* SimulationApi::nameTransmit = "SimTransmit";
-const char* SimulationApi::nameActualHorzRes = "SimActualHorzRes";
-const char* SimulationApi::nameActualVertRes = "SimActualVertRes";
-const char* SimulationApi::nameTimeYear = "SimTimeYear";
-const char* SimulationApi::nameTimeMonth = "SimTimeMonth";
-const char* SimulationApi::nameTimeDay = "SimTimeDay";
-const char* SimulationApi::nameTimeHour = "SimTimeHour";
-const char* SimulationApi::nameTimeMinute = "SimTimeMinute";
-const char* SimulationApi::nameTimeSecond = "SimTimeSecond";
-const char* SimulationApi::nameTempCcd = "SimTempCcd";
-const char* SimulationApi::nameTempCamera = "SimTempCamera";
-const char* SimulationApi::nameTempPsu = "SimTempPsu";
-const char* SimulationApi::nameBitAlignment = "SimBitAlignment";
-const char* SimulationApi::nameEdgeGlobalShutter = "SimEdgeGlobalShutter";
-const char* SimulationApi::nameActualHorzBin = "SimActualHorzBin";
-const char* SimulationApi::nameActualVertBin = "SimActualVertBin";
-const char* SimulationApi::nameActualRoiX0 = "SimActualRoiX0";
-const char* SimulationApi::nameActualRoiY0 = "SimActualRoiY0";
-const char* SimulationApi::nameActualRoiX1 = "SimActualRoiX1";
-const char* SimulationApi::nameActualRoiY1 = "SimActualRoiY1";
-const char* SimulationApi::nameTriggerMode = "SimTriggerMode";
-const char* SimulationApi::nameStorageMode = "SimStorageMode";
-const char* SimulationApi::nameTimestampMode = "SimTimestampMode";
-const char* SimulationApi::nameAcquireMode = "SimAcquireMode";
-const char* SimulationApi::nameDelayTime = "SimDelayTime";
-const char* SimulationApi::nameDelayTimebase = "SimDelayTimebase";
-const char* SimulationApi::nameExposureTime = "SimExposureTime";
-const char* SimulationApi::nameExposureTimebase = "SimExposureTimebase";
-const char* SimulationApi::nameActualConvFact = "SimActualConvFact";
-const char* SimulationApi::nameAdcOperation = "SimAdcOperation";
-const char* SimulationApi::nameRecordingState = "SimRecordingState";
-const char* SimulationApi::nameRecorderSubmode = "SimRecorderSubmode";
-const char* SimulationApi::nameCamlinkHorzRes = "SimCamlinkHorzRes";
-const char* SimulationApi::nameCamlinkVertRes = "SimCamlinkVertRes";
-const char* SimulationApi::nameArmed = "SimArmed";
-const char* SimulationApi::nameStateRecord = "SimStateRecord";
-const char* SimulationApi::nameClearStateRecord = "SimClearStateRecord";
-const char* SimulationApi::nameExternalTrigger = "SimExternalTrigger";
-
-/**
  * Constants
  */
 const int SimulationApi::edgeSetupDataLength = 1;
@@ -98,130 +35,69 @@ const char* SimulationApi::stateNames[] = {"Connected", "Open", "Disconnected",
  */
 SimulationApi::SimulationApi(Pco* pco, TraceStream* trace)
 : DllApi(pco, trace)
+, paramConnected(pco, "SimConnected", true, new AsynParam::Notify<SimulationApi>(this, &SimulationApi::onConnected))
+, paramOpen(pco, "SimOpen", false)
+, paramCameraType(pco, "SimCameraType", DllApi::cameraType4000)
+, paramMaxHorzRes(pco, "SimMaxHorzRes", 1280)
+, paramMaxVertRes(pco, "SimMaxVertRes", 1024)
+, paramDynResolution(pco, "SimDynResolution", 14)
+, paramMaxBinHorz(pco, "SimMaxBinHorz", 4)
+, paramMaxBinVert(pco, "SimMaxBinVert", 4)
+, paramBinHorzStepping(pco, "SimBinHorzStepping", 1)
+, paramBinVertStepping(pco, "SimBinVertStepping", 1)
+, paramRoiHorSteps(pco, "SimRoiHorSteps", 1)
+, paramRoiVertSteps(pco, "SimRoiVertSteps", 1)
+, paramPixelRate(pco, "SimPixelRate", 4000000)
+, paramConvFact(pco, "SimConvFact", 100)
+, paramGeneralCaps(pco, "SimGeneralCaps", 0)
+, paramRamSize(pco, "SimRamSize", 0)
+, paramPageSize(pco, "SimPageSize", 0)
+, paramBaudRate(pco, "SimBaudRate", 0)
+, paramClockFrequency(pco, "SimClockFrequency", 0)
+, paramCamlinkLines(pco, "SimCamlinkLines", 0)
+, paramDataFormat(pco, "SimDataFormat", 0)
+, paramTransmit(pco, "SimTransmit", 0)
+, paramActualHorzRes(pco, "SimActualHorzRes", 1280)
+, paramActualVertRes(pco, "SimActualVertRes", 1024)
+, paramTimeYear(pco, "SimTimeYear", 0)
+, paramTimeMonth(pco, "SimTimeMonth", 0)
+, paramTimeDay(pco, "SimTimeDay", 0)
+, paramTimeHour(pco, "SimTimeHour", 0)
+, paramTimeMinute(pco, "SimTimeMinute", 0)
+, paramTimeSecond(pco, "SimTimeSecond", 0)
+, paramTempCcd(pco, "SimTempCcd", 21)
+, paramTempCamera(pco, "SimTempCamera", 22)
+, paramTempPsu(pco, "SimTempPsu", 23)
+, paramBitAlignment(pco, "SimBitAlignment", 0)
+, paramEdgeGlobalShutter(pco, "SimEdgeGlobalShutter", 0)
+, paramActualHorzBin(pco, "SimActualHorzBin", 1)
+, paramActualVertBin(pco, "SimActualVertBin", 1)
+, paramActualRoiX0(pco, "SimActualRoiX0", 0)
+, paramActualRoiY0(pco, "SimActualRoiY0", 0)
+, paramActualRoiX1(pco, "SimActualRoiX1", 1280)
+, paramActualRoiY1(pco, "SimActualRoiY1", 1024)
+, paramTriggerMode(pco, "SimTriggerMode", DllApi::triggerAuto)
+, paramStorageMode(pco, "SimStorageMode", DllApi::storageModeRecorder)
+, paramTimestampMode(pco, "SimTimestampMode", DllApi::timestampModeOff)
+, paramAcquireMode(pco, "SimAcquireMode", DllApi::acquireModeAuto)
+, paramDelayTime(pco, "SimDelayTime", 100)
+, paramDelayTimebase(pco, "SimDelayTimebase", DllApi::timebaseMilliseconds)
+, paramExposureTime(pco, "SimExposureTime", 100)
+, paramExposureTimebase(pco, "SimExposureTimebase", DllApi::timebaseMilliseconds)
+, paramActualConvFact(pco, "SimActualConvFact", 100)
+, paramAdcOperation(pco, "SimAdcOperation", DllApi::adcModeSingle)
+, paramRecordingState(pco, "SimRecordingState", DllApi::recorderStateOff)
+, paramRecorderSubmode(pco, "SimRecorderSubmode", 0)
+, paramCamlinkHorzRes(pco, "SimCamlinkHorzRes", 1280)
+, paramCamlinkVertRes(pco, "SimCamlinkVertRes", 1024)
+, paramArmed(pco, "SimArmed", false)
+, paramClearStateRecord(pco, "SimClearStateRecord", 0)
+, paramExternalTrigger(pco, "SimExternalTrigger", 0, new AsynParam::Notify<SimulationApi>(this, &SimulationApi::onExternalTrigger))
+, paramStateRecord(pco, "SimStateRecord", "")
 , bufferQueue(DllApi::maxNumBuffers, sizeof(int))
 , stateMachine(NULL)
 , frameNumber(0)
 {
-    // Create parameters...
-    this->pco->createParam(SimulationApi::nameConnected, asynParamInt32, &this->handleConnected);
-    this->pco->createParam(SimulationApi::nameOpen, asynParamInt32, &this->handleOpen);
-    this->pco->createParam(SimulationApi::nameCameraType, asynParamInt32, &this->handleCameraType);
-    this->pco->createParam(SimulationApi::nameMaxHorzRes, asynParamInt32, &this->handleMaxHorzRes);
-    this->pco->createParam(SimulationApi::nameMaxVertRes, asynParamInt32, &this->handleMaxVertRes);
-    this->pco->createParam(SimulationApi::nameDynResolution, asynParamInt32, &this->handleDynResolution);
-    this->pco->createParam(SimulationApi::nameMaxBinHorz, asynParamInt32, &this->handleMaxBinHorz);
-    this->pco->createParam(SimulationApi::nameMaxBinVert, asynParamInt32, &this->handleMaxBinVert);
-    this->pco->createParam(SimulationApi::nameBinHorzStepping, asynParamInt32, &this->handleBinHorzStepping);
-    this->pco->createParam(SimulationApi::nameBinVertStepping, asynParamInt32, &this->handleBinVertStepping);
-    this->pco->createParam(SimulationApi::nameRoiHorSteps, asynParamInt32, &this->handleRoiHorSteps);
-    this->pco->createParam(SimulationApi::nameRoiVertSteps, asynParamInt32, &this->handleRoiVertSteps);
-    this->pco->createParam(SimulationApi::namePixelRate, asynParamInt32, &this->handlePixelRate);
-    this->pco->createParam(SimulationApi::nameConvFact, asynParamInt32, &this->handleConvFact);
-    this->pco->createParam(SimulationApi::nameGeneralCaps, asynParamInt32, &this->handleGeneralCaps);
-    this->pco->createParam(SimulationApi::nameRamSize, asynParamInt32, &this->handleRamSize);
-    this->pco->createParam(SimulationApi::namePageSize, asynParamInt32, &this->handlePageSize);
-    this->pco->createParam(SimulationApi::nameBaudRate, asynParamInt32, &this->handleBaudRate);
-    this->pco->createParam(SimulationApi::nameClockFrequency, asynParamInt32, &this->handleClockFrequency);
-    this->pco->createParam(SimulationApi::nameCamlinkLines, asynParamInt32, &this->handleCamlinkLines);
-    this->pco->createParam(SimulationApi::nameDataFormat, asynParamInt32, &this->handleDataFormat);
-    this->pco->createParam(SimulationApi::nameTransmit, asynParamInt32, &this->handleTransmit);
-    this->pco->createParam(SimulationApi::nameActualHorzRes, asynParamInt32, &this->handleActualHorzRes);
-    this->pco->createParam(SimulationApi::nameActualVertRes, asynParamInt32, &this->handleActualVertRes);
-    this->pco->createParam(SimulationApi::nameTimeYear, asynParamInt32, &this->handleTimeYear);
-    this->pco->createParam(SimulationApi::nameTimeMonth, asynParamInt32, &this->handleTimeMonth);
-    this->pco->createParam(SimulationApi::nameTimeDay, asynParamInt32, &this->handleTimeDay);
-    this->pco->createParam(SimulationApi::nameTimeHour, asynParamInt32, &this->handleTimeHour);
-    this->pco->createParam(SimulationApi::nameTimeMinute, asynParamInt32, &this->handleTimeMinute);
-    this->pco->createParam(SimulationApi::nameTimeSecond, asynParamInt32, &this->handleTimeSecond);
-    this->pco->createParam(SimulationApi::nameTempCcd, asynParamInt32, &this->handleTempCcd);
-    this->pco->createParam(SimulationApi::nameTempCamera, asynParamInt32, &this->handleTempCamera);
-    this->pco->createParam(SimulationApi::nameTempPsu, asynParamInt32, &this->handleTempPsu);
-    this->pco->createParam(SimulationApi::nameBitAlignment, asynParamInt32, &this->handleBitAlignment);
-    this->pco->createParam(SimulationApi::nameEdgeGlobalShutter, asynParamInt32, &this->handleEdgeGlobalShutter);
-    this->pco->createParam(SimulationApi::nameActualHorzBin, asynParamInt32, &this->handleActualHorzBin);
-    this->pco->createParam(SimulationApi::nameActualVertBin, asynParamInt32, &this->handleActualVertBin);
-    this->pco->createParam(SimulationApi::nameActualRoiX0, asynParamInt32, &this->handleActualRoiX0);
-    this->pco->createParam(SimulationApi::nameActualRoiY0, asynParamInt32, &this->handleActualRoiY0);
-    this->pco->createParam(SimulationApi::nameActualRoiX1, asynParamInt32, &this->handleActualRoiX1);
-    this->pco->createParam(SimulationApi::nameActualRoiY1, asynParamInt32, &this->handleActualRoiY1);
-    this->pco->createParam(SimulationApi::nameTriggerMode, asynParamInt32, &this->handleTriggerMode);
-    this->pco->createParam(SimulationApi::nameStorageMode, asynParamInt32, &this->handleStorageMode);
-    this->pco->createParam(SimulationApi::nameTimestampMode, asynParamInt32, &this->handleTimestampMode);
-    this->pco->createParam(SimulationApi::nameAcquireMode, asynParamInt32, &this->handleAcquireMode);
-    this->pco->createParam(SimulationApi::nameDelayTime, asynParamInt32, &this->handleDelayTime);
-    this->pco->createParam(SimulationApi::nameExposureTime, asynParamInt32, &this->handleExposureTime);
-    this->pco->createParam(SimulationApi::nameDelayTimebase, asynParamInt32, &this->handleDelayTimebase);
-    this->pco->createParam(SimulationApi::nameExposureTimebase, asynParamInt32, &this->handleExposureTimebase);
-    this->pco->createParam(SimulationApi::nameActualConvFact, asynParamInt32, &this->handleActualConvFact);
-    this->pco->createParam(SimulationApi::nameAdcOperation, asynParamInt32, &this->handleAdcOperation);
-    this->pco->createParam(SimulationApi::nameRecordingState, asynParamInt32, &this->handleRecordingState);
-    this->pco->createParam(SimulationApi::nameRecorderSubmode, asynParamInt32, &this->handleRecorderSubmode);
-    this->pco->createParam(SimulationApi::nameCamlinkHorzRes, asynParamInt32, &this->handleCamlinkHorzRes);
-    this->pco->createParam(SimulationApi::nameCamlinkVertRes, asynParamInt32, &this->handleCamlinkVertRes);
-    this->pco->createParam(SimulationApi::nameArmed, asynParamInt32, &this->handleArmed);
-    this->pco->createParam(SimulationApi::nameStateRecord, asynParamOctet, &this->handleStateRecord);
-    this->pco->createParam(SimulationApi::nameClearStateRecord, asynParamInt32, &this->handleClearStateRecord);
-    this->pco->createParam(SimulationApi::nameExternalTrigger, asynParamInt32, &this->handleExternalTrigger);
-    // ...and initialise them
-    this->pco->setIntegerParam(this->handleConnected, true);
-    this->pco->setIntegerParam(this->handleOpen, false);
-    this->pco->setIntegerParam(this->handleCameraType, DllApi::cameraType4000);
-    this->pco->setIntegerParam(this->handleMaxHorzRes, 1280);
-    this->pco->setIntegerParam(this->handleMaxVertRes, 1024);
-    this->pco->setIntegerParam(this->handleDynResolution, 14);
-    this->pco->setIntegerParam(this->handleMaxBinHorz, 4);
-    this->pco->setIntegerParam(this->handleMaxBinVert, 4);
-    this->pco->setIntegerParam(this->handleBinHorzStepping, 1);
-    this->pco->setIntegerParam(this->handleBinVertStepping, 1);
-    this->pco->setIntegerParam(this->handleRoiHorSteps, 1);
-    this->pco->setIntegerParam(this->handleRoiVertSteps, 1);
-    this->pco->setIntegerParam(this->handlePixelRate, 4000000);
-    this->pco->setIntegerParam(this->handleConvFact, 100);
-    this->pco->setIntegerParam(this->handleGeneralCaps, 0);
-    this->pco->setIntegerParam(this->handleRamSize, 0);
-    this->pco->setIntegerParam(this->handlePageSize, 0);
-    this->pco->setIntegerParam(this->handleBaudRate, 0);
-    this->pco->setIntegerParam(this->handleClockFrequency, 0);
-    this->pco->setIntegerParam(this->handleCamlinkLines, 0);
-    this->pco->setIntegerParam(this->handleDataFormat, 0);
-    this->pco->setIntegerParam(this->handleTransmit, 0);
-    this->pco->setIntegerParam(this->handleActualHorzRes, 1280);
-    this->pco->setIntegerParam(this->handleActualVertRes, 1024);
-    this->pco->setIntegerParam(this->handleTimeYear, 0);
-    this->pco->setIntegerParam(this->handleTimeMonth, 0);
-    this->pco->setIntegerParam(this->handleTimeDay, 0);
-    this->pco->setIntegerParam(this->handleTimeHour, 0);
-    this->pco->setIntegerParam(this->handleTimeMinute, 0);
-    this->pco->setIntegerParam(this->handleTimeSecond, 0);
-    this->pco->setIntegerParam(this->handleTempCcd, 21);
-    this->pco->setIntegerParam(this->handleTempCamera, 22);
-    this->pco->setIntegerParam(this->handleTempPsu, 23);
-    this->pco->setIntegerParam(this->handleBitAlignment, 0);
-    this->pco->setIntegerParam(this->handleEdgeGlobalShutter, 0);
-    this->pco->setIntegerParam(this->handleActualHorzBin, 1);
-    this->pco->setIntegerParam(this->handleActualVertBin, 1);
-    this->pco->setIntegerParam(this->handleActualRoiX0, 0);
-    this->pco->setIntegerParam(this->handleActualRoiY0, 0);
-    this->pco->setIntegerParam(this->handleActualRoiX1, 1280);
-    this->pco->setIntegerParam(this->handleActualRoiY1, 1024);
-    this->pco->setIntegerParam(this->handleTriggerMode, DllApi::triggerAuto);
-    this->pco->setIntegerParam(this->handleStorageMode, DllApi::storageModeRecorder);
-    this->pco->setIntegerParam(this->handleTimestampMode, DllApi::timestampModeOff);
-    this->pco->setIntegerParam(this->handleAcquireMode, DllApi::acquireModeAuto);
-    this->pco->setIntegerParam(this->handleDelayTime, 100);
-    this->pco->setIntegerParam(this->handleDelayTimebase, DllApi::timebaseMilliseconds);
-    this->pco->setIntegerParam(this->handleExposureTime, 100);
-    this->pco->setIntegerParam(this->handleExposureTimebase, DllApi::timebaseMilliseconds);
-    this->pco->setIntegerParam(this->handleActualConvFact, 100);
-    this->pco->setIntegerParam(this->handleAdcOperation, DllApi::adcModeSingle);
-    this->pco->setIntegerParam(this->handleRecordingState, DllApi::recorderStateOff);
-    this->pco->setIntegerParam(this->handleRecorderSubmode, 0);
-    this->pco->setIntegerParam(this->handleCamlinkHorzRes, 1280);
-    this->pco->setIntegerParam(this->handleCamlinkVertRes, 1024);
-    this->pco->setIntegerParam(this->handleArmed, false);
-    this->pco->setStringParam(this->handleStateRecord, "");
-    this->pco->setIntegerParam(this->handleClearStateRecord, 0);
-    this->pco->setIntegerParam(this->handleExternalTrigger, 0);
     // Initialise the buffers
     for(int i=0; i<DllApi::maxNumBuffers; i++)
     {
@@ -230,7 +106,7 @@ SimulationApi::SimulationApi(Pco* pco, TraceStream* trace)
     }
     // Create the state machine
     this->stateMachine = new StateMachine("SimulationApi", this->pco,
-            this->handleStateRecord, this, SimulationApi::stateConnected,
+            paramStateRecord.getHandle(), this, SimulationApi::stateConnected,
             SimulationApi::stateNames, SimulationApi::eventNames, trace);
 }
 
@@ -354,13 +230,9 @@ void SimulationApi::generateFrame()
         int bufferNumber;
         this->bufferQueue.tryReceive(&bufferNumber, sizeof(int));
         // Fill the frame with a pattern
-        int xSize;
-        int ySize;
-        this->pco->getIntegerParam(this->handleActualHorzRes, &xSize);
-        this->pco->getIntegerParam(this->handleActualVertRes, &ySize);
-        for(int x=0; x<xSize; x++)
+        for(int x=0; x<paramActualHorzRes; x++)
         {
-            for(int y=0; y<ySize; y++)
+            for(int y=0; y<paramActualVertRes; y++)
             {
                 bool dark = true;
                 if(((x / 16) & 1) != 0)
@@ -371,24 +243,18 @@ void SimulationApi::generateFrame()
                 {
                     dark = !dark;
                 }
-                this->buffers[bufferNumber].buffer[y*xSize+x] = (dark ? 15 : 255);
+                this->buffers[bufferNumber].buffer[y*paramActualHorzRes+x] = (dark ? 15 : 255);
             }
         }
         // Plant the BCD time stamp if enabled
-        int timestampMode;
-        this->pco->getIntegerParam(this->handleTimestampMode, &timestampMode);
-        if(timestampMode == DllApi::timestampModeBinary ||
-                timestampMode == DllApi::timestampModeBinaryAndAscii)
+        if(paramTimestampMode == DllApi::timestampModeBinary ||
+                paramTimestampMode == DllApi::timestampModeBinaryAndAscii)
         {
             // The frame number
-            int dynResolution;
-            int bitAlignment;
-            this->pco->getIntegerParam(this->handleDynResolution, &dynResolution);
-            this->pco->getIntegerParam(this->handleBitAlignment, &bitAlignment);
             int shiftLowBcd = 0;
-            if(bitAlignment == DllApi::bitAlignmentMsb)
+            if(paramBitAlignment == DllApi::bitAlignmentMsb)
             {
-                shiftLowBcd = Pco::bitsPerShortWord - dynResolution;
+                shiftLowBcd = Pco::bitsPerShortWord - paramDynResolution;
             }
             int shiftHighBcd = shiftLowBcd + Pco::bitsPerNybble;
             unsigned long n = this->frameNumber;
@@ -419,51 +285,39 @@ void SimulationApi::generateFrame()
  */
 void SimulationApi::startTriggerTimer()
 {
-    int triggerMode;
-    this->pco->getIntegerParam(this->handleTriggerMode, &triggerMode);
-    if(triggerMode == DllApi::triggerAuto)
+    if(paramTriggerMode == DllApi::triggerAuto)
     {
         // In auto trigger mode, start the trigger timer
-        int delay;
-        int delayTimebase;
-        int exposure;
-        int exposureTimebase;
-        this->pco->getIntegerParam(this->handleDelayTime, &delay);
-        this->pco->getIntegerParam(this->handleDelayTimebase, &delayTimebase);
-        this->pco->getIntegerParam(this->handleExposureTime, &exposure);
-        this->pco->getIntegerParam(this->handleExposureTimebase, &exposureTimebase);
-        double period = (double)delay / DllApi::timebaseScaleFactor[delayTimebase] +
-                (double)exposure / DllApi::timebaseScaleFactor[exposureTimebase];
+        double period = (double)paramDelayTime / DllApi::timebaseScaleFactor[paramDelayTimebase] +
+                (double)paramExposureTime / DllApi::timebaseScaleFactor[paramExposureTimebase];
         this->stateMachine->startTimer(period, SimulationApi::requestTrigger);
     }
 }
 
 /**
- * Changes to asyn parameters
+ * Handles changes to the Connected parameter
  */
-void SimulationApi::writeInt32(asynUser *pasynUser, epicsInt32 value)
+void SimulationApi::onConnected(TakeLock& takeLock)
 {
-    int parameter = pasynUser->reason;
-    if(parameter == this->handleConnected)
+    if(paramConnected)
     {
-        if(value)
-        {
-            this->post(SimulationApi::requestConnectionUp);
-        }
-        else
-        {
-            this->post(SimulationApi::requestConnectionDown);
-        }
+        this->post(SimulationApi::requestConnectionUp);
     }
-    else if(parameter == this->handleExternalTrigger)
+    else
     {
-        int triggerMode;
-        this->pco->getIntegerParam(this->handleTriggerMode, &triggerMode);
-        if(triggerMode == DllApi::triggerExternal ||
-                triggerMode == triggerExternalExposure)
-        {
-            this->post(SimulationApi::requestTrigger);
-        }
+        this->post(SimulationApi::requestConnectionDown);
+    }
+}
+
+/**
+ * Handle changes to the ExternalTrigger parameter
+ */
+void SimulationApi::onExternalTrigger(TakeLock& takeLock)
+{
+    if(paramTriggerMode == DllApi::triggerExternal ||
+            paramTriggerMode == triggerExternalExposure)
+    {
+        this->post(SimulationApi::requestTrigger);
     }
 }
 
@@ -474,13 +328,9 @@ void SimulationApi::writeInt32(asynUser *pasynUser, epicsInt32 value)
 int SimulationApi::doOpenCamera(Handle* handle, unsigned short camNum)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && !open)
+    if(paramConnected && !paramOpen)
     {
-        this->pco->setIntegerParam(this->handleOpen, true);
+        paramOpen = true;
         this->post(SimulationApi::requestOpen);
         result = DllApi::errorNone;
     }
@@ -492,7 +342,7 @@ int SimulationApi::doOpenCamera(Handle* handle, unsigned short camNum)
  */
 int SimulationApi::doCloseCamera(Handle handle)
 {
-    this->pco->setIntegerParam(this->handleOpen, false);
+	paramOpen = false;
     this->post(SimulationApi::requestClose);
     return DllApi::errorNone;
 }
@@ -511,11 +361,7 @@ int SimulationApi::doRebootCamera(Handle handle)
 int SimulationApi::doGetGeneral(Handle handle)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         result = DllApi::errorNone;
     }
@@ -528,15 +374,9 @@ int SimulationApi::doGetGeneral(Handle handle)
 int SimulationApi::doGetCameraType(Handle handle, unsigned short* camType)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int localCamType;
-        this->pco->getIntegerParam(this->handleCameraType, &localCamType);
-        *camType = localCamType;
+        *camType = paramCameraType;
         result = DllApi::errorNone;
     }
     return result;
@@ -548,11 +388,7 @@ int SimulationApi::doGetCameraType(Handle handle, unsigned short* camType)
 int SimulationApi::doGetSensorStruct(Handle handle)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         result = DllApi::errorNone;
     }
@@ -565,40 +401,23 @@ int SimulationApi::doGetSensorStruct(Handle handle)
 int SimulationApi::doGetCameraDescription(Handle handle, Description* description)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleMaxHorzRes, &v);
-        description->maxHorzRes = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleMaxVertRes, &v);
-        description->maxVertRes = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleDynResolution, &v);
-        description->dynResolution = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleMaxBinHorz, &v);
-        description->maxBinHorz = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleMaxBinVert, &v);
-        description->maxBinVert = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleBinHorzStepping, &v);
-        description->binHorzStepping = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleBinVertStepping, &v);
-        description->binVertStepping = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleRoiHorSteps, &v);
-        description->roiHorSteps = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleRoiVertSteps, &v);
-        description->roiVertSteps = (unsigned short)v;
-        this->pco->getIntegerParam(this->handlePixelRate, &v);
-        description->pixelRate[0] = (unsigned long)v;
+        description->maxHorzRes = (unsigned short)paramMaxHorzRes;
+        description->maxVertRes = (unsigned short)paramMaxVertRes;
+        description->dynResolution = (unsigned short)paramDynResolution;
+        description->maxBinHorz = (unsigned short)paramMaxBinHorz;
+        description->maxBinVert = (unsigned short)paramMaxBinVert;
+        description->binHorzStepping = (unsigned short)paramBinHorzStepping;
+        description->binVertStepping = (unsigned short)paramBinVertStepping;
+        description->roiHorSteps = (unsigned short)paramRoiHorSteps;
+        description->roiVertSteps = (unsigned short)paramRoiVertSteps;
+        description->pixelRate[0] = (unsigned long)paramPixelRate;
         description->pixelRate[1] = 0;
         description->pixelRate[2] = 0;
         description->pixelRate[3] = 0;
-        this->pco->getIntegerParam(this->handleConvFact, &v);
-        description->convFact = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleGeneralCaps, &v);
-        description->generalCaps = (unsigned long)v;
+        description->convFact = (unsigned short)paramConvFact;
+        description->generalCaps = (unsigned long)paramGeneralCaps;
         description->minCoolingSetpoint = 0;
         description->maxCoolingSetpoint = 0;
         description->defaultCoolingSetpoint = 0;
@@ -620,17 +439,10 @@ int SimulationApi::doGetStorageStruct(Handle handle, unsigned long* ramSize,
         unsigned int* pageSize)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleRamSize, &v);
-        *ramSize = (unsigned long)v;
-        this->pco->getIntegerParam(this->handlePageSize, &v);
-        *pageSize = (unsigned int)v;
+        *ramSize = (unsigned long)paramRamSize;
+        *pageSize = (unsigned int)paramPageSize;
         result = DllApi::errorNone;
     }
     return result;
@@ -642,11 +454,7 @@ int SimulationApi::doGetStorageStruct(Handle handle, unsigned long* ramSize,
 int SimulationApi::doGetRecordingStruct(Handle handle)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         result = DllApi::errorNone;
     }
@@ -659,15 +467,11 @@ int SimulationApi::doGetRecordingStruct(Handle handle)
 int SimulationApi::doResetSettingsToDefault(Handle handle)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         // TODO: Actually reset the settings
         this->post(SimulationApi::requestStopRecording);
-        this->pco->setIntegerParam(this->handleRecordingState, DllApi::recorderStateOff);
+        paramRecordingState = DllApi::recorderStateOff;
         result = DllApi::errorNone;
     }
     return result;
@@ -679,23 +483,13 @@ int SimulationApi::doResetSettingsToDefault(Handle handle)
 int SimulationApi::doGetTransferParameters(Handle handle, Transfer* transfer)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleBaudRate, &v);
-        transfer->baudRate = (unsigned long)v;
-        this->pco->getIntegerParam(this->handleClockFrequency, &v);
-        transfer->clockFrequency = (unsigned long)v;
-        this->pco->getIntegerParam(this->handleCamlinkLines, &v);
-        transfer->camlinkLines = (unsigned long)v;
-        this->pco->getIntegerParam(this->handleDataFormat, &v);
-        transfer->dataFormat = (unsigned long)v;
-        this->pco->getIntegerParam(this->handleTransmit, &v);
-        transfer->transmit = (unsigned long)v;
+        transfer->baudRate = (unsigned long)paramBaudRate;
+        transfer->clockFrequency = (unsigned long)paramClockFrequency;
+        transfer->camlinkLines = (unsigned long)paramCamlinkLines;
+        transfer->dataFormat = (unsigned long)paramDataFormat;
+        transfer->transmit = (unsigned long)paramTransmit;
         result = DllApi::errorNone;
     }
     return result;
@@ -707,17 +501,13 @@ int SimulationApi::doGetTransferParameters(Handle handle, Transfer* transfer)
 int SimulationApi::doSetTransferParameters(Handle handle, Transfer* transfer)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleBaudRate, (int)transfer->baudRate);
-        this->pco->setIntegerParam(this->handleClockFrequency, (int)transfer->clockFrequency);
-        this->pco->setIntegerParam(this->handleCamlinkLines, (int)transfer->camlinkLines);
-        this->pco->setIntegerParam(this->handleDataFormat, (int)transfer->dataFormat);
-        this->pco->setIntegerParam(this->handleTransmit, (int)transfer->transmit);
+        paramBaudRate = (int)transfer->baudRate;
+        paramClockFrequency = (int)transfer->clockFrequency;
+        paramCamlinkLines = (int)transfer->camlinkLines;
+        paramDataFormat = (int)transfer->dataFormat;
+        paramTransmit = (int)transfer->transmit;
         result = DllApi::errorNone;
     }
     return result;
@@ -729,21 +519,12 @@ int SimulationApi::doSetTransferParameters(Handle handle, Transfer* transfer)
 int SimulationApi::doGetSizes(Handle handle, Sizes* sizes)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleActualHorzRes, &v);
-        sizes->xResActual = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleActualVertRes, &v);
-        sizes->yResActual = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleMaxHorzRes, &v);
-        sizes->xResMaximum = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleMaxVertRes, &v);
-        sizes->yResMaximum = (unsigned short)v;
+        sizes->xResActual = (unsigned short)paramActualHorzRes;
+        sizes->yResActual = (unsigned short)paramActualVertRes;
+        sizes->xResMaximum = (unsigned short)paramMaxHorzRes;
+        sizes->yResMaximum = (unsigned short)paramMaxVertRes;
         result = DllApi::errorNone;
     }
     return result;
@@ -755,18 +536,14 @@ int SimulationApi::doGetSizes(Handle handle, Sizes* sizes)
 int SimulationApi::doSetDateTime(Handle handle, struct tm* currentTime)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleTimeYear, (int)currentTime->tm_year);
-        this->pco->setIntegerParam(this->handleTimeMonth, (int)currentTime->tm_mon);
-        this->pco->setIntegerParam(this->handleTimeDay, (int)currentTime->tm_mday);
-        this->pco->setIntegerParam(this->handleTimeHour, (int)currentTime->tm_hour);
-        this->pco->setIntegerParam(this->handleTimeMinute, (int)currentTime->tm_min);
-        this->pco->setIntegerParam(this->handleTimeSecond, (int)currentTime->tm_sec);
+        paramTimeYear = (int)currentTime->tm_year;
+        paramTimeMonth = (int)currentTime->tm_mon;
+        paramTimeDay = (int)currentTime->tm_mday;
+        paramTimeHour = (int)currentTime->tm_hour;
+        paramTimeMinute = (int)currentTime->tm_min;
+        paramTimeSecond = (int)currentTime->tm_sec;
         result = DllApi::errorNone;
     }
     return result;
@@ -779,19 +556,11 @@ int SimulationApi::doGetTemperature(Handle handle, short* ccd,
         short* camera, short* psu)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleTempCcd, &v);
-        *ccd = (short)v;
-        this->pco->getIntegerParam(this->handleTempCamera, &v);
-        *camera = (short)v;
-        this->pco->getIntegerParam(this->handleTempPsu, &v);
-        *psu = (short)v;
+        *ccd = (short)paramTempCcd;
+        *camera = (short)paramTempCamera;
+        *psu = (short)paramTempPsu;
         result = DllApi::errorNone;
     }
     return result;
@@ -819,13 +588,9 @@ int SimulationApi::doGetCoolingSetpoint(Handle handle, short* setPoint)
 int SimulationApi::doSetPixelRate(Handle handle, unsigned long pixRate)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handlePixelRate, (int)pixRate);
+        paramPixelRate = (int)pixRate;
         result = DllApi::errorNone;
     }
     return result;
@@ -837,15 +602,9 @@ int SimulationApi::doSetPixelRate(Handle handle, unsigned long pixRate)
 int SimulationApi::doGetPixelRate(Handle handle, unsigned long* pixRate)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handlePixelRate, &v);
-        *pixRate = (unsigned long)v;
+        *pixRate = (unsigned long)paramPixelRate;
         result = DllApi::errorNone;
     }
     return result;
@@ -857,15 +616,9 @@ int SimulationApi::doGetPixelRate(Handle handle, unsigned long* pixRate)
 int SimulationApi::doGetBitAlignment(Handle handle, unsigned short* bitAlignment)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleBitAlignment, &v);
-        *bitAlignment = (unsigned short)v;
+        *bitAlignment = (unsigned short)paramBitAlignment;
         result = DllApi::errorNone;
     }
     return result;
@@ -877,13 +630,9 @@ int SimulationApi::doGetBitAlignment(Handle handle, unsigned short* bitAlignment
 int SimulationApi::doSetBitAlignment(Handle handle, unsigned short bitAlignment)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleBitAlignment, (int)bitAlignment);
+        paramBitAlignment = (int)bitAlignment;
         result = DllApi::errorNone;
     }
     return result;
@@ -896,16 +645,10 @@ int SimulationApi::doGetCameraSetup(Handle handle, unsigned short* setupType,
         unsigned long* setupData, unsigned short* setupDataLen)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleEdgeGlobalShutter, &v);
         *setupType = (unsigned short)SimulationApi::edgeSetupDataType;
-        *setupData = (unsigned long)v;
+        *setupData = (unsigned long)paramEdgeGlobalShutter;
         *setupDataLen = (unsigned short)SimulationApi::edgeSetupDataLength;
         result = DllApi::errorNone;
     }
@@ -918,14 +661,10 @@ int SimulationApi::doGetCameraSetup(Handle handle, unsigned short* setupType,
 int SimulationApi::doSetBinning(Handle handle, unsigned short binHorz, unsigned short binVert)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleActualHorzBin, (int)binHorz);
-        this->pco->setIntegerParam(this->handleActualVertBin, (int)binVert);
+        paramActualHorzBin = (int)binHorz;
+        paramActualVertBin = (int)binVert;
         result = DllApi::errorNone;
     }
     return result;
@@ -937,17 +676,10 @@ int SimulationApi::doSetBinning(Handle handle, unsigned short binHorz, unsigned 
 int SimulationApi::doGetBinning(Handle handle, unsigned short* binHorz, unsigned short* binVert)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleActualHorzBin, &v);
-        *binHorz = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleActualVertBin, &v);
-        *binVert = (unsigned short)v;
+        *binHorz = (unsigned short)paramActualHorzBin;
+        *binVert = (unsigned short)paramActualVertBin;
         result = DllApi::errorNone;
     }
     return result;
@@ -960,16 +692,12 @@ int SimulationApi::doSetRoi(Handle handle, unsigned short x0, unsigned short y0,
         unsigned short x1, unsigned short y1)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleActualRoiX0, (int)x0);
-        this->pco->setIntegerParam(this->handleActualRoiY0, (int)y0);
-        this->pco->setIntegerParam(this->handleActualRoiX1, (int)x1);
-        this->pco->setIntegerParam(this->handleActualRoiY1, (int)y1);
+        paramActualRoiX0 = (int)x0;
+        paramActualRoiY0 = (int)y0;
+        paramActualRoiX1 = (int)x1;
+        paramActualRoiY1 = (int)y1;
         result = DllApi::errorNone;
     }
     return result;
@@ -982,21 +710,12 @@ int SimulationApi::doGetRoi(Handle handle, unsigned short* x0, unsigned short* y
         unsigned short* x1, unsigned short* y1)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleActualRoiX0, &v);
-        *x0 = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleActualRoiY0, &v);
-        *y0 = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleActualRoiX1, &v);
-        *x1 = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleActualRoiY1, &v);
-        *y1 = (unsigned short)v;
+        *x0 = (unsigned short)paramActualRoiX0;
+        *y0 = (unsigned short)paramActualRoiY0;
+        *x1 = (unsigned short)paramActualRoiX1;
+        *y1 = (unsigned short)paramActualRoiY1;
         result = DllApi::errorNone;
     }
     return result;
@@ -1008,13 +727,9 @@ int SimulationApi::doGetRoi(Handle handle, unsigned short* x0, unsigned short* y
 int SimulationApi::doSetTriggerMode(Handle handle, unsigned short mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleTriggerMode, (int)mode);
+        paramTriggerMode = (int)mode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1026,15 +741,9 @@ int SimulationApi::doSetTriggerMode(Handle handle, unsigned short mode)
 int SimulationApi::doGetTriggerMode(Handle handle, unsigned short* mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleTriggerMode, &v);
-        *mode = (unsigned short)v;
+        *mode = (unsigned short)paramTriggerMode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1046,13 +755,9 @@ int SimulationApi::doGetTriggerMode(Handle handle, unsigned short* mode)
 int SimulationApi::doSetStorageMode(Handle handle, unsigned short mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleStorageMode, (int)mode);
+        paramStorageMode = (int)mode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1064,15 +769,9 @@ int SimulationApi::doSetStorageMode(Handle handle, unsigned short mode)
 int SimulationApi::doGetStorageMode(Handle handle, unsigned short* mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleStorageMode, &v);
-        *mode = (unsigned short)v;
+        *mode = (unsigned short)paramStorageMode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1084,13 +783,9 @@ int SimulationApi::doGetStorageMode(Handle handle, unsigned short* mode)
 int SimulationApi::doSetTimestampMode(Handle handle, unsigned short mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleTimestampMode, (int)mode);
+        paramTimestampMode = (int)mode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1102,15 +797,9 @@ int SimulationApi::doSetTimestampMode(Handle handle, unsigned short mode)
 int SimulationApi::doGetTimestampMode(Handle handle, unsigned short* mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleTimestampMode, &v);
-        *mode = (unsigned short)v;
+        *mode = (unsigned short)paramTimestampMode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1122,13 +811,9 @@ int SimulationApi::doGetTimestampMode(Handle handle, unsigned short* mode)
 int SimulationApi::doSetAcquireMode(Handle handle, unsigned short mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleAcquireMode, (int)mode);
+        paramAcquireMode = (int)mode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1140,15 +825,9 @@ int SimulationApi::doSetAcquireMode(Handle handle, unsigned short mode)
 int SimulationApi::doGetAcquireMode(Handle handle, unsigned short* mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleAcquireMode, &v);
-        *mode = (unsigned short)v;
+        *mode = (unsigned short)paramAcquireMode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1162,16 +841,12 @@ int SimulationApi::doSetDelayExposureTime(Handle handle, unsigned long delay,
         unsigned short timeBaseExposure)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleDelayTime, (int)delay);
-        this->pco->setIntegerParam(this->handleDelayTimebase, (int)timeBaseDelay);
-        this->pco->setIntegerParam(this->handleExposureTime, (int)exposure);
-        this->pco->setIntegerParam(this->handleExposureTimebase, (int)timeBaseExposure);
+        paramDelayTime = (int)delay;
+        paramDelayTimebase = (int)timeBaseDelay;
+        paramExposureTime = (int)exposure;
+        paramExposureTimebase = (int)timeBaseExposure;
         result = DllApi::errorNone;
     }
     return result;
@@ -1185,21 +860,12 @@ int SimulationApi::doGetDelayExposureTime(Handle handle, unsigned long* delay,
         unsigned short* timeBaseExposure)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleDelayTime, &v);
-        *delay = (unsigned long)v;
-        this->pco->getIntegerParam(this->handleDelayTimebase, &v);
-        *timeBaseDelay = (unsigned short)v;
-        this->pco->getIntegerParam(this->handleExposureTime, &v);
-        *exposure = (unsigned long)v;
-        this->pco->getIntegerParam(this->handleExposureTimebase, &v);
-        *timeBaseExposure = (unsigned short)v;
+        *delay = (unsigned long)paramDelayTime;
+        *timeBaseDelay = (unsigned short)paramDelayTimebase;
+        *exposure = (unsigned long)paramExposureTime;
+        *timeBaseExposure = (unsigned short)paramExposureTimebase;
         result = DllApi::errorNone;
     }
     return result;
@@ -1211,13 +877,9 @@ int SimulationApi::doGetDelayExposureTime(Handle handle, unsigned long* delay,
 int SimulationApi::doSetConversionFactor(Handle handle, unsigned short factor)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleActualConvFact, (int)factor);
+        paramActualConvFact = (int)factor;
         result = DllApi::errorNone;
     }
     return result;
@@ -1229,15 +891,9 @@ int SimulationApi::doSetConversionFactor(Handle handle, unsigned short factor)
 int SimulationApi::doGetAdcOperation(Handle handle, unsigned short* mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleAdcOperation, &v);
-        *mode = (unsigned short)v;
+        *mode = (unsigned short)paramAdcOperation;
         result = DllApi::errorNone;
     }
     return result;
@@ -1249,13 +905,9 @@ int SimulationApi::doGetAdcOperation(Handle handle, unsigned short* mode)
 int SimulationApi::doSetAdcOperation(Handle handle, unsigned short mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleAdcOperation, (int)mode);
+        paramAdcOperation = (int)mode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1267,15 +919,9 @@ int SimulationApi::doSetAdcOperation(Handle handle, unsigned short mode)
 int SimulationApi::doGetRecordingState(Handle handle, unsigned short* state)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleRecordingState, &v);
-        *state = (unsigned short)v;
+        *state = (unsigned short)paramRecordingState;
         result = DllApi::errorNone;
     }
     return result;
@@ -1287,11 +933,7 @@ int SimulationApi::doGetRecordingState(Handle handle, unsigned short* state)
 int SimulationApi::doSetRecordingState(Handle handle, unsigned short state)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         if(state == DllApi::recorderStateOn)
         {
@@ -1301,7 +943,7 @@ int SimulationApi::doSetRecordingState(Handle handle, unsigned short state)
         {
             this->post(SimulationApi::requestStopRecording);
         }
-        this->pco->setIntegerParam(this->handleRecordingState, (int)state);
+        paramRecordingState = (int)state;
         result = DllApi::errorNone;
     }
     return result;
@@ -1313,15 +955,9 @@ int SimulationApi::doSetRecordingState(Handle handle, unsigned short state)
 int SimulationApi::doGetRecorderSubmode(Handle handle, unsigned short* mode)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int v;
-        this->pco->getIntegerParam(this->handleRecorderSubmode, &v);
-        *mode = (unsigned short)v;
+        *mode = (unsigned short)paramRecorderSubmode;
         result = DllApi::errorNone;
     }
     return result;
@@ -1334,12 +970,8 @@ int SimulationApi::doAllocateBuffer(Handle handle, short* bufferNumber, unsigned
         unsigned short** buffer, Handle* eventHandle)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
     bool found = false;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         // Identify a buffer number
         found = *bufferNumber != DllApi::bufferUnallocated;
@@ -1383,11 +1015,7 @@ int SimulationApi::doAllocateBuffer(Handle handle, short* bufferNumber, unsigned
 int SimulationApi::doCancelImages(Handle handle)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         // Empty the buffer queue
         while(this->bufferQueue.pending() > 0)
@@ -1408,8 +1036,8 @@ int SimulationApi::doCancelImages(Handle handle)
  */
 int SimulationApi::doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes)
 {
-    this->pco->setIntegerParam(this->handleCamlinkHorzRes, (int)xRes);
-    this->pco->setIntegerParam(this->handleCamlinkHorzRes, (int)yRes);
+    paramCamlinkHorzRes = (int)xRes;
+    paramCamlinkHorzRes = (int)yRes;
     return DllApi::errorNone;
 }
 
@@ -1419,13 +1047,9 @@ int SimulationApi::doCamlinkSetImageParameters(Handle handle, unsigned short xRe
 int SimulationApi::doArm(Handle handle)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        this->pco->setIntegerParam(this->handleArmed, (int)true);
+        paramArmed = (int)true;
         this->post(SimulationApi::requestArm);
         result = DllApi::errorNone;
     }
@@ -1440,18 +1064,11 @@ int SimulationApi::doAddBufferEx(Handle handle, unsigned long firstImage, unsign
         unsigned short bitRes)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         // Are the parameters correct?
-        int actualXRes;
-        int actualYRes;
-        this->pco->getIntegerParam(this->handleActualHorzRes, &actualXRes);
-        this->pco->getIntegerParam(this->handleActualVertRes, &actualYRes);
-        if((int)xRes == actualXRes && (int)yRes == actualYRes && firstImage==0 && lastImage==0)
+        if((int)xRes == paramActualHorzRes && (int)yRes == paramActualVertRes &&
+        		firstImage==0 && lastImage==0)
         {
             // Put the buffer on the queue
             int v = bufferNumber;
@@ -1469,11 +1086,7 @@ int SimulationApi::doGetBufferStatus(Handle handle, short bufferNumber,
         unsigned long* statusDll, unsigned long* statusDrv)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
         *statusDll = this->buffers[bufferNumber].status;
         *statusDrv = 0;
@@ -1488,16 +1101,10 @@ int SimulationApi::doGetBufferStatus(Handle handle, short bufferNumber,
 int SimulationApi::doForceTrigger(Handle handle, unsigned short* triggered)
 {
     int result = DllApi::errorAny;
-    int connected;
-    int open;
-    this->pco->getIntegerParam(this->handleConnected, &connected);
-    this->pco->getIntegerParam(this->handleOpen, &open);
-    if(connected && open)
+    if(paramConnected && paramOpen)
     {
-        int triggerMode;
-        this->pco->getIntegerParam(this->handleTriggerMode, &triggerMode);
-        if(triggerMode == DllApi::triggerSoftware ||
-                triggerMode == DllApi::triggerExternal)
+        if(paramTriggerMode == DllApi::triggerSoftware ||
+                paramTriggerMode == DllApi::triggerExternal)
         {
             this->post(SimulationApi::requestTrigger);
         }

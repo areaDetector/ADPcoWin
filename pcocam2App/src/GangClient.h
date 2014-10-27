@@ -12,6 +12,9 @@
 
 #include "SocketProtocol.h"
 #include "GangMemberConfig.h"
+#include "IntegerParam.h"
+#include "EnumParam.h"
+#include "NDArray.h"
 #include <list>
 class GangServer;
 class GangConfig;
@@ -19,7 +22,7 @@ class GangMemberConfig;
 class GangServerConfig;
 class TraceStream;
 class Pco;
-class NDArray;
+class TakeLock;
 
 class GangClient
 {
@@ -46,41 +49,35 @@ public:
 	void disconnected();
 	void* getDataBuffer(char tag, int parameter, size_t dataSize);
 	bool isConnected();
-	bool isToBeUsed();
-	void createConnection(int fd);
+	bool isToBeUsed(TakeLock& takeLock);
+	void createConnection(TakeLock& takeLock, long long fd);
 	void arm(GangConfig* config);
 	void disarm();
 	void start(GangConfig* config);
 	void stop();
 	void configure(GangServerConfig* config);
-	void determineImageSize(int& fullSizeX, int& fullSizeY);
+	void determineImageSize(TakeLock& takeLock, int& fullSizeX, int& fullSizeY);
 	enum SeqState {seqStateNo, seqStateYes, seqStateMissing};
 	SeqState hasSequence(int s);
-	void useImage(int sequence, NDArray* outImage);
+	void useImage(TakeLock& takeLock, int sequence, NDArray* outImage);
 private:
 	Pco* pco;
 	TraceStream* trace;
 	GangServer* gangServer;
 	int index;
 	Connection* connection;
-	static const char* nameConnected;
-	static const char* nameUse;
-	static const char* namePositionX;
-	static const char* namePositionY;
-	static const char* nameSizeX;
-	static const char* nameSizeY;
-	static const char* nameQueueSize;
-	int handleConnected;
-	int handleUse;
-	int handlePositionX;
-	int handlePositionY;
-	int handleSizeX;
-	int handleSizeY;
-	int handleQueueSize;
+	IntegerParam paramConnected;
+	IntegerParam paramUse;
+	IntegerParam paramPositionX;
+	IntegerParam paramPositionY;
+	IntegerParam paramSizeX;
+	IntegerParam paramSizeY;
+	IntegerParam paramQueueSize;
+	EnumParam<NDDataType_t> paramNDDataType;
 	GangMemberConfig gangMemberConfig;
 	NDArray* image;
-	void createIntegerParam(const char* name, int* handle, int initialValue);
 	void clearImageQueue();
+	static std::string makeParamName(std::string name, int index);
 	std::list<std::pair<int, NDArray*> > imageQueue;
 };
 
