@@ -17,7 +17,7 @@ ADDriverEx::ADDriverEx(const char* portName, int numAddresses, int maxBuffers, s
 		/*maxAddr=*/numAddresses, /*numParams=*/500, maxBuffers, maxMemory,
         asynInt32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask | asynInt16ArrayMask | asynEnumMask,
         asynInt32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask | asynInt16ArrayMask | asynEnumMask,
-        0,          // ASYN_CANBLOCK=0, ASYN_MULTIDEVICE=0
+        ASYN_CANBLOCK,          // ASYN_CANBLOCK=0, ASYN_MULTIDEVICE=0
         1,          // autoConnect = 1
         -1,         // Default priority
         -1)         // Default stack size
