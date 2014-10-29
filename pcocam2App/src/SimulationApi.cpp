@@ -106,8 +106,22 @@ SimulationApi::SimulationApi(Pco* pco, TraceStream* trace)
     }
     // Create the state machine
     this->stateMachine = new StateMachine("SimulationApi", this->pco,
-            paramStateRecord.getHandle(), this, SimulationApi::stateConnected,
+            paramStateRecord.getHandle(), SimulationApi::stateConnected,
             SimulationApi::stateNames, SimulationApi::eventNames, trace);
+	stateMachine->transition(stateConnected, requestConnectionDown, NULL, stateDisconnected);
+	stateMachine->transition(stateConnected, requestOpen, NULL, stateOpen);
+	stateMachine->transition(stateOpen, requestConnectionDown, NULL, stateDisconnected);
+	stateMachine->transition(stateOpen, requestClose, NULL, stateConnected);
+	stateMachine->transition(stateOpen, requestArm, NULL, stateArmed);
+	stateMachine->transition(stateDisconnected, requestConnectionUp, NULL, stateConnected);
+	stateMachine->transition(stateArmed, requestConnectionDown, NULL, stateDisconnected);
+	stateMachine->transition(stateArmed, requestClose, NULL, stateConnected);
+	stateMachine->transition(stateArmed, requestStartRecording, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStartRecording), stateRecording);
+	stateMachine->transition(stateArmed, requestCancelImages, NULL, stateOpen);
+	stateMachine->transition(stateRecording, requestConnectionDown, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateDisconnected);
+	stateMachine->transition(stateRecording, requestClose, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateConnected);
+	stateMachine->transition(stateRecording, requestStopRecording, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateArmed);
+	stateMachine->transition(stateRecording, requestTrigger, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smCreateFrame), stateRecording);
 }
 
 /**
@@ -126,91 +140,34 @@ void SimulationApi::post(Request req)
     this->stateMachine->post(req);
 }
 
+
 /**
- * Handle state transitions.
+ * Start recording
  */
-int SimulationApi::doTransition(StateMachine* machine, int state, int event)
+StateMachine::StateSelector SimulationApi::smStartRecording()
 {
-    if(machine == this->stateMachine)
-    {
-        switch(state)
-        {
-        case stateConnected:
-            if(event == SimulationApi::requestConnectionDown)
-            {
-                state = SimulationApi::stateDisconnected;
-            }
-            else if(event == SimulationApi::requestOpen)
-            {
-                state = SimulationApi::stateOpen;
-            }
-            break;
-        case stateOpen:
-            if(event == SimulationApi::requestConnectionDown)
-            {
-                state = SimulationApi::stateDisconnected;
-            }
-            else if(event == SimulationApi::requestClose)
-            {
-                state = SimulationApi::stateConnected;
-            }
-            else if(event == SimulationApi::requestArm)
-            {
-                state = SimulationApi::stateArmed;
-            }
-            break;
-        case stateDisconnected:
-            if(event == SimulationApi::requestConnectionUp)
-            {
-                state = SimulationApi::stateConnected;
-            }
-            break;
-        case stateArmed:
-            if(event == SimulationApi::requestConnectionDown)
-            {
-                state = SimulationApi::stateDisconnected;
-            }
-            else if(event == SimulationApi::requestClose)
-            {
-                state = SimulationApi::stateConnected;
-            }
-            else if(event == SimulationApi::requestStartRecording)
-            {
-                this->startTriggerTimer();
-                this->frameNumber = 0;
-                state = SimulationApi::stateRecording;
-            }
-            else if(event == SimulationApi::requestCancelImages)
-            {
-                state = SimulationApi::stateOpen;
-            }
-            break;
-        case stateRecording:
-            if(event == SimulationApi::requestConnectionDown)
-            {
-                this->stateMachine->stopTimer();
-                state = SimulationApi::stateDisconnected;
-            }
-            else if(event == SimulationApi::requestClose)
-            {
-                this->stateMachine->stopTimer();
-                state = SimulationApi::stateConnected;
-            }
-            else if(event == SimulationApi::requestStopRecording)
-            {
-                this->stateMachine->stopTimer();
-                state = SimulationApi::stateArmed;
-            }
-            else if(event == SimulationApi::requestTrigger)
-            {
-                this->generateFrame();
-                this->startTriggerTimer();
-                state = SimulationApi::stateRecording;
-            }
-            break;
-        }
-    }
-    return state;
+    startTriggerTimer();
+    frameNumber = 0;
+	return StateMachine::firstState;
+}
+
+/**
+ * Stop the trigger timer
+ */
+StateMachine::StateSelector SimulationApi::smStopTriggerTimer()
+{
+    stateMachine->stopTimer();
+	return StateMachine::firstState;
+}
+
+/**
+ * Create a frame
+ */
+StateMachine::StateSelector SimulationApi::smCreateFrame()
+{
+    generateFrame();
+    startTriggerTimer();
+	return StateMachine::firstState;
 }
 
 /**

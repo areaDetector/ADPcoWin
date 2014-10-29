@@ -24,16 +24,12 @@ class GangServer;
 class GangConnection;
 class TakeLock;
 
-class Pco: public ADDriverEx, public StateMachine::User
+class Pco: public ADDriverEx
 {
 // Construction
 public:
     Pco(const char* portName, int maxBuffers, size_t maxMemory);
     virtual ~Pco();
-
-// Override of StateMachine::User
-public:
-    virtual int doTransition(StateMachine* machine, int state, int event);
 
 // Parameters
 public:
