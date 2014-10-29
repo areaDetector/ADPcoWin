@@ -60,6 +60,80 @@ StateMachine::Timer::expireStatus StateMachine::Timer::expire(const epicsTime& c
     return noRestart;
 }
 
+/* Transition constructor. */
+StateMachine::Transition::Transition(int st, int ev, AbstractAct* act, int s1, int s2, int s3, int s4)
+	: st(st), ev(ev), act(act), s1(s1), s2(s2), s3(s3), s4(s4) 
+{
+}
+
+/* Lookup constructor. */
+StateMachine::Transition::Transition(int st, int ev)
+	: st(st), ev(ev), act(NULL), s1(0), s2(0), s3(0), s4(0) 
+{
+}
+
+/* Default constructor. */
+StateMachine::Transition::Transition()
+	: st(0), ev(0), act(NULL), s1(0), s2(0), s3(0), s4(0) 
+{
+}
+
+/* Copy constructor. */
+StateMachine::Transition::Transition(const Transition& other)
+	: st(0), ev(0), act(NULL), s1(0), s2(0), s3(0), s4(0) 
+{
+	*this = other;
+}
+
+/* Destructor */
+StateMachine::Transition::~Transition() 
+{
+}
+
+/* Assignment operator */
+StateMachine::Transition& StateMachine::Transition::operator=(const Transition& other) 
+{
+	st=other.st; 
+	ev=other.ev; 
+	act=other.act;
+	s1=other.s1; 
+	s2=other.s2; 
+	s3=other.s3; 
+	s4=other.s4;
+	return *this;
+}
+
+/* Less tha operator so this object can go in a set keyed by initial state and event */
+bool StateMachine::Transition::operator<(const Transition& other) const
+{
+	return st==other.st ? ev<other.ev : st<other.st;
+}
+
+/* Execute this transition and return the next state. */
+int StateMachine::Transition::execute() const 
+{
+	int result = firstState;
+	if(act)
+	{
+		switch((*act)()) 
+		{
+		case firstState: 
+			result = s1; 
+			break;
+		case secondState: 
+			result = s2; 
+			break;
+		case thirdState: 
+			result = s3; 
+			break;
+		default: 
+			result = s4; 
+			break;
+		}
+	}
+	return result;
+}
+
 /**
  * Constructor.
  * \param[in] name The name of the machine, used in trace messages.
@@ -75,7 +149,7 @@ StateMachine::Timer::expireStatus StateMachine::Timer::expire(const epicsTime& c
  */
 StateMachine::StateMachine(const char* name,
         asynPortDriver* portDriver,
-        int handleRecord, User* user, int initial,
+        int handleRecord, int initial,
         const char** stateNames, const char** eventNames,
         TraceStream* tracer, int requestQueueCapacity)
     : state(initial)
@@ -83,7 +157,6 @@ StateMachine::StateMachine(const char* name,
     , tracer(tracer)
     , portDriver(portDriver)
     , handleRecord(handleRecord)
-    , user(user)
     , stateNames(stateNames)
     , eventNames(eventNames)
     , requestQueue(requestQueueCapacity, sizeof(int))
@@ -101,6 +174,26 @@ StateMachine::StateMachine(const char* name,
 StateMachine::~StateMachine()
 {
     this->timerQueue.release();
+	transitions.clear();
+}
+
+/**
+ * Define a state transition.
+ */
+void StateMachine::transition(int st, int ev, AbstractAct* act, int s1, 
+	int s2, int s3, int s4)
+{
+	// The transition
+	Transition transition(st, ev, act, s1, s2, s3, s4);
+	// Is one already in the set with this st/ev pair?
+	std::set<Transition>::iterator pos = transitions.find(transition);
+	if(pos != transitions.end())
+	{
+		// Yes, remove it.
+		transitions.erase(pos);
+	}
+	// Add in this transition
+	transitions.insert(transition);
 }
 
 /**
@@ -150,7 +243,13 @@ void StateMachine::run()
         if(this->requestQueue.receive(&event, sizeof(int)) == sizeof(int))
         {
             // Get the event processed
-            int nextState = this->user->doTransition(this, this->state, event);
+			Transition transition(this->state, event);
+			std::set<Transition>::iterator pos = transitions.find(transition);
+			int nextState = this->state;
+			if(pos != transitions.end())
+			{
+				nextState = pos->execute();
+			}
             // Do the trace
             if(this->tracer != NULL)
             {

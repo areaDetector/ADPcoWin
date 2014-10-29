@@ -172,10 +172,41 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     }
     // Create the state machine
     this->stateMachine = new StateMachine("Pco", this,
-            this->paramStateRecord.getHandle(), this, Pco::stateUninitialised,
+            this->paramStateRecord.getHandle(), Pco::stateUninitialised,
             Pco::stateNames, Pco::eventNames, &this->stateTrace,
             Pco::requestQueueCapacity);
+	stateMachine->transition(stateUninitialised, requestInitialise, new StateMachine::Act<Pco>(this, &Pco::smInitialiseWait), stateUnconnected);
+	stateMachine->transition(stateUnconnected, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smConnectToCamera), stateIdle, stateUnconnected);
+	stateMachine->transition(stateIdle, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileIdle), stateIdle);
+	stateMachine->transition(stateIdle, requestArm, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateArmed, stateIdle);
+	stateMachine->transition(stateIdle, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smArmAndAcquire), statedUnarmedAcquiring, stateIdle);
+	stateMachine->transition(stateIdle, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateIdle);
+	stateMachine->transition(stateIdle, requestReboot, new StateMachine::Act<Pco>(this, &Pco::smRequestReboot), stateUnconnected);
+	stateMachine->transition(stateArmed, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateArmed);
+	stateMachine->transition(stateArmed, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateAcquiring);
+	stateMachine->transition(stateArmed, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smFirstImageWhileArmed), stateExternalAcquiring, stateIdle, stateArmed, stateArmed);
+	stateMachine->transition(stateArmed, requestDisarm, new StateMachine::Act<Pco>(this, &Pco::smDisarmAndDiscard), stateIdle);
+	stateMachine->transition(stateArmed, requestStop, new StateMachine::Act<Pco>(this, &Pco::smDisarmAndDiscard), stateIdle);
+	stateMachine->transition(stateAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateAcquiring);
+	stateMachine->transition(stateAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smAcquireImage), stateAcquiring, stateIdle, stateArmed);
+	stateMachine->transition(stateAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateAcquiring, stateIdle, stateArmed);
+	stateMachine->transition(stateAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateAcquiring);
+	stateMachine->transition(stateAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopAcquisition), stateIdle, stateArmed);
+	stateMachine->transition(stateExternalAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateExternalAcquiring);
+	stateMachine->transition(stateExternalAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smExternalAcquireImage), stateExternalAcquiring, stateIdle, stateArmed);
+	stateMachine->transition(stateExternalAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateExternalAcquiring, stateIdle, stateArmed);
+	stateMachine->transition(stateExternalAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
+	stateMachine->transition(statedUnarmedAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), statedUnarmedAcquiring);
+	stateMachine->transition(statedUnarmedAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smUnarmedAcquireImage), statedUnarmedAcquiring, stateIdle);
+	stateMachine->transition(statedUnarmedAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smUnarmedMakeGangedImage), statedUnarmedAcquiring, stateIdle);
+	stateMachine->transition(statedUnarmedAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), statedUnarmedAcquiring);
+	stateMachine->transition(statedUnarmedAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
     this->triggerTimer = new StateMachine::Timer(this->stateMachine);
+
+
+	apiTrace << "####apiTrace" << std::endl;
+	gangTrace << "####gangTrace" << std::endl;
+	stateTrace << "####stateTrace" << std::endl;
 }
 
 /**
@@ -231,253 +262,6 @@ Pco* Pco::getPco(const char* portName)
         result = pos->second;
     }
     return result;
-}
-
-/**
- * Handle state machine transitions
- */
-int Pco::doTransition(StateMachine* machine, int state, int event)
-{
-    if(machine == this->stateMachine)
-    {
-        switch(state)
-        {
-        case Pco::stateUninitialised:
-            if(event == Pco::requestInitialise)
-            {
-            	smInitialiseWait();
-                state = Pco::stateUnconnected;
-            }
-            break;
-        case Pco::stateUnconnected:
-            if(event == Pco::requestTimerExpiry)
-            {
-                if(this->smConnectToCamera() == StateMachine::firstState)
-                {
-                    state = Pco::stateIdle;
-                }
-                else
-                {
-                    state = Pco::stateUnconnected;
-                }
-            }
-            break;
-        case Pco::stateIdle:
-            if(event == Pco::requestTimerExpiry)
-            {
-            	smPollWhileIdle();
-                state = Pco::stateIdle;
-            }
-            else if(event == Pco::requestArm)
-            {
-            	if(smRequestArm() == StateMachine::firstState)
-            	{
-                    state = Pco::stateArmed;
-            	}
-            	else
-            	{
-                    state = Pco::stateIdle;
-            	}
-            }
-            else if(event == Pco::requestAcquire)
-            {
-            	if(smArmAndAcquire() == StateMachine::firstState)
-            	{
-                    state = Pco::statedUnarmedAcquiring;
-            	}
-            	else
-            	{
-                    state = Pco::stateIdle;
-            	}
-            }
-            else if(event == Pco::requestImageReceived)
-            {
-                smDiscardImages();
-                state = Pco::stateIdle;
-            }
-            else if(event == Pco::requestReboot)
-            {
-            	smRequestReboot();
-                state = Pco::stateUnconnected;
-            }
-            break;
-        case Pco::stateArmed:
-            if(event == Pco::requestTimerExpiry)
-            {
-            	smPollWhileAcquiring();
-                state = Pco::stateArmed;
-            }
-            else if(event == Pco::requestAcquire)
-            {
-            	smAcquire();
-                state = Pco::stateAcquiring;
-            }
-            else if(event == Pco::requestImageReceived)
-            {
-            	switch(smFirstImageWhileArmed())
-            	{
-            	case StateMachine::firstState:
-                    state = Pco::stateExternalAcquiring;
-                    break;
-            	case StateMachine::secondState:
-                    state = Pco::stateIdle;
-                    break;
-            	case StateMachine::thirdState:
-                    state = Pco::stateArmed;
-                    break;
-            	default:
-                    state = Pco::stateArmed;
-                    break;
-            	}
-            }
-            else if(event == Pco::requestDisarm)
-            {
-            	smDisarmAndDiscard();
-                state = Pco::stateIdle;
-            }
-            else if(event == Pco::requestStop)
-            {
-            	smDisarmAndDiscard();
-                state = Pco::stateIdle;
-            }
-            break;
-        case Pco::stateAcquiring:
-            if(event == Pco::requestTimerExpiry)
-            {
-            	smPollWhileAcquiring();
-                state = Pco::stateAcquiring;
-            }
-            else if(event == Pco::requestImageReceived)
-            {
-            	switch(smAcquireImage())
-            	{
-            	case StateMachine::firstState:
-                    state = Pco::stateAcquiring;
-                    break;
-            	case StateMachine::secondState:
-                    state = Pco::stateIdle;
-                    break;
-            	default:
-                    state = Pco::stateArmed;
-                    break;
-            	}
-            }
-            else if(event == Pco::requestMakeImages)
-            {
-            	switch(smMakeGangedImage())
-            	{
-            	case StateMachine::firstState:
-                    state = Pco::stateAcquiring;
-                    break;
-            	case StateMachine::secondState:
-                    state = Pco::stateIdle;
-                    break;
-            	default:
-                    state = Pco::stateArmed;
-                    break;
-            	}
-            }
-            else if(event == Pco::requestTrigger)
-            {
-                smTrigger();
-                state = Pco::stateAcquiring;
-            }
-            else if(event == Pco::requestStop)
-            {
-                if(smStopAcquisition() == StateMachine::firstState)
-                {
-                    state = Pco::stateIdle;
-                }
-                else
-                {
-                    state = Pco::stateArmed;
-                }
-            }
-            break;
-        case Pco::stateExternalAcquiring:
-            if(event == Pco::requestTimerExpiry)
-            {
-            	smPollWhileAcquiring();
-                state = Pco::stateExternalAcquiring;
-            }
-            else if(event == Pco::requestImageReceived)
-            {
-            	switch(smExternalAcquireImage())
-            	{
-            	case StateMachine::firstState:
-                    state = Pco::stateExternalAcquiring;
-                    break;
-            	case StateMachine::secondState:
-                    state = Pco::stateIdle;
-                    break;
-            	default:
-                    state = Pco::stateArmed;
-                    break;
-            	}
-            }
-            else if(event == Pco::requestMakeImages)
-            {
-            	switch(smMakeGangedImage())
-            	{
-            	case StateMachine::firstState:
-                    state = Pco::stateExternalAcquiring;
-                    break;
-            	case StateMachine::secondState:
-                    state = Pco::stateIdle;
-                    break;
-            	default:
-                    state = Pco::stateArmed;
-                    break;
-            	}
-            }
-            else if(event == Pco::requestStop)
-            {
-            	smExternalStopAcquisition();
-				state = Pco::stateIdle;
-            }
-            break;
-        case Pco::statedUnarmedAcquiring:
-            if(event == Pco::requestTimerExpiry)
-            {
-            	smPollWhileAcquiring();
-                state = Pco::statedUnarmedAcquiring;
-            }
-            else if(event == Pco::requestImageReceived)
-            {
-            	if(smUnarmedAcquireImage() == StateMachine::firstState)
-                {
-                    state = Pco::statedUnarmedAcquiring;
-                }
-                else
-                {
-                    state = Pco::stateIdle;
-                }
-            }
-            else if(event == Pco::requestMakeImages)
-            {
-            	if(smUnarmedMakeGangedImage() == StateMachine::firstState)
-            	{
-            		state = Pco::statedUnarmedAcquiring;
-            	}
-                else
-                {
-                    state = Pco::stateIdle;
-                }
-            }
-            else if(event == Pco::requestTrigger)
-            {
-            	smTrigger();
-                state = Pco::statedUnarmedAcquiring;
-            }
-            else if(event == Pco::requestStop)
-            {
-            	smExternalStopAcquisition();
-                state = Pco::stateIdle;
-            }
-            break;
-        }
-    }
-    return state;
 }
 
 /**

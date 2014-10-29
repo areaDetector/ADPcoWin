@@ -23,7 +23,7 @@ class Pco;
 class TraceStream;
 class TakeLock;
 
-class SimulationApi: public DllApi, public StateMachine::User
+class SimulationApi: public DllApi
 {
 // Construction
 public:
@@ -98,10 +98,6 @@ protected:
     virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier);
     virtual int doSetTimeouts(Handle handle, unsigned int commandTimeout,
     		unsigned int imageTimeout, unsigned int transferTimeout);
-
-// Override of StateMachine::User
-public:
-    virtual int doTransition(StateMachine* machine, int state, int event);
 
 // Parameters
 private:
@@ -198,6 +194,9 @@ protected:
     void startTriggerTimer();
     void onConnected(TakeLock& takeLock);
     void onExternalTrigger(TakeLock& takeLock);
+	StateMachine::StateSelector smStartRecording();
+	StateMachine::StateSelector smStopTriggerTimer();
+	StateMachine::StateSelector smCreateFrame();
 };
 
 #endif /* SIMULATIONAPI_H_ */
