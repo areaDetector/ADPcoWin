@@ -19,6 +19,7 @@
 #include "GangServer.h"
 #include "GangConnection.h"
 #include "TakeLock.h"
+#include "FreeLock.h"
 
 /** Constants
  */
@@ -172,7 +173,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     }
     // Create the state machine
     this->stateMachine = new StateMachine("Pco", this,
-            this->paramStateRecord.getHandle(), Pco::stateUninitialised,
+            &paramStateRecord, Pco::stateUninitialised,
             Pco::stateNames, Pco::eventNames, &this->stateTrace,
             Pco::requestQueueCapacity);
 	stateMachine->transition(stateUninitialised, requestInitialise, new StateMachine::Act<Pco>(this, &Pco::smInitialiseWait), stateUnconnected);
@@ -202,11 +203,6 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(statedUnarmedAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), statedUnarmedAcquiring);
 	stateMachine->transition(statedUnarmedAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
     this->triggerTimer = new StateMachine::Timer(this->stateMachine);
-
-
-	apiTrace << "####apiTrace" << std::endl;
-	gangTrace << "####gangTrace" << std::endl;
-	stateTrace << "####stateTrace" << std::endl;
 }
 
 /**
@@ -289,10 +285,8 @@ void Pco::doReboot()
  */
 void Pco::outputStatusMessage(const char* text)
 {
-    this->lock();
+	TakeLock takeLock(this);
     paramADStatusMessage = text;
-    this->callParamCallbacks();
-    this->unlock();
 }
 
 /**
@@ -363,8 +357,8 @@ StateMachine::StateSelector Pco::smPollWhileIdle()
  */
 StateMachine::StateSelector Pco::smPollWhileAcquiring()
 {
-    this->pollCamera();
-    this->stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
+    pollCamera();
+    stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
 }
 
@@ -593,7 +587,7 @@ StateMachine::StateSelector Pco::smExternalAcquireImage()
 }
 
 /**
- * Try and make stiched images in the full control ganged mode.
+ * Try and make stitched images in the full control ganged mode.
  * Returns: firstState: further images to be acquired
  *          secondState: acquisition complete and disarmed
  *          thirdState: acquisition complete and still armed
@@ -761,7 +755,6 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	paramADSizeX = (int)this->camSizes.xResActual;
 	paramADSizeY = (int)this->camSizes.yResActual;
 	paramCamlinkClock = (int)this->camTransfer.clockFrequency;
-	std::cout << "#### sizeX=" << (int)paramADSizeX << " " << (int)this->camSizes.xResActual << std::endl;
 
 	// Initialise the cooling setpoint information
 	paramMinCoolingSetpoint = this->camDescription.minCoolingSetpoint;
@@ -915,6 +908,12 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	// refresh everything
 	this->pollCameraNoAcquisition();
 	this->pollCamera();
+
+	// Inform server if we have one
+	if(gangConnection != NULL)
+	{
+		gangConnection->sendMemberConfig(takeLock);
+	}
 }
 
 /**
@@ -964,7 +963,6 @@ void Pco::initialisePixelRate()
 
         }
     }
-    std::cout << "#### numEnums=" << this->pixRateNumEnums << " handle=" << paramPixRate.getHandle();
     for(int i=0; i<this->pixRateNumEnums; i++)
     {
     	std::cout << " " << this->pixRateEnumStrings[i] << "[" << this->pixRateEnumValues[i] << "]";
@@ -1007,25 +1005,18 @@ bool Pco::pollCameraNoAcquisition()
     try
     {
         unsigned short storageMode;
-        this->api->getStorageMode(this->camera, &storageMode);
-        this->lock();
-        paramStorageMode = (int)storageMode;
-        this->unlock();
-
         unsigned short recorderSubmode;
+        this->api->getStorageMode(this->camera, &storageMode);
         this->api->getRecorderSubmode(this->camera, &recorderSubmode);
-        this->lock();
+        TakeLock takeLock(this);
+        paramStorageMode = (int)storageMode;
         paramRecorderSubmode = (int)recorderSubmode;
-        this->unlock();
     }
     catch(PcoException& e)
     {
         this->errorTrace << "Failure: " << e.what() << std::endl;
         result = false;
     }
-    this->lock();
-    callParamCallbacks();
-    this->unlock();
     return result;
 }
 
@@ -1035,25 +1026,25 @@ bool Pco::pollCameraNoAcquisition()
 bool Pco::pollCamera()
 {
     bool result = true;
-    this->lock();
     try
     {
         // Get the temperature information
         short ccdtemp, camtemp, powtemp;
         this->api->getTemperature(this->camera, &ccdtemp, &camtemp, &powtemp);
+        // Get memory usage
+        int ramUse = this->checkMemoryBuffer();
+        // Update EPICS
+        TakeLock takeLock(this);
         paramADTemperature = (double)ccdtemp/DllApi::ccdTemperatureScaleFactor;
         paramElectronicsTemp = (double)camtemp;
         paramPowerTemp = (double)powtemp;
-        // Get memory usage
-        paramCamRamUse = this->checkMemoryBuffer();
+        paramCamRamUse = ramUse;
     }
     catch(PcoException& e)
     {
         this->errorTrace << "Failure: " << e.what() << std::endl;
         result = false;
     }
-    callParamCallbacks();
-    this->unlock();
     return result;
 }
 
@@ -1221,10 +1212,8 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
     if(image == NULL)
     {
         // Out of area detector NDArrays
-        this->lock();
+    	TakeLock takeLock(this);
         paramOutOfNDArrays = ++this->outOfNDArrays;
-        this->callParamCallbacks();
-        this->unlock();
     }
     return image;
 }
@@ -1254,7 +1243,7 @@ void Pco::frameReceived(int bufferNumber)
         }
     }
     // Give the buffer back to the API
-    this->lock();
+    this->lock();  // JAT: Why am I locking here?
     this->api->addBufferEx(this->camera, /*firstImage=*/0,
         /*lastImage=*/0, bufferNumber,
         this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
@@ -1474,125 +1463,108 @@ void Pco::addAvailableBufferAll() throw(PcoException)
  */
 void Pco::doArm() throw(std::bad_alloc, PcoException)
 {
-    this->lock();
-    try
-    {
-        // Camera now busy
-        paramADStatus = ADStatusReadout;
-        // Get configuration information
-        this->triggerMode = paramADTriggerMode;
-        this->numImages = paramADNumImages;
-        this->imageMode = paramADImageMode;
-        this->timestampMode = paramTimestampMode;
-        this->xMaxSize = paramADMaxSizeX;
-        this->yMaxSize = paramADMaxSizeY;
-        this->reqRoiStartX = paramADMinX;
-        this->reqRoiStartY = paramADMinY;
-        this->reqRoiSizeX = paramADSizeX;
-        this->reqRoiSizeY = paramADSizeY;
-        this->reqBinX = paramADBinX;
-        this->reqBinY = paramADBinY;
-        this->adcMode = paramAdcMode;
-        this->bitAlignmentMode = paramBitAlignment;
-        this->acquireMode = paramAcquireMode;
-        this->pixRateValue = paramPixRate;
-        this->pixRate = this->camDescription.pixelRate[this->pixRateEnumValues[this->pixRateValue]];
-        this->exposureTime = paramADAcquireTime;
-        this->acquisitionPeriod = paramADAcquirePeriod;
-        this->delayTime = paramDelayTime;
-        this->cameraSetup = paramCameraSetup;
-        this->dataType = paramNDDataType;
-        this->reverseX = paramADReverseX;
-        this->reverseY = paramADReverseY;
-        this->minExposureTime = paramExpTimeMin;
-        this->maxExposureTime = paramExpTimeMax;
-        this->minDelayTime = paramDelayTimeMin;
-        this->maxDelayTime = paramDelayTimeMax;
-        this->camlinkLongGap = paramCamlinkLongGap;
+	TakeLock takeLock(this);
+    paramArm = 0;
+	// Camera now busy
+	paramADStatus = ADStatusReadout;
+	// Get configuration information
+	this->triggerMode = paramADTriggerMode;
+	this->numImages = paramADNumImages;
+	this->imageMode = paramADImageMode;
+	this->timestampMode = paramTimestampMode;
+	this->xMaxSize = paramADMaxSizeX;
+	this->yMaxSize = paramADMaxSizeY;
+	this->reqRoiStartX = paramADMinX;
+	this->reqRoiStartY = paramADMinY;
+	this->reqRoiSizeX = paramADSizeX;
+	this->reqRoiSizeY = paramADSizeY;
+	this->reqBinX = paramADBinX;
+	this->reqBinY = paramADBinY;
+	this->adcMode = paramAdcMode;
+	this->bitAlignmentMode = paramBitAlignment;
+	this->acquireMode = paramAcquireMode;
+	this->pixRateValue = paramPixRate;
+	this->pixRate = this->camDescription.pixelRate[this->pixRateEnumValues[this->pixRateValue]];
+	this->exposureTime = paramADAcquireTime;
+	this->acquisitionPeriod = paramADAcquirePeriod;
+	this->delayTime = paramDelayTime;
+	this->cameraSetup = paramCameraSetup;
+	this->dataType = paramNDDataType;
+	this->reverseX = paramADReverseX;
+	this->reverseY = paramADReverseY;
+	this->minExposureTime = paramExpTimeMin;
+	this->maxExposureTime = paramExpTimeMax;
+	this->minDelayTime = paramDelayTimeMin;
+	this->maxDelayTime = paramDelayTimeMax;
+	this->camlinkLongGap = paramCamlinkLongGap;
 
-        // Configure the camera (reading back the actual settings)
-        this->cfgBinningAndRoi();    // Also sets camera image size
-        this->cfgTriggerMode();
-        this->cfgTimestampMode();
-        this->cfgAcquireMode();
-        this->cfgAdcMode();
-        this->cfgBitAlignmentMode();
-        this->cfgPixelRate();
-        this->cfgAcquisitionTimes();
-        this->allocateImageBuffers();
-        this->adjustTransferParamsAndLut();
+	// Configure the camera (reading back the actual settings)
+	this->cfgBinningAndRoi();    // Also sets camera image size
+	this->cfgTriggerMode();
+	this->cfgTimestampMode();
+	this->cfgAcquireMode();
+	this->cfgAdcMode();
+	this->cfgBitAlignmentMode();
+	this->cfgPixelRate();
+	this->cfgAcquisitionTimes();
+	this->allocateImageBuffers();
+	this->adjustTransferParamsAndLut();
 
-        // Update what we have really set
-        paramADMinX = this->reqRoiStartX;
-        paramADMinY = this->reqRoiStartY;
-        paramADSizeX = this->reqRoiSizeX;
-        paramADSizeY = this->reqRoiSizeY;
-        paramADTriggerMode = this->triggerMode;
-        paramTimestampMode = this->timestampMode;
-        paramAcquireMode = this->acquireMode;
-        paramAdcMode = this->adcMode;
-        paramBitAlignment = this->bitAlignmentMode;
-        paramPixRate = this->pixRateValue;
-        paramADAcquireTime = this->exposureTime;
-        paramADAcquirePeriod = this->acquisitionPeriod;
-        paramDelayTime = this->delayTime;
-        paramHwBinX = this->hwBinX;
-        paramHwBinY = this->hwBinY;
-        paramHwRoiX1 = this->hwRoiX1;
-        paramHwRoiY1 = this->hwRoiY1;
-        paramHwRoiX2 = this->hwRoiX2;
-        paramHwRoiY2 = this->hwRoiY2;
-        paramXCamSize = this->xCamSize;
-        paramYCamSize = this->yCamSize;
+	// Update what we have really set
+	paramADMinX = this->reqRoiStartX;
+	paramADMinY = this->reqRoiStartY;
+	paramADSizeX = this->reqRoiSizeX;
+	paramADSizeY = this->reqRoiSizeY;
+	paramADTriggerMode = this->triggerMode;
+	paramTimestampMode = this->timestampMode;
+	paramAcquireMode = this->acquireMode;
+	paramAdcMode = this->adcMode;
+	paramBitAlignment = this->bitAlignmentMode;
+	paramPixRate = this->pixRateValue;
+	paramADAcquireTime = this->exposureTime;
+	paramADAcquirePeriod = this->acquisitionPeriod;
+	paramDelayTime = this->delayTime;
+	paramHwBinX = this->hwBinX;
+	paramHwBinY = this->hwBinY;
+	paramHwRoiX1 = this->hwRoiX1;
+	paramHwRoiY1 = this->hwRoiY1;
+	paramHwRoiX2 = this->hwRoiX2;
+	paramHwRoiY2 = this->hwRoiY2;
+	paramXCamSize = this->xCamSize;
+	paramYCamSize = this->yCamSize;
+	// Inform server if we have one
+	if(gangConnection != NULL)
+	{
+		gangConnection->sendMemberConfig(takeLock);
+	}
 
-        // Set the image parameters for the image buffer transfer inside the CamLink and GigE interface.
-        // While using CamLink or GigE this function must be called, before the user tries to get images
-        // from the camera and the sizes have changed. With all other interfaces this is a dummy call.
-        this->api->camlinkSetImageParameters(this->camera, this->xCamSize, this->yCamSize);
+	// Set the image parameters for the image buffer transfer inside the CamLink and GigE interface.
+	// While using CamLink or GigE this function must be called, before the user tries to get images
+	// from the camera and the sizes have changed. With all other interfaces this is a dummy call.
+	this->api->camlinkSetImageParameters(this->camera, this->xCamSize, this->yCamSize);
 
-        // Make sure the pco camera clock is correct
-        this->setCameraClock();
+	// Make sure the pco camera clock is correct
+	this->setCameraClock();
 
-        // Give the buffers to the camera
-        this->addAvailableBufferAll();
-        this->lastImageNumber = 0;
-        this->lastImageNumberValid = false;
+	// Give the buffers to the camera
+	this->addAvailableBufferAll();
+	this->lastImageNumber = 0;
+	this->lastImageNumberValid = false;
 
-        // Now Arm the camera, so it is ready to take images, all settings should have been made by now
-        this->api->arm(this->camera);
+	// Now Arm the camera, so it is ready to take images, all settings should have been made by now
+	this->api->arm(this->camera);
 
-        // Start the camera recording
-        this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
+	// Start the camera recording
+	this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 
-        // The PCO4000 appears to output 1,2 or 3 dodgy frames immediately on
-        // getting the arm.  This bit of code tries to drop them.
-        if(this->camType == DllApi::cameraType4000)
-        {
-            this->unlock();
-            epicsThreadSleep(0.3);
-            this->lock();
-            this->discardImages();        // Dump any images
-        }
-
-        // Update EPICS
-        paramArm = 0;
-        this->callParamCallbacks();
-        this->unlock();
-    }
-    catch(PcoException& e)
-    {
-        paramArm = 0;
-        this->callParamCallbacks();
-        this->unlock();
-        throw e;
-    }
-    catch(std::bad_alloc& e)
-    {
-        paramArm = 0;
-        this->callParamCallbacks();
-        this->unlock();
-        throw e;
-    }
+	// The PCO4000 appears to output 1,2 or 3 dodgy frames immediately on
+	// getting the arm.  This bit of code tries to drop them.
+	if(this->camType == DllApi::cameraType4000)
+	{
+		FreeLock freeLock(takeLock);
+		epicsThreadSleep(0.3);
+		this->discardImages();        // Dump any images
+	}
 }
 
 /**
@@ -1921,7 +1893,7 @@ void Pco::cfgAcquisitionTimes() throw(PcoException)
  */
 void Pco::nowAcquiring() throw()
 {
-    this->lock();
+	TakeLock takeLock(this);
     // Get info
     this->arrayCounter = paramNDArrayCounter;
     this->numImages = paramADNumImages;
@@ -1948,8 +1920,6 @@ void Pco::nowAcquiring() throw()
     paramADNumImagesCounter = this->numImagesCounter;
     paramADNumExposuresCounter = this->numExposuresCounter;
     // Update EPICS
-    this->callParamCallbacks();
-    this->unlock();
     this->updateErrorCounters();
 }
 
@@ -1958,12 +1928,10 @@ void Pco::nowAcquiring() throw()
  */
 void Pco::acquisitionComplete() throw()
 {
-    this->lock();
+	TakeLock takeLock(this);
     paramADStatus = ADStatusIdle;
     paramADAcquire = 0;
-    this->callParamCallbacks();
     this->triggerTimer->stop();
-    this->unlock();
 }
 
 /**
@@ -1971,10 +1939,9 @@ void Pco::acquisitionComplete() throw()
  */
 void Pco::doDisarm() throw()
 {
-    this->lock();
+	TakeLock lock(this);
     paramArmMode = 0;
     paramDisarm = 0;
-    this->callParamCallbacks();
     try
     {
         this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
@@ -1984,7 +1951,6 @@ void Pco::doDisarm() throw()
         // Not much we can do with this error
     }
     this->freeImageBuffers();
-    this->unlock();
 }
 
 /**
@@ -1992,15 +1958,13 @@ void Pco::doDisarm() throw()
  */
 void Pco::updateErrorCounters() throw()
 {
-    this->lock();
+	TakeLock takeLock(this);
     paramOutOfNDArrays = this->outOfNDArrays;
     paramBufferQueueReadFailures = this->bufferQueueReadFailures;
     paramBuffersWithNoData = this->buffersWithNoData;
     paramMisplacedBuffers = this->misplacedBuffers;
     paramMissingFrames = this->missingFrames;
     paramDriverLibraryErrors = this->driverLibraryErrors;
-    this->callParamCallbacks();
-    this->unlock();
 }
 
 /**
@@ -2085,9 +2049,8 @@ bool Pco::receiveImages() throw()
             {
                 this->missingFrames++;
                 printf("Missing frame, got=%ld, exp=%ld\n", imageNumber, this->lastImageNumber+1);
-                this->lock();
+                TakeLock takeLock(this);
                 paramMissingFrames = this->missingFrames;
-                this->unlock();
             }
             this->lastImageNumber = imageNumber;
             // Do software ROI, binning and reversal if required
@@ -2171,11 +2134,9 @@ bool Pco::receiveImages() throw()
             }
         }
     }
-    this->lock();
+    TakeLock takelLock(this);
     paramADNumExposuresCounter = this->numExposuresCounter;
     paramImageNumber = this->lastImageNumber;
-    this->callParamCallbacks();
-    this->unlock();
     return this->imageMode != ADImageContinuous &&
     		this->numImagesCounter >= this->numImages;
 }
@@ -2191,11 +2152,9 @@ void Pco::imageComplete(NDArray* image)
     // Pass the array on
     this->doCallbacksGenericPointer(image, NDArrayData, 0);
     image->release();
-    this->lock();
+    TakeLock takeLock(this);
     paramNDArrayCounter = arrayCounter;
     paramADNumImagesCounter = this->numImagesCounter;
-    this->callParamCallbacks();
-    this->unlock();
 }
 
 /**

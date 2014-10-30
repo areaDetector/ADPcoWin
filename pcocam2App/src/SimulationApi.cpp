@@ -106,7 +106,7 @@ SimulationApi::SimulationApi(Pco* pco, TraceStream* trace)
     }
     // Create the state machine
     this->stateMachine = new StateMachine("SimulationApi", this->pco,
-            paramStateRecord.getHandle(), SimulationApi::stateConnected,
+            &paramStateRecord, SimulationApi::stateConnected,
             SimulationApi::stateNames, SimulationApi::eventNames, trace);
 	stateMachine->transition(stateConnected, requestConnectionDown, NULL, stateDisconnected);
 	stateMachine->transition(stateConnected, requestOpen, NULL, stateOpen);
@@ -370,7 +370,7 @@ int SimulationApi::doGetCameraDescription(Handle handle, Description* descriptio
         description->roiHorSteps = (unsigned short)paramRoiHorSteps;
         description->roiVertSteps = (unsigned short)paramRoiVertSteps;
         description->pixelRate[0] = (unsigned long)paramPixelRate;
-        description->pixelRate[1] = 0;
+        description->pixelRate[1] = 32000000;
         description->pixelRate[2] = 0;
         description->pixelRate[3] = 0;
         description->convFact = (unsigned short)paramConvFact;

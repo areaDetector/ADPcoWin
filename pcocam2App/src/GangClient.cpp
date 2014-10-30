@@ -91,7 +91,6 @@ void GangClient::receive(char tag, int parameter, void* data, size_t dataSize)
 		break;
 	case 'i':
 		// Place the image in the queue
-		printf("####imageReceived 1\n");
 		imageQueue.push_back(std::pair<int,NDArray*>(parameter, image));
 		image = NULL;
 		// Get the main thread to forward any complete images
