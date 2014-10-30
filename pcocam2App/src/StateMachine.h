@@ -6,12 +6,13 @@
 #define __STATE_MACHINE_H
 
 #include <string>
-#include <set>
+#include <map>
 #include "epicsMessageQueue.h"
 #include "epicsThread.h"
 #include "epicsTimer.h"
 #include "asynPortDriver.h"
 class TraceStream;
+class StringParam;
 
 class StateMachine: public epicsThreadRunable
 {
@@ -49,32 +50,38 @@ public:
         virtual expireStatus expire(const epicsTime& currentTime);
     };
 private:
-	class Transition
+	class TransitionAct
 	{
 	private:
-		int st;
-		int ev;
 		AbstractAct* act;
 		int s1;
 		int s2;
 		int s3;
 		int s4;
 	public: 
-		Transition(int st, int ev, AbstractAct* act, int s1, int s2, int s3, int s4);
-		Transition(int st, int ev);
-		Transition();
-		Transition(const Transition& other);
-		~Transition();
-		Transition& operator=(const Transition& other);
-		bool operator<(const Transition& other) const;
+		TransitionAct(AbstractAct* act, int s1, int s2, int s3, int s4);
+		~TransitionAct();
 		int execute() const;
 	};
-	std::set<Transition> transitions;
+	class TransitionKey
+	{
+	private:
+		int st;
+		int ev;
+	public:
+		TransitionKey(int st, int ev);
+		TransitionKey();
+		TransitionKey(const TransitionKey& other);
+		~TransitionKey();
+		TransitionKey& operator=(const TransitionKey& other);
+		bool operator<(const TransitionKey& other) const;
+	};
+	std::map<TransitionKey, TransitionAct*> transitions;
     int state;
     std::string name;
     TraceStream* tracer;
     asynPortDriver* portDriver;
-    int handleRecord;
+    StringParam* paramRecord;
     enum {maxStateRecordLength=40};
     const char** stateNames;
     const char** eventNames;
@@ -84,7 +91,7 @@ private:
     Timer timer;
 public:
     StateMachine(const char* name, asynPortDriver* portDriver,
-            int handleRecord, int initial,
+            StringParam* paramRecord, int initial,
             const char** stateNames, const char** eventNames,
             TraceStream* tracer=NULL, int requestQueueCapacity=10);
     virtual ~StateMachine();

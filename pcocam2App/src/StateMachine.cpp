@@ -4,7 +4,10 @@
 
 #include "StateMachine.h"
 #include "TraceStream.h"
-#include <string.h>
+#include "StringParam.h"
+#include "TakeLock.h"
+#include <string>
+#include <algorithm>
 
 /**
  * Timer class constructor.
@@ -60,78 +63,82 @@ StateMachine::Timer::expireStatus StateMachine::Timer::expire(const epicsTime& c
     return noRestart;
 }
 
-/* Transition constructor. */
-StateMachine::Transition::Transition(int st, int ev, AbstractAct* act, int s1, int s2, int s3, int s4)
-	: st(st), ev(ev), act(act), s1(s1), s2(s2), s3(s3), s4(s4) 
+/* Transition action constructor. */
+StateMachine::TransitionAct::TransitionAct(AbstractAct* act, int s1, int s2, int s3, int s4)
+	: act(act), s1(s1), s2(s2), s3(s3), s4(s4)
 {
 }
 
-/* Lookup constructor. */
-StateMachine::Transition::Transition(int st, int ev)
-	: st(st), ev(ev), act(NULL), s1(0), s2(0), s3(0), s4(0) 
+/* Trasition action destructor */
+StateMachine::TransitionAct::~TransitionAct()
 {
-}
-
-/* Default constructor. */
-StateMachine::Transition::Transition()
-	: st(0), ev(0), act(NULL), s1(0), s2(0), s3(0), s4(0) 
-{
-}
-
-/* Copy constructor. */
-StateMachine::Transition::Transition(const Transition& other)
-	: st(0), ev(0), act(NULL), s1(0), s2(0), s3(0), s4(0) 
-{
-	*this = other;
-}
-
-/* Destructor */
-StateMachine::Transition::~Transition() 
-{
-}
-
-/* Assignment operator */
-StateMachine::Transition& StateMachine::Transition::operator=(const Transition& other) 
-{
-	st=other.st; 
-	ev=other.ev; 
-	act=other.act;
-	s1=other.s1; 
-	s2=other.s2; 
-	s3=other.s3; 
-	s4=other.s4;
-	return *this;
-}
-
-/* Less tha operator so this object can go in a set keyed by initial state and event */
-bool StateMachine::Transition::operator<(const Transition& other) const
-{
-	return st==other.st ? ev<other.ev : st<other.st;
-}
-
-/* Execute this transition and return the next state. */
-int StateMachine::Transition::execute() const 
-{
-	int result = firstState;
 	if(act)
 	{
-		switch((*act)()) 
+		delete act;
+	}
+}
+
+/* Execute this transition action and return the next state. */
+int StateMachine::TransitionAct::execute() const
+{
+	int result = s1;
+	if(act)
+	{
+		switch((*act)())
 		{
-		case firstState: 
-			result = s1; 
+		case firstState:
+			result = s1;
 			break;
-		case secondState: 
-			result = s2; 
+		case secondState:
+			result = s2;
 			break;
-		case thirdState: 
-			result = s3; 
+		case thirdState:
+			result = s3;
 			break;
-		default: 
-			result = s4; 
+		default:
+			result = s4;
 			break;
 		}
 	}
 	return result;
+}
+
+/* Transition key constructor. */
+StateMachine::TransitionKey::TransitionKey(int st, int ev)
+	: st(st), ev(ev)
+{
+}
+
+/* Transition key default constructor. */
+StateMachine::TransitionKey::TransitionKey()
+	: st(0), ev(0)
+{
+}
+
+/* Transition key copy constructor. */
+StateMachine::TransitionKey::TransitionKey(const TransitionKey& other)
+	: st(0), ev(0)
+{
+	*this = other;
+}
+
+/* Transition key destructor */
+StateMachine::TransitionKey::~TransitionKey()
+{
+}
+
+/* Transition key assignment operator */
+StateMachine::TransitionKey& StateMachine::TransitionKey::operator=(const TransitionKey& other)
+{
+	st=other.st; 
+	ev=other.ev; 
+	return *this;
+}
+
+/* Transition key less tha operator so this object can be used as a map key */
+bool StateMachine::TransitionKey::operator<(const TransitionKey& other) const
+{
+	return st==other.st ? ev<other.ev : st<other.st;
 }
 
 /**
@@ -140,7 +147,7 @@ int StateMachine::Transition::execute() const
  * \param[in] portUser An asynUser object to use when outputting trace.
  * \param[in] portDriver The asynPortDriver object that contains the state record.
  * \param[in] traceFlag The asyn trace flag to use when outputting trace.
- * \param[in] handleRecord The asyn string parameter handle of the state record.
+ * \param[in] paramRecord The asyn string parameter to contain the state record.
  * \param[in] user Pointer to the state machine user that handles transitions.
  * \param[in] initial The initial state of the machine.
  * \param[in] stateNames An array of state name strings.
@@ -149,14 +156,14 @@ int StateMachine::Transition::execute() const
  */
 StateMachine::StateMachine(const char* name,
         asynPortDriver* portDriver,
-        int handleRecord, int initial,
+        StringParam* paramRecord, int initial,
         const char** stateNames, const char** eventNames,
         TraceStream* tracer, int requestQueueCapacity)
     : state(initial)
     , name(name)
     , tracer(tracer)
     , portDriver(portDriver)
-    , handleRecord(handleRecord)
+    , paramRecord(paramRecord)
     , stateNames(stateNames)
     , eventNames(eventNames)
     , requestQueue(requestQueueCapacity, sizeof(int))
@@ -174,6 +181,11 @@ StateMachine::StateMachine(const char* name,
 StateMachine::~StateMachine()
 {
     this->timerQueue.release();
+    std::map<TransitionKey, TransitionAct*>::iterator pos;
+    for(pos=transitions.begin(); pos!=transitions.end(); ++pos)
+    {
+    	delete pos->second;
+    }
 	transitions.clear();
 }
 
@@ -184,16 +196,18 @@ void StateMachine::transition(int st, int ev, AbstractAct* act, int s1,
 	int s2, int s3, int s4)
 {
 	// The transition
-	Transition transition(st, ev, act, s1, s2, s3, s4);
-	// Is one already in the set with this st/ev pair?
-	std::set<Transition>::iterator pos = transitions.find(transition);
+	TransitionAct* action = new TransitionAct(act, s1, s2, s3, s4);
+	TransitionKey key(st, ev);
+	// Is one already in the map with this st/ev pair?
+	std::map<TransitionKey, TransitionAct*>::iterator pos = transitions.find(key);
 	if(pos != transitions.end())
 	{
 		// Yes, remove it.
+		delete pos->second;
 		transitions.erase(pos);
 	}
 	// Add in this transition
-	transitions.insert(transition);
+	transitions[key] = action;
 }
 
 /**
@@ -243,12 +257,12 @@ void StateMachine::run()
         if(this->requestQueue.receive(&event, sizeof(int)) == sizeof(int))
         {
             // Get the event processed
-			Transition transition(this->state, event);
-			std::set<Transition>::iterator pos = transitions.find(transition);
+			TransitionKey key(this->state, event);
+			std::map<TransitionKey, TransitionAct*>::iterator pos = transitions.find(key);
 			int nextState = this->state;
 			if(pos != transitions.end())
 			{
-				nextState = pos->execute();
+				nextState = pos->second->execute();
 			}
             // Do the trace
             if(this->tracer != NULL)
@@ -263,19 +277,14 @@ void StateMachine::run()
                 //        "[" << nextState << "]" << std::endl;
             }
             // Update the state record
-            this->portDriver->lock();
-            char stateRecord[maxStateRecordLength+1];
-            this->portDriver->getStringParam(this->handleRecord, maxStateRecordLength,
-                    stateRecord);
-            stateRecord[maxStateRecordLength] = '\0';
-            size_t stateRecordLen = strlen(stateRecord);
-            if(stateRecordLen < maxStateRecordLength)
             {
-                stateRecord[stateRecordLen] += ('0'+(char)nextState);
-                stateRecord[stateRecordLen+1] = '\0';
-                this->portDriver->setStringParam(this->handleRecord, stateRecord);
+            	TakeLock takeLock(portDriver);
+            	std::string record = *paramRecord;
+            	record += (char)nextState;
+            	size_t startPos = record.size() - maxStateRecordLength;
+            	startPos = std::max<size_t>(startPos, 0);
+            	*paramRecord = record.substr(startPos, maxStateRecordLength);
             }
-            this->portDriver->unlock();
             // Change the state
             this->state = nextState;
         }

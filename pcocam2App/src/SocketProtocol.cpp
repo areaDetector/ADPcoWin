@@ -25,6 +25,7 @@
 #include "epicsThread.h"
 #include "epicsEvent.h"
 #include "epicsMutex.h"
+#include <iostream>
 
 /** Receive thread constructor
  * \param[in] owner The owner socket protocol
