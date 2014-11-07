@@ -22,14 +22,6 @@
 const int SimulationApi::edgeSetupDataLength = 1;
 const int SimulationApi::edgeSetupDataType = 1;
 
-/** State machine strings
- */
-const char* SimulationApi::eventNames[] = {"ConnectionUp", "ConnectionDown",
-        "Open", "Close", "StartRecording", "StopRecording", "Trigger", "Arm",
-        "CancelImages"};
-const char* SimulationApi::stateNames[] = {"Connected", "Open", "Disconnected",
-        "Armed", "Recording"};
-
 /**
  * Constructor
  */
@@ -106,9 +98,25 @@ SimulationApi::SimulationApi(Pco* pco, TraceStream* trace)
     }
     // Create the state machine
     this->stateMachine = new StateMachine("SimulationApi", this->pco,
-            &paramStateRecord, SimulationApi::stateConnected,
-            SimulationApi::stateNames, SimulationApi::eventNames, trace);
-	stateMachine->transition(stateConnected, requestConnectionDown, NULL, stateDisconnected);
+            &paramStateRecord, trace);
+	// Events
+    requestConnectionUp = stateMachine->event("ConnectionUp");
+    requestConnectionDown = stateMachine->event("ConnectionDown");
+    requestOpen = stateMachine->event("Open");
+    requestClose = stateMachine->event("Close");
+    requestStartRecording = stateMachine->event("StartRecording");
+    requestStopRecording = stateMachine->event("StopRecording");
+    requestTrigger = stateMachine->event("Trigger");
+    requestArm = stateMachine->event("Arm");
+    requestCancelImages = stateMachine->event("CancelImages");
+    // States
+    stateConnected = stateMachine->state("Connected");
+    stateOpen = stateMachine->state("Open");
+    stateDisconnected = stateMachine->state("Disconnected");
+    stateArmed = stateMachine->state("Armed");
+    stateRecording = stateMachine->state("Recording");
+    // Transitions
+    stateMachine->transition(stateConnected, requestConnectionDown, NULL, stateDisconnected);
 	stateMachine->transition(stateConnected, requestOpen, NULL, stateOpen);
 	stateMachine->transition(stateOpen, requestConnectionDown, NULL, stateDisconnected);
 	stateMachine->transition(stateOpen, requestClose, NULL, stateConnected);
@@ -122,6 +130,8 @@ SimulationApi::SimulationApi(Pco* pco, TraceStream* trace)
 	stateMachine->transition(stateRecording, requestClose, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateConnected);
 	stateMachine->transition(stateRecording, requestStopRecording, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateArmed);
 	stateMachine->transition(stateRecording, requestTrigger, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smCreateFrame), stateRecording);
+	// Starting state
+	stateMachine->initialState(stateConnected);
 }
 
 /**
@@ -135,7 +145,7 @@ SimulationApi::~SimulationApi()
 /**
  * Post a request
  */
-void SimulationApi::post(Request req)
+void SimulationApi::post(const StateMachine::Event* req)
 {
     this->stateMachine->post(req);
 }

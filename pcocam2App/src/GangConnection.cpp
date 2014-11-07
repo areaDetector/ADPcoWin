@@ -79,20 +79,20 @@ void GangConnection::receive(char tag, int parameter, void* data, size_t dataSiz
 	case 'a':
 		*trace << "Gang client received arm" << std::endl;
 		config.toPco(pco, takeLock);
-        pco->post(Pco::requestArm);
+        pco->post(pco->requestArm);
         break;
 	case 'd':
 		*trace << "Gang client received disarm" << std::endl;
-        pco->post(Pco::requestDisarm);
+        pco->post(pco->requestDisarm);
         break;
 	case 's':
 		*trace << "Gang client received start" << std::endl;
 		config.toPco(pco, takeLock);
-        pco->post(Pco::requestAcquire);
+        pco->post(pco->requestAcquire);
 		break;
 	case 'x':
 		*trace << "Gang client received stop" << std::endl;
-        pco->post(Pco::requestStop);
+        pco->post(pco->requestStop);
 		break;
 	case 'c':
 		*trace << "Gang client received server config" << std::endl;
