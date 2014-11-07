@@ -55,13 +55,6 @@ const double Pco::triggerRetryPeriod = 0.01;
 const int Pco::statusMessageSize = 256;
 
 
-/** State machine strings
- */
-const char* Pco::eventNames[] = {"Initialise", "TimerExpiry", "Acquire",
-    "Stop", "Arm", "ImageReceived", "Disarm", "Trigger", "Reboot", "MakeImages"};
-const char* Pco::stateNames[] =  {"Uninitialised", "Unconnected", "Idle",
-    "Armed", "Acquiring", "UnarmedAcquiring", "ExternalAcquiring"};
-
 /** The PCO object map
  */
 std::map<std::string, Pco*> Pco::thePcos;
@@ -155,27 +148,45 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     paramADMaxSizeY = 1024;
     paramNDArraySize = 0;
     // We are not connected to a camera
-    this->camera = NULL;
+    camera = NULL;
     // Initialise the buffers
     for(int i=0; i<Pco::numApiBuffers; i++)
     {
-        this->buffers[i].bufferNumber = DllApi::bufferUnallocated;
-        this->buffers[i].buffer = NULL;
-        this->buffers[i].eventHandle = NULL;
-        this->buffers[i].ready = false;
+        buffers[i].bufferNumber = DllApi::bufferUnallocated;
+        buffers[i].buffer = NULL;
+        buffers[i].eventHandle = NULL;
+        buffers[i].ready = false;
     }
     // Initialise the enum strings
     for(int i=0; i<DllApi::descriptionNumPixelRates; i++)
     {
-        this->pixRateEnumValues[i] = 0;
-        this->pixRateEnumStrings[i] = (char *)calloc(MAX_ENUM_STRING_SIZE, sizeof(char));
-        this->pixRateEnumSeverities[i] = 0;
+        pixRateEnumValues[i] = 0;
+        pixRateEnumStrings[i] = (char *)calloc(MAX_ENUM_STRING_SIZE, sizeof(char));
+        pixRateEnumSeverities[i] = 0;
     }
     // Create the state machine
-    this->stateMachine = new StateMachine("Pco", this,
-            &paramStateRecord, Pco::stateUninitialised,
-            Pco::stateNames, Pco::eventNames, &this->stateTrace,
-            Pco::requestQueueCapacity);
+    stateMachine = new StateMachine("Pco", this,
+            &paramStateRecord, &stateTrace, Pco::requestQueueCapacity);
+    // States
+	stateUninitialised = stateMachine->state("Uninitialised");
+	stateUnconnected = stateMachine->state("Unconnected");
+	stateIdle = stateMachine->state("Idle");
+    stateArmed = stateMachine->state("Armed");
+    stateAcquiring = stateMachine->state("Acquiring");
+	statedUnarmedAcquiring = stateMachine->state("UnarmedAcquiring");
+	stateExternalAcquiring = stateMachine->state("ExternalAcquiring");
+	// Events
+    requestInitialise = stateMachine->event("Initialise");
+	requestTimerExpiry = stateMachine->event("TimerExpiry");
+	requestAcquire = stateMachine->event("Acquire");
+	requestStop = stateMachine->event("Stop");
+	requestArm = stateMachine->event("Arm");
+	requestImageReceived = stateMachine->event("ImageReceived");
+	requestDisarm = stateMachine->event("Disarm");
+	requestTrigger = stateMachine->event("Trigger");
+	requestReboot = stateMachine->event("Reboot");
+	requestMakeImages = stateMachine->event("MakeImages");
+	// Transitions
 	stateMachine->transition(stateUninitialised, requestInitialise, new StateMachine::Act<Pco>(this, &Pco::smInitialiseWait), stateUnconnected);
 	stateMachine->transition(stateUnconnected, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smConnectToCamera), stateIdle, stateUnconnected);
 	stateMachine->transition(stateIdle, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileIdle), stateIdle);
@@ -202,7 +213,10 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(statedUnarmedAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smUnarmedMakeGangedImage), statedUnarmedAcquiring, stateIdle);
 	stateMachine->transition(statedUnarmedAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), statedUnarmedAcquiring);
 	stateMachine->transition(statedUnarmedAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
-    this->triggerTimer = new StateMachine::Timer(this->stateMachine);
+	// State machine starting state
+	stateMachine->initialState(stateUninitialised);
+	// A timer for the trigger
+    triggerTimer = new StateMachine::Timer(stateMachine);
 }
 
 /**
@@ -212,26 +226,26 @@ Pco::~Pco()
 {
     try
     {
-        this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
-        this->api->cancelImages(this->camera);
+        api->setRecordingState(this->camera, DllApi::recorderStateOff);
+        api->cancelImages(this->camera);
         for(int i=0; i<Pco::numApiBuffers; i++)
         {
-            this->api->freeBuffer(this->camera, i);
+            api->freeBuffer(camera, i);
         }
-        this->api->closeCamera(this->camera);
+        api->closeCamera(camera);
     }
     catch(PcoException&)
     {
     }
     for(int i=0; i<Pco::numApiBuffers; i++)
     {
-        if(this->buffers[i].buffer != NULL)
+        if(buffers[i].buffer != NULL)
         {
-            delete[] this->buffers[i].buffer;
+            delete[] buffers[i].buffer;
         }
     }
-    delete this->triggerTimer;
-    delete this->stateMachine;
+    delete triggerTimer;
+    delete stateMachine;
 }
 
 /**
@@ -241,7 +255,7 @@ Pco::~Pco()
 void Pco::registerDllApi(DllApi* api)
 {
     this->api = api;
-    this->post(Pco::requestInitialise);
+    post(requestInitialise);
 }
 
 /**
@@ -265,18 +279,18 @@ Pco* Pco::getPco(const char* portName)
  */
 void Pco::doReboot()
 {
-	this->api->setTimeouts(this->camera, 2000, 3000, 250);
+	api->setTimeouts(this->camera, 2000, 3000, 250);
 	switch(this->camType)
 	{
 	case DllApi::cameraTypeEdge:
 	case DllApi::cameraTypeEdgeGl:
-		this->api->rebootCamera(this->camera);
+		api->rebootCamera(this->camera);
 		break;
 	default:
 		break;
 	}
-    this->api->closeCamera(this->camera);
-    this->camera = 0;
+    api->closeCamera(this->camera);
+    camera = NULL;
 }
 
 /**
@@ -696,12 +710,12 @@ StateMachine::StateSelector Pco::smExternalStopAcquisition()
 void Pco::initialiseCamera(TakeLock& takeLock)
 {
 	// Get various camera data
-	this->api->getGeneral(this->camera);
-	this->api->getCameraType(this->camera, &this->camType);
-	this->api->getSensorStruct(this->camera);
-	this->api->getCameraDescription(this->camera, &this->camDescription);
-	this->api->getStorageStruct(this->camera, &this->camRamSize, &this->camPageSize);
-	this->api->getRecordingStruct(this->camera);
+	api->getGeneral(camera);
+	api->getCameraType(camera, &camType);
+	api->getSensorStruct(camera);
+	api->getCameraDescription(camera, &camDescription);
+	api->getStorageStruct(camera, &camRamSize, &camPageSize);
+	api->getRecordingStruct(camera);
 
 	// Corrections for values that appear to be incorrectly returned by the SDK
 	switch(this->camType)
@@ -709,7 +723,7 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	case DllApi::cameraTypeDimaxStd:
 	case DllApi::cameraTypeDimaxTv:
 	case DllApi::cameraTypeDimaxAutomotive:
-		this->camDescription.roiVertSteps = 4;
+		camDescription.roiVertSteps = 4;
 		break;
 	default:
 		break;
@@ -718,7 +732,7 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	// reset the camera
 	try
 	{
-		this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
+		api->setRecordingState(camera, DllApi::recorderStateOff);
 	}
 	catch(PcoException&)
 	{
@@ -726,7 +740,7 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	}
 	try
 	{
-		this->api->resetSettingsToDefault(this->camera);
+		api->resetSettingsToDefault(camera);
 	}
 	catch(PcoException&)
 	{
@@ -734,18 +748,18 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	}
 
 	// Record binning and roi capabilities
-	paramMaxBinHorz = (int)this->camDescription.maxBinHorz;
-	paramMaxBinVert = (int)this->camDescription.maxBinVert;
-	paramBinHorzStepping = (int)this->camDescription.binHorzStepping;
-	paramBinVertStepping = (int)this->camDescription.binVertStepping;
-	paramRoiHorzSteps = (int)this->camDescription.roiHorSteps;
-	paramRoiVertSteps = (int)this->camDescription.roiVertSteps;
+	paramMaxBinHorz = (int)camDescription.maxBinHorz;
+	paramMaxBinVert = (int)camDescription.maxBinVert;
+	paramBinHorzStepping = (int)camDescription.binHorzStepping;
+	paramBinVertStepping = (int)camDescription.binVertStepping;
+	paramRoiHorzSteps = (int)camDescription.roiHorSteps;
+	paramRoiVertSteps = (int)camDescription.roiVertSteps;
 
 	// Build the set of binning values
-	this->setValidBinning(this->availBinX, this->camDescription.maxBinHorz,
-			this->camDescription.binHorzStepping);
-	this->setValidBinning(this->availBinY, this->camDescription.maxBinVert,
-			this->camDescription.binVertStepping);
+	setValidBinning(availBinX, camDescription.maxBinHorz,
+			camDescription.binHorzStepping);
+	setValidBinning(availBinY, camDescription.maxBinVert,
+			camDescription.binVertStepping);
 
 	// Get more camera information
 	this->api->getTransferParameters(this->camera, &this->camTransfer);
@@ -963,11 +977,6 @@ void Pco::initialisePixelRate()
 
         }
     }
-    for(int i=0; i<this->pixRateNumEnums; i++)
-    {
-    	std::cout << " " << this->pixRateEnumStrings[i] << "[" << this->pixRateEnumValues[i] << "]";
-    }
-    std::cout << std::endl;
     // Give the enum strings to the PV
     this->doCallbacksEnum(this->pixRateEnumStrings, this->pixRateEnumValues, this->pixRateEnumSeverities,
         this->pixRateNumEnums, paramPixRate.getHandle(), 0);
@@ -1196,7 +1205,7 @@ void Pco::onADTemperature(TakeLock& takeLock)
 /**
  * Post a request
  */
-void Pco::post(Request req)
+void Pco::post(const StateMachine::Event* req)
 {
     this->stateMachine->post(req);
 }
@@ -1223,8 +1232,10 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
  */
 void Pco::frameReceived(int bufferNumber)
 {
+	// JAT: Is this optimisation necessary?  I think it is also a little unsafe.
+	//      I wonder why I put it in here in the first place?
     // Drop frames if we are idle
-    if(!this->stateMachine->isState(stateIdle))
+    //if(!this->stateMachine->isState(stateIdle))
     {
         // Get an ND array
     	NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
@@ -1347,7 +1358,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
         if(this->cameraSetup == DllApi::edgeSetupGlobalShutter)
         {
             // Works in global and rolling modes
-            this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12 | 
+            this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12 |
                 DllApi:: sccmosFormatTopCenterBottomCenter;
             lutIdentifier = DllApi::camlinkLutNone;
         }
@@ -1358,14 +1369,14 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
             {
                 // Options for edge are PCO_CL_DATAFORMAT_5x12L (uses sqrt LUT) and 
                 // PCO_CL_DATAFORMAT_5x12 (data shifted 2 LSBs lost)
-                this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12L | 
+                this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12L |
                     DllApi::sccmosFormatTopCenterBottomCenter;
                 lutIdentifier = DllApi::camLinkLutSqrt;
             } 
             else 
             {
                 // Doesn't work in global, works in rolling
-                this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x16 | 
+                this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x16 |
                     DllApi::sccmosFormatTopCenterBottomCenter;
                 lutIdentifier = DllApi::camlinkLutNone;
             }
@@ -1440,7 +1451,7 @@ void Pco::addAvailableBuffer(int index) throw(PcoException)
     if(this->buffers[index].ready)
     {
         this->api->addBufferEx(this->camera, /*firstImage=*/0,
-            /*lastImage=*/0, this->buffers[index].bufferNumber, 
+            /*lastImage=*/0, this->buffers[index].bufferNumber,
             this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
         this->buffers[index].ready = false;
     }

@@ -126,17 +126,10 @@ public:
     enum {xDimension=0, yDimension=1, numDimensions=2};
     enum {recordingStateRetry=10};
     enum {gangModeNone=0, gangModeServer=1, gangModeConnection=2};
-// Types
-public:
-    enum Request {requestInitialise=0, requestTimerExpiry, requestAcquire,
-        requestStop, requestArm, requestImageReceived, requestDisarm,
-        requestTrigger, requestReboot, requestMakeImages};
-    enum State {stateUninitialised=0, stateUnconnected, stateIdle,
-        stateArmed, stateAcquiring, statedUnarmedAcquiring, stateExternalAcquiring};
 
 // API for use by component classes
 public:
-    void post(Request req);
+    void post(const StateMachine::Event* req);
     void frameReceived(int bufferNumber);
     void trace(int flags, const char* format, ...);
     asynUser* getAsynUser();
@@ -297,6 +290,27 @@ private:
     void onCoolingSetpoint(TakeLock& takeLock);
     void onADTemperature(TakeLock& takeLock);
     void onReboot(TakeLock& takeLock);
+
+public:
+    // States
+	const StateMachine::State* stateUninitialised;
+	const StateMachine::State* stateUnconnected;
+	const StateMachine::State* stateIdle;
+    const StateMachine::State* stateArmed;
+    const StateMachine::State* stateAcquiring;
+	const StateMachine::State* statedUnarmedAcquiring;
+	const StateMachine::State* stateExternalAcquiring;
+	// Events
+    const StateMachine::Event* requestInitialise;
+	const StateMachine::Event* requestTimerExpiry;
+	const StateMachine::Event* requestAcquire;
+	const StateMachine::Event* requestStop;
+	const StateMachine::Event* requestArm;
+	const StateMachine::Event* requestImageReceived;
+	const StateMachine::Event* requestDisarm;
+	const StateMachine::Event* requestTrigger;
+	const StateMachine::Event* requestReboot;
+	const StateMachine::Event* requestMakeImages;
 
 public:
     StateMachine::StateSelector smInitialiseWait();

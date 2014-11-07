@@ -161,13 +161,23 @@ private:
 	IntegerParam paramExternalTrigger;
 	StringParam paramStateRecord;
 
-// Types
 public:
-    enum Request {requestConnectionUp=0, requestConnectionDown, requestOpen,
-        requestClose, requestStartRecording, requestStopRecording,
-        requestTrigger, requestArm, requestCancelImages};
-    enum State {stateConnected=0, stateOpen, stateDisconnected, stateArmed,
-        stateRecording};
+	// Events
+    const StateMachine::Event* requestConnectionUp;
+    const StateMachine::Event* requestConnectionDown;
+    const StateMachine::Event* requestOpen;
+    const StateMachine::Event* requestClose;
+    const StateMachine::Event* requestStartRecording;
+    const StateMachine::Event* requestStopRecording;
+    const StateMachine::Event* requestTrigger;
+    const StateMachine::Event* requestArm;
+    const StateMachine::Event* requestCancelImages;
+    // States
+    const StateMachine::State* stateConnected;
+    const StateMachine::State* stateOpen;
+    const StateMachine::State* stateDisconnected;
+    const StateMachine::State* stateArmed;
+    const StateMachine::State* stateRecording;
 
 // Constants
 protected:
@@ -189,7 +199,7 @@ protected:
 
 // Functions
 protected:
-    void post(Request req);
+    void post(const StateMachine::Event* req);
     void generateFrame();
     void startTriggerTimer();
     void onConnected(TakeLock& takeLock);

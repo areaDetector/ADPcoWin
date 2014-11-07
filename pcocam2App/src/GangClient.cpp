@@ -94,7 +94,7 @@ void GangClient::receive(char tag, int parameter, void* data, size_t dataSize)
 		imageQueue.push_back(std::pair<int,NDArray*>(parameter, image));
 		image = NULL;
 		// Get the main thread to forward any complete images
-	    pco->post(Pco::requestMakeImages);
+	    pco->post(pco->requestMakeImages);
 		// Update counters
 		paramQueueSize = (int)imageQueue.size();
 		break;

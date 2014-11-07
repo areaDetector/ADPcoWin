@@ -34,7 +34,7 @@ StateMachine::Timer::~Timer()
  * \param[in] delay Time in seconds to timer expiry
  * \param[in] expiryEvent The event to post to the state machine on expiry
  */
-void StateMachine::Timer::start(double delay, int expiryEvent)
+void StateMachine::Timer::start(double delay, const Event* expiryEvent)
 {
     this->expiryEvent = expiryEvent;
     this->timer.start(*this, delay);
@@ -64,7 +64,8 @@ StateMachine::Timer::expireStatus StateMachine::Timer::expire(const epicsTime& c
 }
 
 /* Transition action constructor. */
-StateMachine::TransitionAct::TransitionAct(AbstractAct* act, int s1, int s2, int s3, int s4)
+StateMachine::TransitionAct::TransitionAct(AbstractAct* act, const State* s1, const State* s2,
+		const State* s3, const State* s4)
 	: act(act), s1(s1), s2(s2), s3(s3), s4(s4)
 {
 }
@@ -79,9 +80,9 @@ StateMachine::TransitionAct::~TransitionAct()
 }
 
 /* Execute this transition action and return the next state. */
-int StateMachine::TransitionAct::execute() const
+const StateMachine::State* StateMachine::TransitionAct::execute() const
 {
-	int result = s1;
+	const State* result = s1;
 	if(act)
 	{
 		switch((*act)())
@@ -104,20 +105,20 @@ int StateMachine::TransitionAct::execute() const
 }
 
 /* Transition key constructor. */
-StateMachine::TransitionKey::TransitionKey(int st, int ev)
+StateMachine::TransitionKey::TransitionKey(const State* st, const Event* ev)
 	: st(st), ev(ev)
 {
 }
 
 /* Transition key default constructor. */
 StateMachine::TransitionKey::TransitionKey()
-	: st(0), ev(0)
+	: st(NULL), ev(NULL)
 {
 }
 
 /* Transition key copy constructor. */
 StateMachine::TransitionKey::TransitionKey(const TransitionKey& other)
-	: st(0), ev(0)
+	: st(NULL), ev(NULL)
 {
 	*this = other;
 }
@@ -135,10 +136,10 @@ StateMachine::TransitionKey& StateMachine::TransitionKey::operator=(const Transi
 	return *this;
 }
 
-/* Transition key less tha operator so this object can be used as a map key */
+/* Transition key less than operator so this object can be used as a map key */
 bool StateMachine::TransitionKey::operator<(const TransitionKey& other) const
 {
-	return st==other.st ? ev<other.ev : st<other.st;
+	return *st == *other.st ? *ev < *other.ev : *st < *other.st;
 }
 
 /**
@@ -156,17 +157,14 @@ bool StateMachine::TransitionKey::operator<(const TransitionKey& other) const
  */
 StateMachine::StateMachine(const char* name,
         asynPortDriver* portDriver,
-        StringParam* paramRecord, int initial,
-        const char** stateNames, const char** eventNames,
+        StringParam* paramRecord,
         TraceStream* tracer, int requestQueueCapacity)
-    : state(initial)
+    : currentState(NULL)
     , name(name)
     , tracer(tracer)
     , portDriver(portDriver)
     , paramRecord(paramRecord)
-    , stateNames(stateNames)
-    , eventNames(eventNames)
-    , requestQueue(requestQueueCapacity, sizeof(int))
+    , requestQueue(requestQueueCapacity, sizeof(const Event*))
     , thread(*this, name, epicsThreadGetStackSize(epicsThreadStackMedium))
     , timerQueue(epicsTimerQueueActive::allocate(true))
     , timer(this)
@@ -182,18 +180,31 @@ StateMachine::~StateMachine()
 {
     this->timerQueue.release();
     std::map<TransitionKey, TransitionAct*>::iterator pos;
-    for(pos=transitions.begin(); pos!=transitions.end(); ++pos)
+    for(std::map<TransitionKey, TransitionAct*>::iterator pos=transitions.begin();
+    		pos!=transitions.end(); ++pos)
     {
     	delete pos->second;
     }
 	transitions.clear();
+    for(std::list<const State*>::iterator pos=states.begin();
+    		pos!=states.end(); ++pos)
+    {
+    	delete *pos;
+    }
+    states.clear();
+    for(std::list<const Event*>::iterator pos=events.begin();
+    		pos!=events.end(); ++pos)
+    {
+    	delete *pos;
+    }
+    events.clear();
 }
 
 /**
  * Define a state transition.
  */
-void StateMachine::transition(int st, int ev, AbstractAct* act, int s1, 
-	int s2, int s3, int s4)
+void StateMachine::transition(const State* st, const Event* ev, AbstractAct* act,
+		const State* s1, const State* s2, const State* s3, const State* s4)
 {
 	// The transition
 	TransitionAct* action = new TransitionAct(act, s1, s2, s3, s4);
@@ -211,19 +222,43 @@ void StateMachine::transition(int st, int ev, AbstractAct* act, int s1,
 }
 
 /**
+ * Define a state
+ */
+const StateMachine::State* StateMachine::state(const char* name)
+{
+	states.push_back(new State(name, (int)states.size()));
+	return states.back();
+}
+
+/**
+ * Define an event
+ */
+const StateMachine::Event* StateMachine::event(const char* name)
+{
+	events.push_back(new Event(name, (int)events.size()));
+	return events.back();
+}
+
+/**
+ * Set the state machine's initial state
+ */
+void StateMachine::initialState(const State* state)
+{
+	currentState = state;
+}
+
+
+/**
  * Post an event to the request queue.
  * \param[in] req The event to post.
  */
-void StateMachine::post(int req)
+void StateMachine::post(const Event* req)
 {
-    if(this->tracer != NULL)
+    if(tracer != NULL)
     {
-        this->tracer->printf("%s: post request = %s[%d]\n",
-                this->name.c_str(), this->eventNames[req], req);
-        //*this->tracer << this->name << ": post request = " << this->eventNames[req] <<
-        //        "[" << req << "]" << std::endl;
+    	*(tracer) << name << ": post request = " << *req << std::endl;
     }
-    this->requestQueue.trySend(&req, sizeof(int));
+    requestQueue.trySend(&req, sizeof(const Event*));
 }
 
 /**
@@ -231,7 +266,7 @@ void StateMachine::post(int req)
  * \param[in] delay Time in seconds to timer expiry
  * \param[in] expiryEvent The event to post to the state machine on expiry
  */
-void StateMachine::startTimer(double delay, int expiryEvent)
+void StateMachine::startTimer(double delay, const Event* expiryEvent)
 {
     this->timer.stop();
     this->timer.start(delay, expiryEvent);
@@ -253,40 +288,34 @@ void StateMachine::run()
 {
     while(true)
     {
-        int event;
-        if(this->requestQueue.receive(&event, sizeof(int)) == sizeof(int))
+        const Event* event;
+        if(requestQueue.receive(&event, sizeof(const Event*)) == sizeof(const Event*))
         {
             // Get the event processed
-			TransitionKey key(this->state, event);
+			TransitionKey key(currentState, event);
 			std::map<TransitionKey, TransitionAct*>::iterator pos = transitions.find(key);
-			int nextState = this->state;
+			const State* nextState = this->currentState;
 			if(pos != transitions.end())
 			{
 				nextState = pos->second->execute();
 			}
             // Do the trace
-            if(this->tracer != NULL)
+            if(tracer != NULL)
             {
-                this->tracer->printf("%s: %s[%d] --%s[%d]--> %s[%d]\n",
-                        this->name.c_str(), this->stateNames[this->state],
-                        this->state, this->eventNames[event], event,
-                        this->stateNames[nextState], nextState);
-                //*this->tracer << this->name << ": " << this->stateNames[this->state] <<
-                //        "[" << this->state << "] --" << this->eventNames[event] <<
-                //        "[" << event << "]--> " << this->stateNames[nextState] <<
-                //        "[" << nextState << "]" << std::endl;
+            	(*tracer) << name << ": " << *currentState << "--" << *event << "--> " <<
+            			*nextState << std::endl;
             }
             // Update the state record
             {
             	TakeLock takeLock(portDriver);
             	std::string record = *paramRecord;
-            	record += (char)nextState;
+            	record += (char)(int)*nextState;
             	size_t startPos = record.size() - maxStateRecordLength;
             	startPos = std::max<size_t>(startPos, 0);
             	*paramRecord = record.substr(startPos, maxStateRecordLength);
             }
             // Change the state
-            this->state = nextState;
+            currentState = nextState;
         }
     }
 }
@@ -296,7 +325,7 @@ void StateMachine::run()
  */
  int StateMachine::pending()
  {
-     return this->requestQueue.pending();
+     return requestQueue.pending();
  }
 
  /**
@@ -304,18 +333,18 @@ void StateMachine::run()
   */
  void StateMachine::clear()
 {
-    int event;
-    while(this->requestQueue.tryReceive(&event, sizeof(int)) == sizeof(int))
+    const Event* event;
+    while(requestQueue.tryReceive(&event, sizeof(const Event*)) == sizeof(const Event*))
     {
         // Just discard messages on the queue
     }
 }
 
-/**
+ /**
  * Returns true if the state machine is currently in the given state.
  */
-bool StateMachine::isState(int s)
+bool StateMachine::isState(const State* s)
 {
-    return this->state == s;
+    return this->currentState == s;
 }
 
