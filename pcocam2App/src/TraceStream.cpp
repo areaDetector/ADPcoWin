@@ -39,7 +39,7 @@ void TraceBuf::vprintf(const char *pformat, va_list argptr)
     {
         TraceBuf::mutex.lock();
         epicsVsnprintf(message, maxTraceBuff, pformat, argptr);
-        asynPrint(user, flag, "%s", message);;
+        asynPrint(user, flag, "%s", message);
         TraceBuf::mutex.unlock();
     }
 }
