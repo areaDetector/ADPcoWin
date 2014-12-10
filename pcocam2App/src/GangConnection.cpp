@@ -22,7 +22,7 @@
 // When used at the client end, the server is NULL
 GangConnection::GangConnection(Pco* pco, TraceStream* trace, const char* serverIp,
 		int serverPort)
-	: SocketProtocol("GangConnection", "pco_gang")
+	: SocketProtocol("GangConnection", "pco_gang", 40000000)
 	, pco(pco)
 	, trace(trace)
     , paramIsConnected(pco, "PCO_GANGCONN_CONNECTED", 0)

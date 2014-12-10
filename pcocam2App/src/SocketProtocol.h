@@ -73,7 +73,7 @@ private:
     enum {RXSTATE_PREAMBLE=0, RXSTATE_HEADER=1, RXSTATE_DATA=2} rxState;
     size_t requiredSize;
 public:
-    SocketProtocol(const char* name, const char* preamble);
+    SocketProtocol(const char* name, const char* preamble, size_t maxMessageSize);
     virtual ~SocketProtocol();
     void server(long long fd);
     void client(const char* hostName, int tcpPort);

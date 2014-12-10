@@ -20,7 +20,7 @@
 
 // Connection class constructor
 GangClient::Connection::Connection(GangClient* owner)
-	: SocketProtocol("GangClient", "pco_gang")
+	: SocketProtocol("GangClient", "pco_gang", 40000000)
 	, owner(owner)
 {
 }

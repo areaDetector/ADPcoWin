@@ -136,6 +136,7 @@ void DllApi::getCameraDescription(Handle handle, Description* description) throw
         description->pixelRate[2] << "," << description->pixelRate[3] << "}, " <<
         description->convFact << "," << description->minCoolingSetpoint << "," <<
         description->maxCoolingSetpoint << "," << description->defaultCoolingSetpoint <<
+        ", " << description->generalCaps <<
         "}) = " << result << std::endl;
     if(result != DllApi::errorNone)
     {
