@@ -24,7 +24,7 @@ const int GangServer::maxConnections = 3;
 
 // Constructor.
 GangServer::GangServer(Pco* pco, TraceStream* trace, int gangPortNumber)
-	: SocketProtocol("GangServer", "")
+	: SocketProtocol("GangServer", "", 40000000)
 	, pco(pco)
 	, trace(trace)
 	, paramNumConnections(pco, "PCO_GANGSERV_CONNECTIONS", 0)

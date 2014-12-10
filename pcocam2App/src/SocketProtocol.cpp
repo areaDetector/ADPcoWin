@@ -43,7 +43,7 @@ SocketProtocol::RxThread::RxThread(SocketProtocol* owner, const char* threadName
  * \param[in] name A name that will be used for the thread
  * \param[in] preamble The preamble string that starts a message
  */
-SocketProtocol::SocketProtocol(const char* name, const char* preamble)
+SocketProtocol::SocketProtocol(const char* name, const char* preamble, size_t maxMessageSize)
 : rxThread(this, name)
 , fd(0)
 , state(STATE_IDLE)
@@ -54,7 +54,7 @@ SocketProtocol::SocketProtocol(const char* name, const char* preamble)
 , rxState(RXSTATE_PREAMBLE)
 , requiredSize(0)
 {
-    this->txbuffer = new char[10000000];
+    this->txbuffer = new char[maxMessageSize];
     /* An event for communicating initialisation state changes to the thread. */
     this->initialiseEventId = epicsEventCreate(epicsEventEmpty);
     if(this->initialiseEventId == 0)
