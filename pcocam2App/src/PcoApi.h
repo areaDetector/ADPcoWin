@@ -112,8 +112,8 @@ protected:
 	virtual int doSetDoubleImageMode(Handle handle, unsigned short mode);
 	virtual int doSetOffsetMode(Handle handle, unsigned short mode);
 	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode);
-	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned short seg1,
-		unsigned short seg2, unsigned short seg3, unsigned short seg4);
+	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
+		unsigned long seg2, unsigned long seg3, unsigned long seg4);
 
 // Overrides of epicsThreadRunable
 public:

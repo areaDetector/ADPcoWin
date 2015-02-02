@@ -195,8 +195,8 @@ protected:
 	virtual int doSetDoubleImageMode(Handle handle, unsigned short mode) = 0;
 	virtual int doSetOffsetMode(Handle handle, unsigned short mode) = 0;
 	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode) = 0;
-	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned short seg1,
-		unsigned short seg2, unsigned short seg3, unsigned short seg4) = 0;
+	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
+		unsigned long seg2, unsigned long seg3, unsigned long seg4) = 0;
 
 // API for Pco class
 public:
@@ -280,8 +280,8 @@ public:
 	void setDoubleImageMode(Handle handle, unsigned short mode) throw(PcoException);
 	void setOffsetMode(Handle handle, unsigned short mode) throw(PcoException);
 	void setNoiseFilterMode(Handle handle, unsigned short mode) throw(PcoException);
-	void setCameraRamSegmentSize(Handle handle, unsigned short seg1, unsigned short seg2,
-		unsigned short seg3, unsigned short seg4) throw(PcoException);
+	void setCameraRamSegmentSize(Handle handle, unsigned long seg1, unsigned long seg2,
+		unsigned long seg3, unsigned long seg4) throw(PcoException);
 
 // Members
 protected:

@@ -1009,8 +1009,8 @@ void DllApi::setNoiseFilterMode(Handle handle, unsigned short mode) throw(PcoExc
 /**
  * Set the camera RAM segment size.
  */
-void DllApi::setCameraRamSegmentSize(Handle handle, unsigned short seg1,
-	unsigned short seg2, unsigned short seg3, unsigned short seg4) throw(PcoException)
+void DllApi::setCameraRamSegmentSize(Handle handle, unsigned long seg1,
+	unsigned long seg2, unsigned long seg3, unsigned long seg4) throw(PcoException)
 {
     int result = doSetCameraRamSegmentSize(handle, seg1, seg2, seg3, seg4);
     *this->trace << "DllApi->SetCameraRamSegmentSize(" << handle <<

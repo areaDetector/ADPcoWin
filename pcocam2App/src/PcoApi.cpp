@@ -777,10 +777,10 @@ int PcoApi::doSetNoiseFilterMode(Handle handle, unsigned short mode)
 /**
  * Set the camera RAM segment size
  */
-int PcoApi::doSetCameraRamSegmentSize(Handle handle, unsigned short seg1,
-	unsigned short seg2, unsigned short seg3, unsigned short seg4)
+int PcoApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
+	unsigned long seg2, unsigned long seg3, unsigned long seg4)
 {
-	unsigned short segs[4] = {seg1, seg2, seg3, seg4};
+	unsigned long segs[4] = {seg1, seg2, seg3, seg4};
 	return PCO_SetCameraRamSegmentSize(handle, segs);
 }
 
