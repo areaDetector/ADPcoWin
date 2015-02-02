@@ -299,6 +299,7 @@ void GangServer::makeCompleteImages(TakeLock& takeLock)
 		if(missingPiece)
 		{
 			// Part of this frame has gone missing, count and discard
+			paramMissingPieces = paramMissingPieces + 1;
 			imageQueue.front().second->release();
 			imageQueue.pop_front();
 		}

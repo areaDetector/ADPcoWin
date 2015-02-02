@@ -1205,6 +1205,8 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
     	TakeLock takeLock(this);
         paramOutOfNDArrays = ++this->outOfNDArrays;
     }
+    std::cout << "#### numBuffers=" << this->pNDArrayPool->numBuffers() <<
+    		", numFree=" << this->pNDArrayPool->numFree() << std::endl;
     return image;
 }
 
