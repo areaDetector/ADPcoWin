@@ -54,6 +54,12 @@ const double Pco::oneMillisecond = 1e-3;
 const double Pco::triggerRetryPeriod = 0.01;
 const int Pco::statusMessageSize = 256;
 
+/** Aligned allocation for DLL buffers. */
+#ifdef _WIN32
+#else
+#define _aligned_malloc(siz, align) malloc(siz)
+#define _aligned_free(buff) free(buff)
+#endif
 
 /** The PCO object map
  */
@@ -1522,7 +1528,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->api->setConversionFactor(this->camera, this->camDescription.convFact);
 	this->api->setNoiseFilterMode(this->camera, 0);
 	this->api->setRecorderSubmode(this->camera, 1);
-	this->api->setCameraRamSegmentSize(this->camera, 
+	//this->api->setCameraRamSegmentSize(this->camera,
 	this->cfgBinningAndRoi();    // Also sets camera image size
 	this->cfgTriggerMode();
 	this->cfgTimestampMode();

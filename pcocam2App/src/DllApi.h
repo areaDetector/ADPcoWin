@@ -276,12 +276,12 @@ public:
 	void getCameraBusyStatus(Handle handle, unsigned short* status);
 	void getExpTrigSignalStatus(Handle handle, unsigned short* status);
 	void getAcqEnblSignalStatus(Handle handle, unsigned short* status);
-	void setSensorFormat(Handle handle, unsigned short format);
-	void setDoubleImageMode(Handle handle, unsigned short mode);
-	void setOffsetMode(Handle handle, unsigned short mode);
-	void setNoiseFilterMode(Handle handle, unsigned short mode);
+	void setSensorFormat(Handle handle, unsigned short format) throw(PcoException);
+	void setDoubleImageMode(Handle handle, unsigned short mode) throw(PcoException);
+	void setOffsetMode(Handle handle, unsigned short mode) throw(PcoException);
+	void setNoiseFilterMode(Handle handle, unsigned short mode) throw(PcoException);
 	void setCameraRamSegmentSize(Handle handle, unsigned short seg1, unsigned short seg2,
-		unsigned short seg3, unsigned short seg4);
+		unsigned short seg3, unsigned short seg4) throw(PcoException);
 
 // Members
 protected:
