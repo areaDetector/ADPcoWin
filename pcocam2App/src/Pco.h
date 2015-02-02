@@ -87,6 +87,10 @@ public:
     IntegerParam paramGangMode;
 	IntegerParam paramADAcquire;
 	DoubleParam paramADTemperature;
+	IntegerParam paramCameraRam;
+	IntegerParam paramCameraBusy;
+	IntegerParam paramExpTrigger;
+	IntegerParam paramAcqEnable;
 
 // Constants
 public:

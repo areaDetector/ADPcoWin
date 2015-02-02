@@ -15,7 +15,7 @@
 
 #include <string>
 #include "asynPortDriver.h"
-#include <PcoException.h>
+#include "PcoException.h"
 class Pco;
 class TraceStream;
 
@@ -165,6 +165,7 @@ protected:
     virtual int doGetRecordingState(Handle handle, unsigned short* state) = 0;
     virtual int doSetRecordingState(Handle handle, unsigned short state) = 0;
     virtual int doGetRecorderSubmode(Handle handle, unsigned short* mode) = 0;
+    virtual int doSetRecorderSubmode(Handle handle, unsigned short mode) = 0;
     virtual int doAllocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
             unsigned short** buffer, Handle* event) = 0;
     virtual int doCancelImages(Handle handle) = 0;
@@ -177,11 +178,25 @@ protected:
     virtual int doForceTrigger(Handle handle, unsigned short* triggered) = 0;
     virtual int doFreeBuffer(Handle handle, short bufferNumber) = 0;
     virtual int doGetActiveRamSegment(Handle handle, unsigned short* segment) = 0;
+    virtual int doSetActiveRamSegment(Handle handle, unsigned short segment) = 0;
     virtual int doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount) = 0;
     virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier) = 0;
     virtual int doSetTimeouts(Handle handle, unsigned int commandTimeout,
     		unsigned int imageTimeout, unsigned int transferTimeout) = 0;
+    virtual int doClearRamSegment(Handle handle) = 0;
+	virtual int doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize) = 0;
+	virtual int doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
+			unsigned long* status) = 0;
+	virtual int doGetCameraBusyStatus(Handle handle, unsigned short* status) = 0;
+	virtual int doGetExpTrigSignalStatus(Handle handle, unsigned short* status) = 0;
+	virtual int doGetAcqEnblSignalStatus(Handle handle, unsigned short* status) = 0;
+	virtual int doSetSensorFormat(Handle handle, unsigned short format) = 0;
+	virtual int doSetDoubleImageMode(Handle handle, unsigned short mode) = 0;
+	virtual int doSetOffsetMode(Handle handle, unsigned short mode) = 0;
+	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode) = 0;
+	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned short seg1,
+		unsigned short seg2, unsigned short seg3, unsigned short seg4) = 0;
 
 // API for Pco class
 public:
@@ -234,6 +249,7 @@ public:
     void getRecordingState(Handle handle, unsigned short* state) throw(PcoException);
     void setRecordingState(Handle handle, unsigned short state) throw(PcoException);
     void getRecorderSubmode(Handle handle, unsigned short* mode) throw(PcoException);
+    void setRecorderSubmode(Handle handle, unsigned short mode) throw(PcoException);
     void allocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
             unsigned short** buffer, Handle* event) throw(PcoException);
     void cancelImages(Handle handle) throw(PcoException);
@@ -247,11 +263,25 @@ public:
     void forceTrigger(Handle handle, unsigned short* triggered) throw(PcoException);
     void freeBuffer(Handle handle, short bufferNumber) throw(PcoException);
     void getActiveRamSegment(Handle handle, unsigned short* segment) throw(PcoException);
+    void setActiveRamSegment(Handle handle, unsigned short segment) throw(PcoException);
     void getNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount) throw(PcoException);
     void setActiveLookupTable(Handle handle, unsigned short identifier) throw(PcoException);
     void setTimeouts(Handle handle, unsigned int commandTimeout,
     		unsigned int imageTimeout, unsigned int transferTimeout);
+    void clearRamSegment(Handle handle);
+	void getCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize);
+	void getCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
+			unsigned long* status);
+	void getCameraBusyStatus(Handle handle, unsigned short* status);
+	void getExpTrigSignalStatus(Handle handle, unsigned short* status);
+	void getAcqEnblSignalStatus(Handle handle, unsigned short* status);
+	void setSensorFormat(Handle handle, unsigned short format);
+	void setDoubleImageMode(Handle handle, unsigned short mode);
+	void setOffsetMode(Handle handle, unsigned short mode);
+	void setNoiseFilterMode(Handle handle, unsigned short mode);
+	void setCameraRamSegmentSize(Handle handle, unsigned short seg1, unsigned short seg2,
+		unsigned short seg3, unsigned short seg4);
 
 // Members
 protected:

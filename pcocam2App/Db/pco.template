@@ -744,3 +744,50 @@ record(mbbi, "$(P)$(R)GANGMODE_RBV")
     field(TWST, "Connection")
     field(TWVL, "2")
 }
+
+# % gdatag, pv, ro, $(PORT)_pcocam, CAM_RAM_RBV, Camera RAM size
+record(longin, "$(P)$(R)CAM_RAM_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAM_RAM")
+    field(PREC, "0")
+    field(EGU, "MBytes")
+    field(SCAN, "I/O Intr")
+}
+
+# Camera busy
+record(mbbi, "$(P)$(R)CAM_BUSY_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAM_BUSY")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Idle")
+    field(ZRVL, "0")
+    field(ONST, "Busy")
+    field(ONVL, "1")
+}
+
+# Exposure trigger signal
+record(mbbi, "$(P)$(R)EXP_TRIGGER_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_EXP_TRIGGER")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Inactive")
+    field(ZRVL, "0")
+    field(ONST, "Active")
+    field(ONVL, "1")
+}
+
+# Acquisition enable signal
+record(mbbi, "$(P)$(R)ACQ_ENABLE_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ACQ_ENABLE")
+    field(SCAN, "I/O Intr")
+    field(ZRST, "Inactive")
+    field(ZRVL, "0")
+    field(ONST, "Active")
+    field(ONVL, "1")
+}
+

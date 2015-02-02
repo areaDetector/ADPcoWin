@@ -658,6 +658,20 @@ void DllApi::getRecorderSubmode(Handle handle, unsigned short* mode) throw(PcoEx
 }
 
 /**
+ * Set the recorder submode.
+ */
+void DllApi::setRecorderSubmode(Handle handle, unsigned short mode) throw(PcoException)
+{
+    int result = doSetRecorderSubmode(handle, mode);
+    *this->trace << "DllApi->SetRecorderSubmode(" << handle <<
+        ", " << mode << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setRecorderSubmode", result);
+    }
+}
+
+/**
  * Allocate a buffer
  */
 void DllApi::allocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
@@ -792,6 +806,20 @@ void DllApi::getActiveRamSegment(Handle handle, unsigned short* segment) throw(P
 }
 
 /**
+ * Set the active RAM segment.
+ */
+void DllApi::setActiveRamSegment(Handle handle, unsigned short segment) throw(PcoException)
+{
+    int result = doSetActiveRamSegment(handle, segment);
+    *this->trace << "DllApi->SetActiveRamSegment(" << handle <<
+        ", " << segment << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setActiveRamSegment", result);
+    }
+}
+
+/**
  * Get the number of images in a segment.
  */
 void DllApi::getNumberOfImagesInSegment(Handle handle, unsigned short segment,
@@ -834,5 +862,161 @@ void DllApi::setTimeouts(Handle handle, unsigned int commandTimeout,
     if(result != DllApi::errorNone)
     {
         throw PcoException("setTimeouts", result);
+    }
+}
+
+/**
+ * Clear active RAM segment
+ */
+void DllApi::clearRamSegment(Handle handle)
+{
+    int result = doClearRamSegment(handle);
+    this->trace->printf("DllApi->ClearRamSegment(%p) = 0x%x\n",
+            handle, result);
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("clearRamSegment", result);
+    }
+}
+
+/**
+ * Get the RAM size
+ */
+void DllApi::getCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize)
+{
+    int result = doGetCameraRamSize(handle, numPages, pageSize);
+    *this->trace << "DllApi->GetCameraRamSize(" << handle << ", " <<
+        *numPages << ", " << *pageSize << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getCameraRamSize", result);
+    }
+}
+
+/**
+ * Get camera health status
+ */
+void DllApi::getCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
+		unsigned long* status)
+{
+    int result = doGetCameraHealthStatus(handle, warnings, errors, status);
+    *this->trace << "DllApi->GetCameraHealthStatus(" << handle << ", " <<
+        *warnings << ", " << *errors << ", " << *status << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getCameraHealthStatus", result);
+    }
+}
+
+/**
+ * Get camera busy status
+ */
+void DllApi::getCameraBusyStatus(Handle handle, unsigned short* status)
+{
+    int result = doGetCameraBusyStatus(handle, status);
+    *this->trace << "DllApi->GetCameraBusyStatus(" << handle << ", " <<
+        *status << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getCameraBusyStatus", result);
+    }
+}
+
+/**
+ * Get exposure trigger status
+ */
+void DllApi::getExpTrigSignalStatus(Handle handle, unsigned short* status)
+{
+    int result = doGetExpTrigSignalStatus(handle, status);
+    *this->trace << "DllApi->GetExpTrigSignalStatus(" << handle << ", " <<
+        *status << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getExpTrigSignalStatus", result);
+    }
+}
+
+/**
+ * Get acquisition enable status
+ */
+void DllApi::getAcqEnblSignalStatus(Handle handle, unsigned short* status)
+{
+    int result = doGetAcqEnblSignalStatus(handle, status);
+    *this->trace << "DllApi->GetAcqEnblSignalStatus(" << handle << ", " <<
+        *status << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getAcqEnblSignalStatus", result);
+    }
+}
+
+/**
+ * Set the sensor format.
+ */
+void DllApi::setSensorFormat(Handle handle, unsigned short format) throw(PcoException)
+{
+    int result = doSetSensorFormat(handle, format);
+    *this->trace << "DllApi->SetSensorFormat(" << handle <<
+        ", " << format << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setSensorFormat", result);
+    }
+}
+
+/**
+ * Set double image mode.
+ */
+void DllApi::setDoubleImageMode(Handle handle, unsigned short mode) throw(PcoException)
+{
+    int result = doSetDoubleImageMode(handle, mode);
+    *this->trace << "DllApi->SetDoubleImageMode(" << handle <<
+        ", " << mode << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setDoubleImageMode", result);
+    }
+}
+
+/**
+ * Set offset mode.
+ */
+void DllApi::setOffsetMode(Handle handle, unsigned short mode) throw(PcoException)
+{
+    int result = doSetOffsetMode(handle, mode);
+    *this->trace << "DllApi->SetOffsetMode(" << handle <<
+        ", " << mode << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setOffsetMode", result);
+    }
+}
+
+/**
+ * Set noise filter mode.
+ */
+void DllApi::setNoiseFilterMode(Handle handle, unsigned short mode) throw(PcoException)
+{
+    int result = doSetNoiseFilterMode(handle, mode);
+    *this->trace << "DllApi->SetNoiseFilterMode(" << handle <<
+        ", " << mode << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setNoiseFilterMode", result);
+    }
+}
+
+/**
+ * Set the camera RAM segment size.
+ */
+void DllApi::setCameraRamSegmentSize(Handle handle, unsigned short seg1,
+	unsigned short seg2, unsigned short seg3, unsigned short seg4) throw(PcoException)
+{
+    int result = doSetCameraRamSegmentSize(handle, seg1, seg2, seg3, seg4);
+    *this->trace << "DllApi->SetCameraRamSegmentSize(" << handle <<
+        ", " << seg1 << ", " << seg2 << ", " << seg3 << ", " << seg4 << ") = " << result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setCameraRamSegmentSize", result);
     }
 }

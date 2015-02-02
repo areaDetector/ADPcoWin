@@ -81,6 +81,7 @@ protected:
     virtual int doGetRecordingState(Handle handle, unsigned short* state);
     virtual int doSetRecordingState(Handle handle, unsigned short state);
     virtual int doGetRecorderSubmode(Handle handle, unsigned short* mode);
+    virtual int doSetRecorderSubmode(Handle handle, unsigned short mode);
     virtual int doAllocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
             unsigned short** buffer, Handle* event);
     virtual int doCancelImages(Handle handle);
@@ -93,11 +94,25 @@ protected:
     virtual int doForceTrigger(Handle handle, unsigned short* triggered);
     virtual int doFreeBuffer(Handle handle, short bufferNumber);
     virtual int doGetActiveRamSegment(Handle handle, unsigned short* segment);
+    virtual int doSetActiveRamSegment(Handle handle, unsigned short segment);
     virtual int doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
             unsigned long* validImageCount, unsigned long* maxImageCount);
     virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier);
     virtual int doSetTimeouts(Handle handle, unsigned int commandTimeout,
     		unsigned int imageTimeout, unsigned int transferTimeout);
+    virtual int doClearRamSegment(Handle handle);
+	virtual int doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize);
+	virtual int doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
+			unsigned long* status);
+	virtual int doGetCameraBusyStatus(Handle handle, unsigned short* status);
+	virtual int doGetExpTrigSignalStatus(Handle handle, unsigned short* status);
+	virtual int doGetAcqEnblSignalStatus(Handle handle, unsigned short* status);
+	virtual int doSetSensorFormat(Handle handle, unsigned short format);
+	virtual int doSetDoubleImageMode(Handle handle, unsigned short mode);
+	virtual int doSetOffsetMode(Handle handle, unsigned short mode);
+	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode);
+	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned short seg1,
+		unsigned short seg2, unsigned short seg3, unsigned short seg4);
 
 // Parameters
 private:
