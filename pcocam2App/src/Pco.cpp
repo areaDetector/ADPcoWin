@@ -125,6 +125,10 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramGangMode(this, "PCO_GANGMODE", gangModeNone)
 , paramADAcquire(ADDriverEx::paramADAcquire, new AsynParam::Notify<Pco>(this, &Pco::onAcquire))
 , paramADTemperature(ADDriverEx::paramADTemperature, new AsynParam::Notify<Pco>(this, &Pco::onADTemperature))
+, paramCameraRam(this, "PCO_CAM_RAM", 0)
+, paramCameraBusy(this, "PCO_CAM_BUSY", 0)
+, paramExpTrigger(this, "PCO_EXP_TRIGGER", 0)
+, paramAcqEnable(this, "PCO_ACQ_ENABLE", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -241,7 +245,8 @@ Pco::~Pco()
     {
         if(buffers[i].buffer != NULL)
         {
-            delete[] buffers[i].buffer;
+            //delete[] buffers[i].buffer;
+			_aligned_free(buffers[i].buffer);
         }
     }
     delete triggerTimer;
@@ -747,6 +752,9 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 		// Swallow errors from this
 	}
 
+	// Camera RAM size
+	paramCameraRam = camRamSize * camPageSize * sizeof(unsigned short) / 1048576; // MBytes
+
 	// Record binning and roi capabilities
 	paramMaxBinHorz = (int)camDescription.maxBinHorz;
 	paramMaxBinVert = (int)camDescription.maxBinVert;
@@ -870,45 +878,6 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	// Set the storage mode to FIFO
 	this->api->setStorageMode(this->camera, DllApi::storageModeFifoBuffer);
 
-	// Set our preferred time stamp mode.
-	if((this->camDescription.generalCaps & DllApi::generalCapsNoTimestamp) != 0)
-	{
-		this->api->setTimestampMode(this->camera, DllApi::timestampModeOff);
-	}
-	else if((this->camDescription.generalCaps & DllApi::generalCapsTimestampAsciiOnly) != 0)
-	{
-		this->api->setTimestampMode(this->camera, DllApi::timestampModeAscii);
-	}
-	else
-	{
-		this->api->setTimestampMode(this->camera, DllApi::timestampModeBinaryAndAscii);
-	}
-
-	// Set the acquire mode.
-	this->api->setAcquireMode(this->camera, DllApi::acquireModeAuto);
-	paramAcquireMode = DllApi::acquireModeAuto;
-
-	// Set the delay and exposure times
-	this->api->setDelayExposureTime(this->camera,
-			Pco::defaultDelayTime, Pco::defaultExposureTime,
-			DllApi::timebaseMilliseconds, DllApi::timebaseMilliseconds);
-	paramADAcquireTime = Pco::defaultExposureTime * Pco::oneMillisecond;
-
-	// Set the gain
-	if(this->camDescription.convFact > 0)
-	{
-		this->api->setConversionFactor(this->camera, this->camDescription.convFact);
-		paramADGain = this->camDescription.convFact;
-	}
-
-	// Set the ADC mode for the cameras that support it
-	if(this->camType == DllApi::cameraType1600 ||
-			this->camType == DllApi::cameraType2000 ||
-			this->camType == DllApi::cameraType4000)
-	{
-		this->api->setAdcOperation(this->camera, DllApi::adcModeSingle);
-	}
-
 	// Default data type
 	paramNDDataType = NDUInt16;
 
@@ -1013,10 +982,12 @@ bool Pco::pollCameraNoAcquisition()
     bool result = true;
     try
     {
+		// Storage mode
         unsigned short storageMode;
         unsigned short recorderSubmode;
         this->api->getStorageMode(this->camera, &storageMode);
         this->api->getRecorderSubmode(this->camera, &recorderSubmode);
+        // Update EPICS
         TakeLock takeLock(this);
         paramStorageMode = (int)storageMode;
         paramRecorderSubmode = (int)recorderSubmode;
@@ -1042,12 +1013,22 @@ bool Pco::pollCamera()
         this->api->getTemperature(this->camera, &ccdtemp, &camtemp, &powtemp);
         // Get memory usage
         int ramUse = this->checkMemoryBuffer();
+		// Camera state
+		unsigned short camBusy;
+		unsigned short expTrigger;
+		unsigned short acqEnable;
+		this->api->getCameraBusyStatus(this->camera, &camBusy);
+		this->api->getExpTrigSignalStatus(this->camera, &expTrigger);
+		this->api->getAcqEnblSignalStatus(this->camera, &acqEnable);
         // Update EPICS
         TakeLock takeLock(this);
         paramADTemperature = (double)ccdtemp/DllApi::ccdTemperatureScaleFactor;
         paramElectronicsTemp = (double)camtemp;
         paramPowerTemp = (double)powtemp;
         paramCamRamUse = ramUse;
+		paramCameraBusy = (int)camBusy;
+		paramExpTrigger = (int)expTrigger;
+		paramAcqEnable = (int)acqEnable;
     }
     catch(PcoException& e)
     {
@@ -1232,26 +1213,20 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
  */
 void Pco::frameReceived(int bufferNumber)
 {
-	// JAT: Is this optimisation necessary?  I think it is also a little unsafe.
-	//      I wonder why I put it in here in the first place?
-    // Drop frames if we are idle
-    //if(!this->stateMachine->isState(stateIdle))
+    // Get an ND array
+    NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+    if(image != NULL)
     {
-        // Get an ND array
-    	NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
-        if(image != NULL)
+        // Copy the image into an NDArray
+        ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
+                this->xCamSize*this->yCamSize*sizeof(unsigned short));
+        // Post the NDarray to the state machine thread
+        if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
         {
-            // Copy the image into an NDArray
-            ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
-                    this->xCamSize*this->yCamSize*sizeof(unsigned short));
-            // Post the NDarray to the state machine thread
-            if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
-            {
-            	// Failed to put on queue, better free the NDArray to avoid leaks
-            	image->release();
-            }
-            this->post(Pco::requestImageReceived);
+            // Failed to put on queue, better free the NDArray to avoid leaks
+            image->release();
         }
+        this->post(Pco::requestImageReceived);
     }
     // Give the buffer back to the API
     this->lock();  // JAT: Why am I locking here?
@@ -1277,8 +1252,9 @@ asynUser* Pco::getAsynUser()
  */
 void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
 {
-    // How big?
-	int bufferSize = this->camSizes.xResActual * this->camSizes.yResActual;
+    // How big?   xCamSize
+	//int bufferSize = this->camSizes.xResActual * this->camSizes.yResActual;
+	int bufferSize = this->xCamSize * this->yCamSize;
     // Now allocate the memory and tell the SDK
     try
     {
@@ -1286,9 +1262,11 @@ void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
         {
             if(this->buffers[i].buffer != NULL)
             {
-                delete[] this->buffers[i].buffer;
+                //delete[] this->buffers[i].buffer;
+				_aligned_free(this->buffers[i].buffer);
             }
-            this->buffers[i].buffer = new unsigned short[bufferSize];
+            //this->buffers[i].buffer = new unsigned short[bufferSize];
+			this->buffers[i].buffer = (unsigned short*)_aligned_malloc(bufferSize*sizeof(unsigned short), 0x10000);
             this->buffers[i].bufferNumber = DllApi::bufferUnallocated;
             this->buffers[i].eventHandle = NULL;
             this->api->allocateBuffer(this->camera, &this->buffers[i].bufferNumber,
@@ -1478,6 +1456,29 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
     paramArm = 0;
 	// Camera now busy
 	paramADStatus = ADStatusReadout;
+	// Try to clear up from last time
+	try
+	{
+		this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
+	}
+	catch(PcoException&)
+	{
+	}
+	try
+	{
+		this->api->resetSettingsToDefault(this->camera);
+	}
+	catch(PcoException&)
+	{
+	}
+	try
+	{
+		this->api->setActiveRamSegment(this->camera, 1);
+	    this->api->clearRamSegment(this->camera);
+	}
+	catch(PcoException&)
+	{
+	}
 	// Get configuration information
 	this->triggerMode = paramADTriggerMode;
 	this->numImages = paramADNumImages;
@@ -1510,6 +1511,16 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->camlinkLongGap = paramCamlinkLongGap;
 
 	// Configure the camera (reading back the actual settings)
+	this->api->setSensorFormat(this->camera, 0);
+	if(this->camType == DllApi::cameraType4000)
+	{
+		this->api->setDoubleImageMode(this->camera, 0);
+	}
+	this->api->setOffsetMode(this->camera, 0);
+	this->api->setConversionFactor(this->camera, this->camDescription.convFact);
+	this->api->setNoiseFilterMode(this->camera, 0);
+	this->api->setRecorderSubmode(this->camera, 1);
+	this->api->setCameraRamSegmentSize(this->camera, 
 	this->cfgBinningAndRoi();    // Also sets camera image size
 	this->cfgTriggerMode();
 	this->cfgTimestampMode();
@@ -1518,7 +1529,13 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->cfgBitAlignmentMode();
 	this->cfgPixelRate();
 	this->cfgAcquisitionTimes();
-	this->allocateImageBuffers();
+
+	// Set the image parameters for the image buffer transfer inside the CamLink and GigE interface.
+	// While using CamLink or GigE this function must be called, before the user tries to get images
+	// from the camera and the sizes have changed. With all other interfaces this is a dummy call.
+	this->api->camlinkSetImageParameters(this->camera, this->xCamSize, this->yCamSize);
+
+
 	this->adjustTransferParamsAndLut();
 
 	// Update what we have really set
@@ -1549,21 +1566,14 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 		gangConnection->sendMemberConfig(takeLock);
 	}
 
-	// Set the image parameters for the image buffer transfer inside the CamLink and GigE interface.
-	// While using CamLink or GigE this function must be called, before the user tries to get images
-	// from the camera and the sizes have changed. With all other interfaces this is a dummy call.
-	this->api->camlinkSetImageParameters(this->camera, this->xCamSize, this->yCamSize);
-
-	// Make sure the pco camera clock is correct
-	this->setCameraClock();
+	// Now Arm the camera, so it is ready to take images, all settings should have been made by now
+	this->api->arm(this->camera);
 
 	// Give the buffers to the camera
+	this->allocateImageBuffers();
 	this->addAvailableBufferAll();
 	this->lastImageNumber = 0;
 	this->lastImageNumberValid = false;
-
-	// Now Arm the camera, so it is ready to take images, all settings should have been made by now
-	this->api->arm(this->camera);
 
 	// Start the camera recording
 	this->api->setRecordingState(this->camera, DllApi::recorderStateOn);

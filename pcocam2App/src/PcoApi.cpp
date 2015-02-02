@@ -544,6 +544,14 @@ int PcoApi::doGetRecorderSubmode(Handle handle, unsigned short* mode)
 }
 
 /**
+ * Set the recorder submode
+ */
+int PcoApi::doSetRecorderSubmode(Handle handle, unsigned short mode)
+{
+	return PCO_SetRecorderSubmode(handle, mode);
+}
+
+/**
  * Allocate a buffer
  */
 int PcoApi::doAllocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
@@ -645,6 +653,14 @@ int PcoApi::doGetActiveRamSegment(Handle handle, unsigned short* segment)
 }
 
 /**
+ * Set the active RAM segment
+ */
+int PcoApi::doSetActiveRamSegment(Handle handle, unsigned short segment)
+{
+    return PCO_SetActiveRamSegment(handle, segment);
+}
+
+/**
  * Get the number of images in a segment
  */
 int PcoApi::doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
@@ -675,6 +691,97 @@ int PcoApi::doSetActiveLookupTable(Handle handle, unsigned short identifier)
 	unsigned short p1 = identifier;
 	unsigned short p2 = 0;
     return PCO_SetActiveLookupTable(handle, &p1, &p2);
+}
+
+/**
+ * Clear active RAM segment
+ */
+int PcoApi::doClearRamSegment(Handle handle)
+{
+    return PCO_ClearRamSegment(handle);
+}
+
+/**
+ * Get the camera RAM size
+ */
+int PcoApi::doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize)
+{
+	return PCO_GetCameraRamSize(handle, numPages, pageSize);
+}
+
+/**
+ * Get the camera health status
+ */
+int PcoApi::doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
+			unsigned long* status)
+{
+	return PCO_GetCameraHealthStatus(handle, warnings, errors, status);
+}
+
+/**
+ * Get the camera busy status
+ */
+int PcoApi::doGetCameraBusyStatus(Handle handle, unsigned short* status)
+{
+	return PCO_GetCameraBusyStatus(handle, status);
+}
+
+/**
+ * Get the exposure trigger status
+ */
+int PcoApi::doGetExpTrigSignalStatus(Handle handle, unsigned short* status)
+{
+	return PCO_GetExpTrigSignalStatus(handle, status);
+}
+
+/**
+ * Get the acquisition enable status
+ */
+int PcoApi::doGetAcqEnblSignalStatus(Handle handle, unsigned short* status)
+{
+	return PCO_GetAcqEnblSignalStatus(handle, status);
+}
+
+/**
+ * Set the sensor format
+ */
+int PcoApi::doSetSensorFormat(Handle handle, unsigned short format)
+{
+	return PCO_SetSensorFormat(handle, format);
+}
+
+/**
+ * Set the double image mode
+ */
+int PcoApi::doSetDoubleImageMode(Handle handle, unsigned short mode)
+{
+	return PCO_SetDoubleImageMode(handle, mode);
+}
+
+/**
+ * Set the offset mode
+ */
+int PcoApi::doSetOffsetMode(Handle handle, unsigned short mode)
+{
+	return PCO_SetOffsetMode(handle, mode);
+}
+
+/**
+ * Set the noise filter mode
+ */
+int PcoApi::doSetNoiseFilterMode(Handle handle, unsigned short mode)
+{
+	return PCO_SetNoiseFilterMode(handle, mode);
+}
+
+/**
+ * Set the camera RAM segment size
+ */
+int PcoApi::doSetCameraRamSegmentSize(Handle handle, unsigned short seg1,
+	unsigned short seg2, unsigned short seg3, unsigned short seg4)
+{
+	unsigned short segs[4] = {seg1, seg2, seg3, seg4};
+	return PCO_SetCameraRamSegmentSize(handle, segs);
 }
 
 // C entry point for iocinit

@@ -931,6 +931,14 @@ int SimulationApi::doGetRecorderSubmode(Handle handle, unsigned short* mode)
 }
 
 /**
+ * Set the recorder submode
+ */
+int SimulationApi::doSetRecorderSubmode(Handle handle, unsigned short mode)
+{
+    return DllApi::errorNone;
+}
+
+/**
  * Allocate a buffer
  */
 int SimulationApi::doAllocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
@@ -1106,6 +1114,14 @@ int SimulationApi::doGetActiveRamSegment(Handle handle, unsigned short* segment)
 }
 
 /**
+ * Set the active RAM segment
+ */
+int SimulationApi::doSetActiveRamSegment(Handle handle, unsigned short segment)
+{
+    return DllApi::errorNone;
+}
+
+/**
  * Get the number of images in a segment
  */
 int SimulationApi::doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
@@ -1129,6 +1145,104 @@ int SimulationApi::doSetActiveLookupTable(Handle handle, unsigned short identifi
  */
 int SimulationApi::doSetTimeouts(Handle handle, unsigned int commandTimeout,
 		unsigned int imageTimeout, unsigned int transferTimeout)
+{
+    return DllApi::errorNone;
+}
+
+/**
+ * Get the camera RAM size
+ */
+int SimulationApi::doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize)
+{
+	*numPages = 0;
+	*pageSize = 0;
+	return DllApi::errorNone;
+}
+
+/**
+ * Clear active RAM segment
+ */
+int SimulationApi::doClearRamSegment(Handle handle)
+{
+    return DllApi::errorNone;
+}
+
+/**
+ * Get the camera health status
+ */
+int SimulationApi::doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
+			unsigned long* status)
+{
+	*warnings = 0;
+	*errors = 0;
+	*status = 0;
+    return DllApi::errorNone;
+}
+
+/**
+ * Get the camera busy status
+ */
+int SimulationApi::doGetCameraBusyStatus(Handle handle, unsigned short* status)
+{
+	*status = 0;
+    return DllApi::errorNone;
+}
+
+/**
+ * Get the exposure trigger status
+ */
+int SimulationApi::doGetExpTrigSignalStatus(Handle handle, unsigned short* status)
+{
+	*status = 0;
+    return DllApi::errorNone;
+}
+
+/**
+ * Get the acquisition enable status
+ */
+int SimulationApi::doGetAcqEnblSignalStatus(Handle handle, unsigned short* status)
+{
+	*status = 0;
+    return DllApi::errorNone;
+}
+
+/**
+ * Set the sensor format
+ */
+int SimulationApi::doSetSensorFormat(Handle handle, unsigned short format)
+{
+    return DllApi::errorNone;
+}
+
+/**
+ * Set double image mode
+ */
+int SimulationApi::doSetDoubleImageMode(Handle handle, unsigned short mode)
+{
+    return DllApi::errorNone;
+}
+
+/**
+ * Set offset mode
+ */
+int SimulationApi::doSetOffsetMode(Handle handle, unsigned short mode)
+{
+    return DllApi::errorNone;
+}
+
+/**
+ * Set noise filter mode
+ */
+int SimulationApi::doSetNoiseFilterMode(Handle handle, unsigned short mode)
+{
+    return DllApi::errorNone;
+}
+
+/**
+ * Set the camera RAM segment size
+ */
+int SimulationApi::doSetCameraRamSegmentSize(Handle handle, unsigned short seg1,
+	unsigned short seg2, unsigned short seg3, unsigned short seg4)
 {
     return DllApi::errorNone;
 }
