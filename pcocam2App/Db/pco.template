@@ -750,7 +750,6 @@ record(longin, "$(P)$(R)CAM_RAM_RBV")
 {
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAM_RAM")
-    field(PREC, "0")
     field(EGU, "MBytes")
     field(SCAN, "I/O Intr")
 }

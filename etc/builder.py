@@ -19,20 +19,23 @@ class pcocam2(_ADBase):
     ArgInfo = _ADBase.ArgInfo + _SpecificTemplate.ArgInfo + makeArgInfo(__init__,
         BUFFERS = Simple('Maximum number of NDArray buffers to be created', int),
         MEMORY  = Simple('Max memory to allocate', int))
-    LibFileList = []
-    DbdFileList = []
+    LibFileList = ['pcocam2']
+    DbdFileList = ['pcocam2Support']
     SysLibFileList = []
     MakefileStringList = []
     epics_host_arch = Architecture()
     # For any windows architecture, install the pcocam libraries
     # and configure the required linker flags
     if epics_host_arch.find('win') >= 0:
-        LibFileList += ['pcocam2', 'SC2_DLG', 'SC2_Cam','PCO_CDLG','Pco_conv' ]
+        LibFileList += ['SC2_DLG', 'SC2_Cam','PCO_CDLG','Pco_conv' ]
         SysLibFileList += ['windowscodecs', 'Comdlg32', 'Winspool', 'Comctl32', 'nafxcw']
-        DbdFileList += ['pcocam2Support', 'pcocam2HardwareSupport']
+        DbdFileList += ['pcocam2HardwareSupport']
         MakefileStringList += ['%(ioc_name)s_LDFLAGS_WIN32 += /NOD:nafxcwd.lib /NOD:nafxcw.lib']
 
     def Initialise(self):
         print 'pcoConfig("%(PORT)s", %(BUFFERS)d, %(MEMORY)d)' % self.__dict__
-        print 'pcoApiConfig("%(PORT)s")' % self.__dict__
+        if self.epics_host_arch.find('win') >= 0:
+            print 'pcoApiConfig("%(PORT)s")' % self.__dict__
+        else:
+            print 'simulationApiConfig("%(PORT)s")' % self.__dict__
 
