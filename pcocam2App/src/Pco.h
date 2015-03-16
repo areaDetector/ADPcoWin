@@ -91,6 +91,9 @@ public:
 	IntegerParam paramCameraBusy;
 	IntegerParam paramExpTrigger;
 	IntegerParam paramAcqEnable;
+	IntegerParam paramSerialNumber;
+	IntegerParam paramHardwareVersion;
+	IntegerParam paramFirmwareVersion;
 
 // Constants
 public:
@@ -149,7 +152,7 @@ private:
     StateMachine::Timer* triggerTimer;
     DllApi* api;
     DllApi::Handle camera;
-    unsigned short camType;
+	DllApi::CameraType camType;
     DllApi::Description camDescription;
     unsigned long camRamSize;
     unsigned int camPageSize;

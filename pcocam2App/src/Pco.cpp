@@ -135,6 +135,9 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramCameraBusy(this, "PCO_CAM_BUSY", 0)
 , paramExpTrigger(this, "PCO_EXP_TRIGGER", 0)
 , paramAcqEnable(this, "PCO_ACQ_ENABLE", 0)
+, paramSerialNumber(this, "PCO_SERIAL_NUMBER", 0)
+, paramHardwareVersion(this, "PCO_HARDWARE_VERSION", 0)
+, paramFirmwareVersion(this, "PCO_FIRMWARE_VERSION", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -291,7 +294,7 @@ Pco* Pco::getPco(const char* portName)
 void Pco::doReboot()
 {
 	api->setTimeouts(this->camera, 2000, 3000, 250);
-	switch(this->camType)
+	switch(this->camType.camType)
 	{
 	case DllApi::cameraTypeEdge:
 	case DllApi::cameraTypeEdgeGl:
@@ -397,24 +400,27 @@ StateMachine::StateSelector Pco::smRequestArm()
 	StateMachine::StateSelector result;
     try
     {
-        doArm();
+		try
+		{
+			doArm();
+		}
+		catch(std::exception&)
+		{
+			// Sometimes the arm fails in a way that is fixed by the clean up.
+			// This especially happens on the way back from a hardware ROI.
+			// So we disarm and try once more if that happens.
+			doDisarm();
+			doArm();
+		}
         stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
         outputStatusMessage("");
         result = StateMachine::firstState;
     }
-    catch(std::bad_alloc& e)
+    catch(std::exception& e)
     {
         acquisitionComplete();
         doDisarm();
-        errorTrace << "Failed to arm due to out of memory, " << e.what() << std::endl;
-        outputStatusMessage(e.what());
-        result = StateMachine::secondState;
-    }
-    catch(PcoException& e)
-    {
-        acquisitionComplete();
-        doDisarm();
-        errorTrace << "Failed to arm due DLL error, " << e.what() << std::endl;
+        errorTrace << "Failed to arm, " << e.what() << std::endl;
         outputStatusMessage(e.what());
         result = StateMachine::secondState;
     }
@@ -431,26 +437,29 @@ StateMachine::StateSelector Pco::smArmAndAcquire()
 	StateMachine::StateSelector result;
     try
     {
-        doArm();
+		try
+		{
+			doArm();
+		}
+		catch(std::exception&)
+		{
+			// Sometimes the arm fails in a way that is fixed by the clean up.
+			// This especially happens on the way back from a hardware ROI.
+			// So we disarm and try once more if that happens.
+			doDisarm();
+			doArm();
+		}
         nowAcquiring();
         startCamera();
         stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
         outputStatusMessage("");
         result = StateMachine::firstState;
     }
-    catch(std::bad_alloc& e)
+    catch(std::exception& e)
     {
         acquisitionComplete();
         doDisarm();
-        errorTrace << "Failed to arm due to out of memory, " << e.what() << std::endl;
-        outputStatusMessage(e.what());
-        result = StateMachine::secondState;
-    }
-    catch(PcoException& e)
-    {
-        acquisitionComplete();
-        doDisarm();
-        errorTrace << "Failed to arm due DLL error, " << e.what() << std::endl;
+        errorTrace << "Failed to arm, " << e.what() << std::endl;
         outputStatusMessage(e.what());
         result = StateMachine::secondState;
     }
@@ -725,11 +734,12 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	api->getCameraType(camera, &camType);
 	api->getSensorStruct(camera);
 	api->getCameraDescription(camera, &camDescription);
+	api->getTimingStruct(camera);
 	api->getStorageStruct(camera, &camRamSize, &camPageSize);
 	api->getRecordingStruct(camera);
 
 	// Corrections for values that appear to be incorrectly returned by the SDK
-	switch(this->camType)
+	switch(this->camType.camType)
 	{
 	case DllApi::cameraTypeDimaxStd:
 	case DllApi::cameraTypeDimaxTv:
@@ -800,7 +810,7 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	paramExpTimeStep = (double)this->camDescription.minExposureStepNs * 1e-9;
 
 	// Update area detector information strings
-	switch(this->camType)
+	switch(this->camType.camType)
 	{
 	case DllApi::cameraType1200Hs:
 		paramADModel = "PCO.Camera 1200";
@@ -831,6 +841,9 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 		break;
 	}
 	paramADManufacturer = "PCO";
+	paramSerialNumber = (int)this->camType.serialNumber;
+	paramHardwareVersion = (int)this->camType.hardwareVersion;
+	paramFirmwareVersion = (int)this->camType.firmwareVersion;
 
 	// Work out how to decode the BCD frame number in the image
 	this->shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
@@ -843,7 +856,8 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	this->initialisePixelRate();
 
 	// Make Edge specific function calls
-	if(this->camType == DllApi::cameraTypeEdge || this->camType == DllApi::cameraTypeEdgeGl)
+	if(this->camType.camType == DllApi::cameraTypeEdge || 
+			this->camType.camType == DllApi::cameraTypeEdgeGl)
 	{
 		// Get Edge camera setup mode
 		unsigned long setupData[DllApi::cameraSetupDataSize];
@@ -1211,8 +1225,6 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
     	TakeLock takeLock(this);
         paramOutOfNDArrays = ++this->outOfNDArrays;
     }
-    std::cout << "#### numBuffers=" << this->pNDArrayPool->numBuffers() <<
-    		", numFree=" << this->pNDArrayPool->numFree() << std::endl;
     return image;
 }
 
@@ -1260,20 +1272,16 @@ asynUser* Pco::getAsynUser()
  */
 void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
 {
-    // How big?   xCamSize
-	//int bufferSize = this->camSizes.xResActual * this->camSizes.yResActual;
-	int bufferSize = this->xCamSize * this->yCamSize;
     // Now allocate the memory and tell the SDK
+	int bufferSize = this->xCamSize * this->yCamSize;
     try
     {
         for(int i=0; i<Pco::numApiBuffers; i++)
         {
             if(this->buffers[i].buffer != NULL)
             {
-                //delete[] this->buffers[i].buffer;
 				_aligned_free(this->buffers[i].buffer);
             }
-            //this->buffers[i].buffer = new unsigned short[bufferSize];
 			this->buffers[i].buffer = (unsigned short*)_aligned_malloc(bufferSize*sizeof(unsigned short), 0x10000);
             this->buffers[i].bufferNumber = DllApi::bufferUnallocated;
             this->buffers[i].eventHandle = NULL;
@@ -1281,7 +1289,7 @@ void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
                     bufferSize * sizeof(short), &this->buffers[i].buffer,
                     &this->buffers[i].eventHandle);
             this->buffers[i].ready = true;
-            assert(this->buffers[i].bufferNumber == i);
+            //assert(this->buffers[i].bufferNumber == i);
         }
     }
     catch(std::bad_alloc& e)
@@ -1305,20 +1313,42 @@ void Pco::freeImageBuffers() throw()
 {
     // Free the buffers in the camera.  Since we are recovering,
     // ignore any SDK error this may cause.
-    try
+    // JAT: We didn't originally free the buffers from the DLL routinely.
+    //      However, for the Dimax it seems to be essential.
+    for(int i=0; i<Pco::numApiBuffers; i++)
     {
-        this->api->cancelImages(this->camera);
-        // JAT: We didn't originally free the buffers from the DLL routinely.
-        //      However, for the Dimax it seems to be essential.
-        for(int i=0; i<Pco::numApiBuffers; i++)
-        {
-            this->api->freeBuffer(this->camera, i);
-        }
+		try
+		{
+			this->api->freeBuffer(this->camera, i);
+		}
+		catch(PcoException&)
+		{
+		}
     }
-    catch(PcoException& e)
-    {
-        this->errorTrace << "Failure: " << e.what() << std::endl;
-    }
+	// For some reason, when buffer allocation has failed, to clear the error
+	// we need to put the camera into recording state and back out again.
+	try
+	{
+		this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
+	}
+	catch(PcoException&)
+	{
+	}
+	try
+	{
+		this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
+	}
+	catch(PcoException&)
+	{
+	}
+	// Now cancel all images
+	try
+	{
+	    this->api->cancelImages(this->camera);
+	}
+	catch(PcoException&)
+	{
+	}
 }
 
 /**
@@ -1335,7 +1365,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
 {
 	unsigned short lutIdentifier = 0;
     // Configure according to camera type
-    switch(this->camType)
+	switch(this->camType.camType)
     {
     case DllApi::cameraTypeEdge:
     case DllApi::cameraTypeEdgeGl:
@@ -1467,6 +1497,28 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	// Try to clear up from last time
 	try
 	{
+		// Experimental additions from Pete's code
+		unsigned long long1, long2;
+		unsigned short short1, short2, short3, short4;
+		short short5, short6, short7;
+		this->api->getDelayExposureTime(this->camera, &long1, &long2, &short1, &short2);
+		this->api->getRoi(this->camera, &short1, &short2, &short3, &short4);
+		this->api->getBinning(this->camera, &short1, &short2);
+		this->api->getTriggerMode(this->camera, &short1);
+		this->api->getPixelRate(this->camera, &long1);
+		this->api->getStorageMode(this->camera, &short1);
+		this->api->getRecorderSubmode(this->camera, &short1);
+		this->api->getTimestampMode(this->camera, &short1);
+		this->api->getAcquireMode(this->camera, &short1);
+		this->api->getBitAlignment(this->camera, &short1);
+		this->api->getAdcOperation(this->camera, &short1);
+		this->api->getTemperature(this->camera, &short5, &short6, &short7);
+	}
+	catch(PcoException&)
+	{
+	}
+	try
+	{
 		this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
 	}
 	catch(PcoException&)
@@ -1520,7 +1572,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 
 	// Configure the camera (reading back the actual settings)
 	this->api->setSensorFormat(this->camera, 0);
-	if(this->camType == DllApi::cameraType4000)
+	if(this->camType.camType == DllApi::cameraType4000)
 	{
 		this->api->setDoubleImageMode(this->camera, 0);
 	}
@@ -1538,11 +1590,12 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->cfgPixelRate();
 	this->cfgAcquisitionTimes();
 
+	this->allocateImageBuffers();
+
 	// Set the image parameters for the image buffer transfer inside the CamLink and GigE interface.
 	// While using CamLink or GigE this function must be called, before the user tries to get images
 	// from the camera and the sizes have changed. With all other interfaces this is a dummy call.
 	this->api->camlinkSetImageParameters(this->camera, this->xCamSize, this->yCamSize);
-
 
 	this->adjustTransferParamsAndLut();
 
@@ -1578,7 +1631,6 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->api->arm(this->camera);
 
 	// Give the buffers to the camera
-	this->allocateImageBuffers();
 	this->addAvailableBufferAll();
 	this->lastImageNumber = 0;
 	this->lastImageNumberValid = false;
@@ -1588,7 +1640,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 
 	// The PCO4000 appears to output 1,2 or 3 dodgy frames immediately on
 	// getting the arm.  This bit of code tries to drop them.
-	if(this->camType == DllApi::cameraType4000)
+	if(this->camType.camType == DllApi::cameraType4000)
 	{
 		FreeLock freeLock(takeLock);
 		epicsThreadSleep(0.3);
@@ -1602,9 +1654,9 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 void Pco::cfgAdcMode() throw(PcoException)
 {
     unsigned short v;
-    if(this->camType == DllApi::cameraType1600 ||
-            this->camType == DllApi::cameraType2000 ||
-            this->camType == DllApi::cameraType4000)
+	if(this->camType.camType == DllApi::cameraType1600 ||
+		this->camType.camType == DllApi::cameraType2000 ||
+		this->camType.camType == DllApi::cameraType4000)
     {
         this->api->setAdcOperation(this->camera, this->adcMode);
         this->api->getAdcOperation(this->camera, &v);
@@ -1746,9 +1798,9 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
 
     // Enforce horizontal symmetry requirements
     if(this->adcMode == DllApi::adcModeDual ||
-            this->camType == DllApi::cameraTypeDimaxStd ||
-            this->camType == DllApi::cameraTypeDimaxTv ||
-            this->camType == DllApi::cameraTypeDimaxAutomotive)
+		this->camType.camType == DllApi::cameraTypeDimaxStd ||
+		this->camType.camType == DllApi::cameraTypeDimaxTv ||
+		this->camType.camType == DllApi::cameraTypeDimaxAutomotive)
     {
         if(this->hwRoiX1 <= this->xCamSize-this->hwRoiX2)
         {
@@ -1761,11 +1813,11 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
     }
 
     // Enforce vertical symmetry requirements
-    if(this->camType == DllApi::cameraTypeEdge ||
-            this->camType == DllApi::cameraTypeEdgeGl ||
-            this->camType == DllApi::cameraTypeDimaxStd ||
-            this->camType == DllApi::cameraTypeDimaxTv ||
-            this->camType == DllApi::cameraTypeDimaxAutomotive)
+	if(this->camType.camType == DllApi::cameraTypeEdge ||
+		this->camType.camType == DllApi::cameraTypeEdgeGl ||
+		this->camType.camType == DllApi::cameraTypeDimaxStd ||
+		this->camType.camType == DllApi::cameraTypeDimaxTv ||
+		this->camType.camType == DllApi::cameraTypeDimaxAutomotive)
     {
         if(this->hwRoiY1 <= this->yCamSize-this->hwRoiY2)
         {
@@ -1971,14 +2023,6 @@ void Pco::doDisarm() throw()
 	TakeLock lock(this);
     paramArmMode = 0;
     paramDisarm = 0;
-    try
-    {
-        this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
-    }
-    catch(PcoException&)
-    {
-        // Not much we can do with this error
-    }
     this->freeImageBuffers();
 }
 

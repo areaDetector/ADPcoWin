@@ -338,12 +338,15 @@ int SimulationApi::doGetGeneral(Handle handle)
 /**
  * Get the camera type information
  */
-int SimulationApi::doGetCameraType(Handle handle, unsigned short* camType)
+int SimulationApi::doGetCameraType(Handle handle, CameraType* cameraType)
 {
     int result = DllApi::errorAny;
     if(paramConnected && paramOpen)
     {
-        *camType = paramCameraType;
+        cameraType->camType = paramCameraType;
+		cameraType->serialNumber = 0x00000001;
+		cameraType->hardwareVersion = 0x00000002;
+		cameraType->firmwareVersion = 0x00000003;
         result = DllApi::errorNone;
     }
     return result;
@@ -353,6 +356,19 @@ int SimulationApi::doGetCameraType(Handle handle, unsigned short* camType)
  * Get sensor information
  */
 int SimulationApi::doGetSensorStruct(Handle handle)
+{
+    int result = DllApi::errorAny;
+    if(paramConnected && paramOpen)
+    {
+        result = DllApi::errorNone;
+    }
+    return result;
+}
+
+/**
+ * Get timing information
+ */
+int SimulationApi::doGetTimingStruct(Handle handle)
 {
     int result = DllApi::errorAny;
     if(paramConnected && paramOpen)
