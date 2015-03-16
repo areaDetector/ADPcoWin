@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 3230
-y 636
+x 1013
+y 196
 w 390
 h 820
 font "arial-bold-r-12.0"
@@ -1148,28 +1148,24 @@ font "helvetica-bold-r-10.0"
 fontAlign "center"
 endObjectProperties
 
-# (Message Button)
-object activeMessageButtonClass
+# (Static Text)
+object activeXTextClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
-x 275
-y 675
-w 90
-h 25
-fgColor index 25
-onColor index 3
-offColor index 3
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(P)$(R)REBOOT"
-pressValue "1"
-onLabel "Reboot"
-offLabel "Reboot"
-3d
-useEnumNumeric
-font "arial-bold-r-12.0"
+x 255
+y 670
+w 48
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Cam Ram"
+}
+autoSize
 endObjectProperties
 
 # (Textupdate)
@@ -1178,12 +1174,13 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 275
-y 705
-w 90
+x 310
+y 670
+w 45
 h 15
-controlPv "$(P)$(R)REBOOT_RBV"
+controlPv "$(P)$(R)CAM_RAM_USE_FRAMES_RBV"
 fgColor index 16
+fgAlarm
 bgColor index 10
 fill
 font "helvetica-bold-r-10.0"
