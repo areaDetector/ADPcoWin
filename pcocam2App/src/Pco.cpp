@@ -138,6 +138,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramSerialNumber(this, "PCO_SERIAL_NUMBER", 0)
 , paramHardwareVersion(this, "PCO_HARDWARE_VERSION", 0)
 , paramFirmwareVersion(this, "PCO_FIRMWARE_VERSION", 0)
+, paramCamRamUseFrames(this, "PCO_CAM_RAM_USE_FRAMES", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -1032,7 +1033,9 @@ bool Pco::pollCamera()
         short ccdtemp, camtemp, powtemp;
         this->api->getTemperature(this->camera, &ccdtemp, &camtemp, &powtemp);
         // Get memory usage
-        int ramUse = this->checkMemoryBuffer();
+        int ramUsePercent;
+		int ramUseFrames;
+		this->checkMemoryBuffer(ramUsePercent, ramUseFrames);
 		// Camera state
 		unsigned short camBusy;
 		unsigned short expTrigger;
@@ -1045,10 +1048,11 @@ bool Pco::pollCamera()
         paramADTemperature = (double)ccdtemp/DllApi::ccdTemperatureScaleFactor;
         paramElectronicsTemp = (double)camtemp;
         paramPowerTemp = (double)powtemp;
-        paramCamRamUse = ramUse;
+        paramCamRamUse = ramUsePercent;
 		paramCameraBusy = (int)camBusy;
 		paramExpTrigger = (int)expTrigger;
 		paramAcqEnable = (int)acqEnable;
+		paramCamRamUseFrames = ramUseFrames;
     }
     catch(PcoException& e)
     {
@@ -1064,9 +1068,10 @@ bool Pco::pollCamera()
  * Note for a camera with a single image in memory the percentage returned will
  * be at least 1% even if the camera has a massive memory containing a small image.
  */
-int Pco::checkMemoryBuffer() throw(PcoException)
+void Pco::checkMemoryBuffer(int& percentUsed, int& numFrames) throw(PcoException)
 {
-    int percent = 0;
+    percentUsed = 0;
+	numFrames = 0;
     if(this->camRamSize > 0)
     {
         unsigned short segment;
@@ -1077,12 +1082,13 @@ int Pco::checkMemoryBuffer() throw(PcoException)
             this->api->getActiveRamSegment(this->camera, &segment);
             this->api->getNumberOfImagesInSegment(this->camera, segment, &validImages,
                     &maxImages);
+			numFrames = validImages;
             if(maxImages > 0)
             {
-                percent = (validImages*100)/maxImages;
-                if(validImages > 0 && percent == 0)
+                percentUsed = (validImages*100)/maxImages;
+                if(validImages > 0 && percentUsed == 0)
                 {
-                    percent = 1;
+                    percentUsed = 1;
                 }
             }
         }
@@ -1090,7 +1096,6 @@ int Pco::checkMemoryBuffer() throw(PcoException)
         {
         }
     }
-    return percent;
 }
 
 /**

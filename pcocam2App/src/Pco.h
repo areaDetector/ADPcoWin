@@ -94,6 +94,7 @@ public:
 	IntegerParam paramSerialNumber;
 	IntegerParam paramHardwareVersion;
 	IntegerParam paramFirmwareVersion;
+	IntegerParam paramCamRamUseFrames;
 
 // Constants
 public:
@@ -273,7 +274,7 @@ private:
     void extractImageTimeStamp(epicsTimeStamp* imageTime, unsigned short* imageBuffer) throw();
     void updateErrorCounters() throw();
     void acquisitionComplete() throw();
-    int checkMemoryBuffer() throw(PcoException);
+    void checkMemoryBuffer(int& percentUsed, int& numFrames) throw(PcoException);
     void setValidBinning(std::set<int>& valid, int max, int step) throw();
     void cfgBinningAndRoi() throw(PcoException);
     void cfgTriggerMode() throw(PcoException);

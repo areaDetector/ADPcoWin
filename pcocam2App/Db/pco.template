@@ -100,6 +100,16 @@ record(ai, "$(P)$(R)CAM_RAM_USE_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# % gdatag, pv, ro, $(PORT)_pcocam, CAM_RAM_USE_FRAMES_RBV, Readback for cam ram usage
+record(ai, "$(P)$(R)CAM_RAM_USE_FRAMES_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAM_RAM_USE_FRAMES")
+    field(PREC, "0")
+    field(EGU, "%")
+    field(SCAN, "I/O Intr")
+}
+
 # % gdatag, pv, ro, $(PORT)_pcocam, ELEC_TEMP_RBV, Readback for elec temp
 record(ai, "$(P)$(R)ELEC_TEMP_RBV") 
 {
