@@ -96,11 +96,13 @@ void DllApi::getGeneral(Handle handle) throw(PcoException)
 /**
  * Get the camera type information
  */
-void DllApi::getCameraType(Handle handle, unsigned short* camType) throw(PcoException)
+void DllApi::getCameraType(Handle handle, CameraType* cameraType) throw(PcoException)
 {
-    int result = doGetCameraType(handle, camType);
+    int result = doGetCameraType(handle, cameraType);
     *this->trace << "DllApi->GetCameraType(" << handle << ", " <<
-            *camType << ") = " << result << std::endl;
+            cameraType->camType << ', ' << cameraType->serialNumber << ', ' << 
+			cameraType->hardwareVersion << ', ' << cameraType->firmwareVersion << 
+			") = " << result << std::endl;
     if(result != DllApi::errorNone)
     {
         throw PcoException("getCameraType", result);
@@ -118,6 +120,20 @@ void DllApi::getSensorStruct(Handle handle) throw(PcoException)
     if(result != DllApi::errorNone)
     {
         throw PcoException("getSensorStruct", result);
+    }
+}
+
+/**
+ * Get timing information
+ */
+void DllApi::getTimingStruct(Handle handle) throw(PcoException)
+{
+    int result = doGetTimingStruct(handle);
+    *this->trace << "DllApi->GetTimingStruct(" << handle << ") = " <<
+            result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getTimingStruct", result);
     }
 }
 

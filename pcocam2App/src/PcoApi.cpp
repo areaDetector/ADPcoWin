@@ -81,11 +81,14 @@ void PcoApi::run()
                 //int pos = this->queueHead;
                 for(int i=0; i<DllApi::maxNumBuffers; i++)
                 {
-                    assert(this->buffers[i].eventHandle != NULL);
-                    runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[i].eventHandle;
-                    //assert(this->buffers[pos].eventHandle != NULL);
-                    //runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[pos].eventHandle;
-                    //pos = (pos + 1) % DllApi::maxNumBuffers;
+					if(this->buffers[i].eventHandle != NULL)
+					{
+						assert(this->buffers[i].eventHandle != NULL);
+						runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[i].eventHandle;
+						//assert(this->buffers[pos].eventHandle != NULL);
+						//runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[pos].eventHandle;
+						//pos = (pos + 1) % DllApi::maxNumBuffers;
+					}
                 }
                 result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
                     runEvents, FALSE, INFINITE);
@@ -160,12 +163,15 @@ int PcoApi::doGetGeneral(Handle handle)
 /**
  * Get the camera type information
  */
-int PcoApi::doGetCameraType(Handle handle, unsigned short* camType)
+int PcoApi::doGetCameraType(Handle handle, CameraType* cameraType)
 {
     PCO_CameraType info;
     info.wSize = sizeof(info);
     int result = PCO_GetCameraType(handle, &info);
-    *camType = info.wCamType;
+    cameraType->camType = info.wCamType;
+	cameraType->serialNumber = info.dwSerialNumber;
+	cameraType->hardwareVersion = info.dwHWVersion;
+	cameraType->firmwareVersion = info.dwFWVersion;
     return result;
 }
 
@@ -178,6 +184,20 @@ int PcoApi::doGetSensorStruct(Handle handle)
     info.wSize = sizeof(info);
     info.strDescription.wSize = sizeof(info.strDescription);
     return PCO_GetSensorStruct(handle, &info);
+}
+
+/**
+ * Get timing information
+ */
+int PcoApi::doGetTimingStruct(Handle handle)
+{
+    PCO_Timing info;
+    info.wSize = sizeof(info);
+	for(int i=0; i<NUM_MAX_SIGNALS; i++)
+	{
+	    info.strSignal[i].wSize = sizeof(info.strSignal[i]);
+	}
+    return PCO_GetTimingStruct(handle, &info);
 }
 
 /**

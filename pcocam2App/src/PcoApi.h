@@ -37,8 +37,9 @@ protected:
     virtual int doCloseCamera(Handle handle);
     virtual int doRebootCamera(Handle handle);
     virtual int doGetGeneral(Handle handle);
-    virtual int doGetCameraType(Handle handle, unsigned short* camType);
+    virtual int doGetCameraType(Handle handle, CameraType* cameraType);
     virtual int doGetSensorStruct(Handle handle);
+    virtual int doGetTimingStruct(Handle handle);
     virtual int doGetCameraDescription(Handle handle, Description* description);
     virtual int doGetStorageStruct(Handle handle, unsigned long* ramSize, unsigned int* pageSize);
     virtual int doGetRecordingStruct(Handle handle);

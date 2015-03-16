@@ -111,6 +111,13 @@ public:
         unsigned short xResMaximum;
         unsigned short yResMaximum;
     };
+	struct CameraType
+	{
+		unsigned short camType;         // camera type from cameraType enum
+		unsigned long serialNumber;     // serial number of the device
+		unsigned long hardwareVersion;  // hardware version
+		unsigned long firmwareVersion;  // firmware version
+	};
 
 
 
@@ -120,8 +127,9 @@ protected:
     virtual int doCloseCamera(Handle handle) = 0;
     virtual int doRebootCamera(Handle handle) = 0;
     virtual int doGetGeneral(Handle handle) = 0;
-    virtual int doGetCameraType(Handle handle, unsigned short* camType) = 0;
+    virtual int doGetCameraType(Handle handle, CameraType* cameraType) = 0;
     virtual int doGetSensorStruct(Handle handle) = 0;
+    virtual int doGetTimingStruct(Handle handle) = 0;
     virtual int doGetCameraDescription(Handle handle, Description* description) = 0;
     virtual int doGetStorageStruct(Handle handle, unsigned long* ramSize, unsigned int* pageSize) = 0;
     virtual int doGetRecordingStruct(Handle handle) = 0;
@@ -204,8 +212,9 @@ public:
     void closeCamera(Handle handle) throw(PcoException);
     void rebootCamera(Handle handle) throw(PcoException);
     void getGeneral(Handle handle) throw(PcoException);
-    void getCameraType(Handle handle, unsigned short* camType) throw(PcoException);
+    void getCameraType(Handle handle, CameraType* cameraType) throw(PcoException);
     void getSensorStruct(Handle handle) throw(PcoException);
+    void getTimingStruct(Handle handle) throw(PcoException);
     void getCameraDescription(Handle handle, Description* description) throw(PcoException);
     void getStorageStruct(Handle handle, unsigned long* ramSize, unsigned int* pageSize) throw(PcoException);
     void getRecordingStruct(Handle handle) throw(PcoException);

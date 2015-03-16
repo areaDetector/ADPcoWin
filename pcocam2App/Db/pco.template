@@ -790,3 +790,26 @@ record(mbbi, "$(P)$(R)ACQ_ENABLE_RBV")
     field(ONVL, "1")
 }
 
+# Camera serial number
+record(longin, "$(P)$(R)SERIAL_NUMBER_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_SERIAL_NUMBER")
+    field(SCAN, "I/O Intr")
+}
+
+# Camera hardware version
+record(longin, "$(P)$(R)HARDWARE_VERSION_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_HARDWARE_VERSION")
+    field(SCAN, "I/O Intr")
+}
+
+# Camera firmware version
+record(longin, "$(P)$(R)FIRMWARE_VERSION_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_FIRMWARE_VERSION")
+    field(SCAN, "I/O Intr")
+}
