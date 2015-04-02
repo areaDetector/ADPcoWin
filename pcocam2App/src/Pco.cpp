@@ -1582,9 +1582,9 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	{
 		this->api->setDoubleImageMode(this->camera, 0);
 	}
-	this->api->setOffsetMode(this->camera, 0);
-	this->api->setConversionFactor(this->camera, this->camDescription.convFact);
-	this->api->setNoiseFilterMode(this->camera, 0);
+	//this->api->setOffsetMode(this->camera, 0);
+	//this->api->setConversionFactor(this->camera, this->camDescription.convFact);
+	//this->api->setNoiseFilterMode(this->camera, 0);
 	this->api->setRecorderSubmode(this->camera, 1);
 	//this->api->setCameraRamSegmentSize(this->camera,
 	this->cfgBinningAndRoi();    // Also sets camera image size
@@ -1644,9 +1644,10 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	// Start the camera recording
 	this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 
-	// The PCO4000 appears to output 1,2 or 3 dodgy frames immediately on
+	// The PCO4000 and PCO1600 appear to output a few dodgy frames immediately on
 	// getting the arm.  This bit of code tries to drop them.
-	if(this->camType.camType == DllApi::cameraType4000)
+	if(this->camType.camType == DllApi::cameraType4000 || 
+			this->camType.camType == DllApi::cameraType1600)
 	{
 		FreeLock freeLock(takeLock);
 		epicsThreadSleep(0.3);
