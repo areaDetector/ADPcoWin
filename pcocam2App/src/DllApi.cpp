@@ -100,8 +100,8 @@ void DllApi::getCameraType(Handle handle, CameraType* cameraType) throw(PcoExcep
 {
     int result = doGetCameraType(handle, cameraType);
     *this->trace << "DllApi->GetCameraType(" << handle << ", " <<
-            cameraType->camType << ', ' << cameraType->serialNumber << ', ' << 
-			cameraType->hardwareVersion << ', ' << cameraType->firmwareVersion << 
+            cameraType->camType << ", " << cameraType->serialNumber << ", " << 
+			cameraType->hardwareVersion << ", " << cameraType->firmwareVersion << 
 			") = " << result << std::endl;
     if(result != DllApi::errorNone)
     {

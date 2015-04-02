@@ -218,6 +218,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateAcquiring);
 	stateMachine->transition(stateAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopAcquisition), stateIdle, stateArmed);
+	stateMachine->transition(stateAcquiring, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateAcquiring);
 	stateMachine->transition(stateExternalAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateExternalAcquiring);
 	stateMachine->transition(stateExternalAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smExternalAcquireImage), stateExternalAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateExternalAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateExternalAcquiring, stateIdle, stateArmed);
@@ -556,7 +557,7 @@ StateMachine::StateSelector Pco::smAcquireImage()
         startCamera();
         result = StateMachine::firstState;
     }
-    else if(triggerMode != DllApi::triggerSoftware)
+	else if((triggerMode == DllApi::triggerAuto) || (triggerMode == DllApi::triggerExternalOnly))
     {
         acquisitionComplete();
         doDisarm();

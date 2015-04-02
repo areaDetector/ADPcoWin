@@ -106,7 +106,6 @@ record(ai, "$(P)$(R)CAM_RAM_USE_FRAMES_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAM_RAM_USE_FRAMES")
     field(PREC, "0")
-    field(EGU, "%")
     field(SCAN, "I/O Intr")
 }
 
