@@ -33,6 +33,7 @@ const double Pco::rebootPeriod = 10.0;
 const double Pco::connectPeriod = 5.0;
 const double Pco::statusPollPeriod = 2.0;
 const double Pco::acquisitionStatusPollPeriod = 5.0;
+const double Pco::armIgnoreImagesPeriod = 0.3;
 const int Pco::bitsPerShortWord = 16;
 const int Pco::bitsPerNybble = 4;
 const long Pco::nybbleMask = 0x0f;
@@ -82,8 +83,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramCamRamUse(this, "PCO_CAM_RAM_USE", 0)
 , paramElectronicsTemp(this, "PCO_ELECTRONICS_TEMP", 0.0)
 , paramPowerTemp(this, "PCO_POWER_TEMP", 0.0)
-, paramStorageMode(this, "PCO_STORAGE_MODE", 0)
-, paramRecorderSubmode(this, "PCO_RECORDER_SUBMODE", 0)
+, paramStorageMode(this, "PCO_STORAGE_MODE", 1)
+, paramRecorderSubmode(this, "PCO_RECORDER_SUBMODE", 1)
 , paramTimestampMode(this, "PCO_TIMESTAMP_MODE", 2)
 , paramAcquireMode(this, "PCO_ACQUIRE_MODE", 0)
 , paramDelayTime(this, "PCO_DELAY_TIME", 0.0)
@@ -185,6 +186,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateUninitialised = stateMachine->state("Uninitialised");
 	stateUnconnected = stateMachine->state("Unconnected");
 	stateIdle = stateMachine->state("Idle");
+    stateArmedDelay = stateMachine->state("ArmedDelay");
     stateArmed = stateMachine->state("Armed");
     stateAcquiring = stateMachine->state("Acquiring");
 	statedUnarmedAcquiring = stateMachine->state("UnarmedAcquiring");
@@ -204,10 +206,12 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateUninitialised, requestInitialise, new StateMachine::Act<Pco>(this, &Pco::smInitialiseWait), stateUnconnected);
 	stateMachine->transition(stateUnconnected, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smConnectToCamera), stateIdle, stateUnconnected);
 	stateMachine->transition(stateIdle, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileIdle), stateIdle);
-	stateMachine->transition(stateIdle, requestArm, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateArmed, stateIdle);
+	stateMachine->transition(stateIdle, requestArm, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateArmedDelay, stateIdle);
 	stateMachine->transition(stateIdle, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smArmAndAcquire), statedUnarmedAcquiring, stateIdle);
 	stateMachine->transition(stateIdle, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateIdle);
 	stateMachine->transition(stateIdle, requestReboot, new StateMachine::Act<Pco>(this, &Pco::smRequestReboot), stateUnconnected);
+	stateMachine->transition(stateArmedDelay, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smArmComplete), stateArmed);
+	stateMachine->transition(stateArmedDelay, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateArmedDelay);
 	stateMachine->transition(stateArmed, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateArmed);
 	stateMachine->transition(stateArmed, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateAcquiring);
 	stateMachine->transition(stateArmed, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smFirstImageWhileArmed), stateExternalAcquiring, stateIdle, stateArmed, stateArmed);
@@ -223,6 +227,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateExternalAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smExternalAcquireImage), stateExternalAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateExternalAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateExternalAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateExternalAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
+	stateMachine->transition(stateExternalAcquiring, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateExternalAcquiring);
 	stateMachine->transition(statedUnarmedAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), statedUnarmedAcquiring);
 	stateMachine->transition(statedUnarmedAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smUnarmedAcquireImage), statedUnarmedAcquiring, stateIdle);
 	stateMachine->transition(statedUnarmedAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smUnarmedMakeGangedImage), statedUnarmedAcquiring, stateIdle);
@@ -402,6 +407,7 @@ StateMachine::StateSelector Pco::smRequestArm()
 	StateMachine::StateSelector result;
     try
     {
+		stateMachine->stopTimer();
 		try
 		{
 			doArm();
@@ -414,7 +420,7 @@ StateMachine::StateSelector Pco::smRequestArm()
 			doDisarm();
 			doArm();
 		}
-        stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
+        stateMachine->startTimer(Pco::armIgnoreImagesPeriod, Pco::requestTimerExpiry);
         outputStatusMessage("");
         result = StateMachine::firstState;
     }
@@ -427,6 +433,16 @@ StateMachine::StateSelector Pco::smRequestArm()
         result = StateMachine::secondState;
     }
     return result;
+}
+
+/**
+ * Camera arming is complete
+ * returns: firstState: always
+ */
+StateMachine::StateSelector Pco::smArmComplete()
+{
+    stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
+    return StateMachine::firstState;
 }
 
 /**
@@ -554,7 +570,7 @@ StateMachine::StateSelector Pco::smAcquireImage()
 	StateMachine::StateSelector result;
     if(!receiveImages())
     {
-        startCamera();
+        //startCamera();
         result = StateMachine::firstState;
     }
 	else if((triggerMode == DllApi::triggerAuto) || (triggerMode == DllApi::triggerExternalOnly))
@@ -1004,6 +1020,7 @@ bool Pco::pollCameraNoAcquisition()
     bool result = true;
     try
     {
+#if 0
 		// Storage mode
         unsigned short storageMode;
         unsigned short recorderSubmode;
@@ -1013,6 +1030,7 @@ bool Pco::pollCameraNoAcquisition()
         TakeLock takeLock(this);
         paramStorageMode = (int)storageMode;
         paramRecorderSubmode = (int)recorderSubmode;
+#endif
     }
     catch(PcoException& e)
     {
@@ -1501,6 +1519,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	// Camera now busy
 	paramADStatus = ADStatusReadout;
 	// Try to clear up from last time
+#if 0
 	try
 	{
 		// Experimental additions from Pete's code
@@ -1523,6 +1542,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	catch(PcoException&)
 	{
 	}
+#endif
 	try
 	{
 		this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
@@ -1575,6 +1595,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->minDelayTime = paramDelayTimeMin;
 	this->maxDelayTime = paramDelayTimeMax;
 	this->camlinkLongGap = paramCamlinkLongGap;
+	this->recoderSubmode = paramRecorderSubmode;
+	this->storageMode = paramStorageMode;
 
 	// Configure the camera (reading back the actual settings)
 	this->api->setSensorFormat(this->camera, 0);
@@ -1585,8 +1607,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	//this->api->setOffsetMode(this->camera, 0);
 	//this->api->setConversionFactor(this->camera, this->camDescription.convFact);
 	//this->api->setNoiseFilterMode(this->camera, 0);
-	this->api->setRecorderSubmode(this->camera, 1);
 	//this->api->setCameraRamSegmentSize(this->camera,
+	this->cfgMemoryMode();
 	this->cfgBinningAndRoi();    // Also sets camera image size
 	this->cfgTriggerMode();
 	this->cfgTimestampMode();
@@ -1627,6 +1649,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	paramHwRoiY2 = this->hwRoiY2;
 	paramXCamSize = this->xCamSize;
 	paramYCamSize = this->yCamSize;
+	paramRecorderSubmode = this->recoderSubmode;
+	paramStorageMode = this->storageMode;
 	// Inform server if we have one
 	if(gangConnection != NULL)
 	{
@@ -1644,6 +1668,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	// Start the camera recording
 	this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 
+#if 0
 	// The PCO4000 and PCO1600 appear to output a few dodgy frames immediately on
 	// getting the arm.  This bit of code tries to drop them.
 	if(this->camType.camType == DllApi::cameraType4000 || 
@@ -1653,6 +1678,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 		epicsThreadSleep(0.3);
 		this->discardImages();        // Dump any images
 	}
+#endif
 }
 
 /**
@@ -1673,6 +1699,20 @@ void Pco::cfgAdcMode() throw(PcoException)
     {
         this->adcMode = DllApi::adcModeSingle;
     }
+}
+
+/**
+ * Configure the acquire mode
+ */
+void Pco::cfgMemoryMode() throw(PcoException)
+{
+    unsigned short v;
+	this->api->setRecorderSubmode(this->camera, this->recoderSubmode);
+	this->api->getRecorderSubmode(this->camera, &v);
+	this->recoderSubmode = v;
+	this->api->setStorageMode(this->camera, this->storageMode);
+	this->api->getStorageMode(this->camera, &v);
+	this->storageMode = v;
 }
 
 /**

@@ -107,6 +107,7 @@ public:
     static const double reconnectPeriod;
     static const double connectPeriod;
     static const double statusPollPeriod;
+    static const double armIgnoreImagesPeriod;
     static const double acquisitionStatusPollPeriod;
     static const char* stateNames[];
     static const char* eventNames[];
@@ -215,6 +216,8 @@ private:
     int reverseY;
     int adcMode;
     int bitAlignmentMode;
+	int recoderSubmode;
+	int storageMode;
     int acquireMode;
     int cameraSetup;
     int dataType;
@@ -276,6 +279,7 @@ private:
     void acquisitionComplete() throw();
     void checkMemoryBuffer(int& percentUsed, int& numFrames) throw(PcoException);
     void setValidBinning(std::set<int>& valid, int max, int step) throw();
+	void cfgMemoryMode() throw(PcoException);
     void cfgBinningAndRoi() throw(PcoException);
     void cfgTriggerMode() throw(PcoException);
     void cfgTimestampMode() throw(PcoException);
@@ -305,6 +309,7 @@ public:
 	const StateMachine::State* stateUnconnected;
 	const StateMachine::State* stateIdle;
     const StateMachine::State* stateArmed;
+    const StateMachine::State* stateArmedDelay;
     const StateMachine::State* stateAcquiring;
 	const StateMachine::State* statedUnarmedAcquiring;
 	const StateMachine::State* stateExternalAcquiring;
@@ -340,6 +345,7 @@ public:
     StateMachine::StateSelector smTrigger();
     StateMachine::StateSelector smStopAcquisition();
     StateMachine::StateSelector smExternalStopAcquisition();
+    StateMachine::StateSelector smArmComplete();
 
 };
 
