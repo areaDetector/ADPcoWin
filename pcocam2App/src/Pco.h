@@ -94,6 +94,7 @@ public:
 	IntegerParam paramFirmwareVersion;
 	IntegerParam paramCamRamUseFrames;
 	IntegerParam paramArmComplete;
+	IntegerParam paramConnected;
 
 // Constants
 public:

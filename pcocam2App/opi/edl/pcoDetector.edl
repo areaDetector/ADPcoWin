@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 1013
-y 196
+x 1017
+y 221
 w 390
 h 820
 font "arial-bold-r-12.0"
@@ -59,7 +59,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 5
 y 475
 w 108
@@ -72,43 +72,6 @@ value {
 }
 autoSize
 border
-endObjectProperties
-
-# (Textupdate)
-object TextupdateClass
-beginObjectProperties
-major 10
-minor 0
-release 0
-x 260
-y 525
-w 105
-h 15
-controlPv "$(P)$(R)PIX_RATE_RBV"
-fgColor index 16
-bgColor index 10
-fill
-font "helvetica-bold-r-10.0"
-fontAlign "center"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 0
-x 90
-y 525
-w 55
-h 15
-font "helvetica-bold-r-10.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "Pixel rate"
-}
 endObjectProperties
 
 # (Embedded Window)
@@ -140,7 +103,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 90
 y 545
 w 53
@@ -178,7 +141,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 135
 y 670
 w 48
@@ -198,7 +161,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 130
 y 730
 w 55
@@ -218,7 +181,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 130
 y 710
 w 54
@@ -238,7 +201,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 75
 y 565
 w 68
@@ -276,7 +239,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 55
 y 585
 w 86
@@ -296,7 +259,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 130
 y 690
 w 57
@@ -490,7 +453,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 10
 y 500
 w 31
@@ -564,7 +527,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 80
 y 605
 w 56
@@ -603,7 +566,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
 y 790
 w 56
@@ -661,7 +624,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 45
 y 625
 w 98
@@ -680,7 +643,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 270
 y 790
@@ -818,7 +781,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
 y 670
 w 54
@@ -838,7 +801,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
 y 690
 w 51
@@ -858,7 +821,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
 y 710
 w 58
@@ -878,7 +841,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
 y 730
 w 55
@@ -898,7 +861,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
 y 750
 w 53
@@ -918,7 +881,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 15
 y 770
 w 40
@@ -976,7 +939,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 130
 y 750
 w 59
@@ -996,7 +959,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 130
 y 770
 w 60
@@ -1016,7 +979,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 75
 y 645
 w 68
@@ -1089,32 +1052,12 @@ indicatorPv "$(P)$(R)ADC_MODE_RBV"
 font "helvetica-bold-r-10.0"
 endObjectProperties
 
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 150
-y 525
-w 100
-h 15
-fgColor index 25
-bgColor index 3
-inconsistentColor index 3
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(P)$(R)PIX_RATE"
-indicatorPv "$(P)$(R)PIX_RATE_RBV"
-font "helvetica-bold-r-10.0"
-endObjectProperties
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 130
 y 790
 w 58
@@ -1153,7 +1096,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 255
 y 670
 w 48
@@ -1176,7 +1119,7 @@ minor 0
 release 0
 x 310
 y 670
-w 45
+w 65
 h 15
 controlPv "$(P)$(R)CAM_RAM_USE_FRAMES_RBV"
 fgColor index 16
@@ -1185,5 +1128,121 @@ bgColor index 10
 fill
 font "helvetica-bold-r-10.0"
 fontAlign "center"
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 90
+y 525
+w 275
+h 15
+
+beginGroup
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 90
+y 525
+w 55
+h 15
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Pixel rate"
+}
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 260
+y 525
+w 105
+h 15
+controlPv "$(P)$(R)PIX_RATE_RBV"
+fgColor index 16
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 150
+y 525
+w 100
+h 15
+fgColor index 25
+bgColor index 3
+inconsistentColor index 3
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(P)$(R)PIX_RATE"
+indicatorPv "$(P)$(R)PIX_RATE_RBV"
+font "helvetica-bold-r-10.0"
+endObjectProperties
+
+endGroup
+
+visPv "$(P)$(R)CONNECTED_RBV"
+visMin "1"
+visMax "0"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 310
+y 690
+w 65
+h 15
+controlPv "$(P)$(R)CONNECTED_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 255
+y 690
+w 26
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Conn"
+}
+autoSize
 endObjectProperties
 

@@ -140,6 +140,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramFirmwareVersion(this, "PCO_FIRMWARE_VERSION", 0)
 , paramCamRamUseFrames(this, "PCO_CAM_RAM_USE_FRAMES", 0)
 , paramArmComplete(this, "PCO_ARM_COMPLETE", 0)
+, paramConnected(this, "PCO_CONNECTED", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -370,6 +371,7 @@ StateMachine::StateSelector Pco::smConnectToCamera()
         stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
         outputStatusMessage("");
         result = StateMachine::firstState;
+		paramConnected = 1;
     }
     catch(PcoException&)
     {
@@ -676,6 +678,7 @@ StateMachine::StateSelector Pco::smUnarmedMakeGangedImage()
  */
 StateMachine::StateSelector Pco::smDisarmAndDiscard()
 {
+	acquisitionComplete();
     doDisarm();
     discardImages();
     return StateMachine::firstState;

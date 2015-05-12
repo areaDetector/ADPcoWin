@@ -828,3 +828,13 @@ record(longin, "$(P)$(R)FIRMWARE_VERSION_RBV")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_FIRMWARE_VERSION")
     field(SCAN, "I/O Intr")
 }
+
+# Camera connection state
+record(bi, "$(P)$(R)CONNECTED_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CONNECTED")
+    field(SCAN, "I/O Intr")
+	field(ZNAM, "Disconnected")
+	field(ONAM, "Connected")
+}
