@@ -311,7 +311,8 @@ public:
     const StateMachine::State* stateArmed;
     const StateMachine::State* stateArmedDelay;
     const StateMachine::State* stateAcquiring;
-	const StateMachine::State* statedUnarmedAcquiring;
+	const StateMachine::State* stateUnarmedAcquiring;
+    const StateMachine::State* stateUnarmedAcquiringDelay;
 	const StateMachine::State* stateExternalAcquiring;
 	// Events
     const StateMachine::Event* requestInitialise;
@@ -331,7 +332,7 @@ public:
     StateMachine::StateSelector smPollWhileIdle();
     StateMachine::StateSelector smPollWhileAcquiring();
     StateMachine::StateSelector smRequestArm();
-    StateMachine::StateSelector smArmAndAcquire();
+    StateMachine::StateSelector smArmCompleteAcquire();
     StateMachine::StateSelector smAcquire();
     StateMachine::StateSelector smDiscardImages();
     StateMachine::StateSelector smRequestReboot();

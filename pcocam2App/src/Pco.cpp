@@ -162,6 +162,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     paramADMaxSizeX = 0;
     paramADMaxSizeY = 1024;
     paramNDArraySize = 0;
+	paramADStatusMessage = "Disconnected";
     // We are not connected to a camera
     camera = NULL;
     // Initialise the buffers
@@ -189,7 +190,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     stateArmedDelay = stateMachine->state("ArmedDelay");
     stateArmed = stateMachine->state("Armed");
     stateAcquiring = stateMachine->state("Acquiring");
-	statedUnarmedAcquiring = stateMachine->state("UnarmedAcquiring");
+	stateUnarmedAcquiring = stateMachine->state("UnarmedAcquiring");
+	stateUnarmedAcquiringDelay = stateMachine->state("UnarmedAcquiringDelay");
 	stateExternalAcquiring = stateMachine->state("ExternalAcquiring");
 	// Events
     requestInitialise = stateMachine->event("Initialise");
@@ -207,7 +209,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateUnconnected, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smConnectToCamera), stateIdle, stateUnconnected);
 	stateMachine->transition(stateIdle, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileIdle), stateIdle);
 	stateMachine->transition(stateIdle, requestArm, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateArmedDelay, stateIdle);
-	stateMachine->transition(stateIdle, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smArmAndAcquire), statedUnarmedAcquiring, stateIdle);
+	stateMachine->transition(stateIdle, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateUnarmedAcquiringDelay, stateIdle);
 	stateMachine->transition(stateIdle, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateIdle);
 	stateMachine->transition(stateIdle, requestReboot, new StateMachine::Act<Pco>(this, &Pco::smRequestReboot), stateUnconnected);
 	stateMachine->transition(stateArmedDelay, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smArmComplete), stateArmed);
@@ -228,11 +230,13 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateExternalAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateExternalAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateExternalAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
 	stateMachine->transition(stateExternalAcquiring, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateExternalAcquiring);
-	stateMachine->transition(statedUnarmedAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), statedUnarmedAcquiring);
-	stateMachine->transition(statedUnarmedAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smUnarmedAcquireImage), statedUnarmedAcquiring, stateIdle);
-	stateMachine->transition(statedUnarmedAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smUnarmedMakeGangedImage), statedUnarmedAcquiring, stateIdle);
-	stateMachine->transition(statedUnarmedAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), statedUnarmedAcquiring);
-	stateMachine->transition(statedUnarmedAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
+	stateMachine->transition(stateUnarmedAcquiringDelay, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smArmCompleteAcquire), stateUnarmedAcquiring);
+	stateMachine->transition(stateUnarmedAcquiringDelay, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateUnarmedAcquiringDelay);
+	stateMachine->transition(stateUnarmedAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateUnarmedAcquiring);
+	stateMachine->transition(stateUnarmedAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smUnarmedAcquireImage), stateUnarmedAcquiring, stateIdle);
+	stateMachine->transition(stateUnarmedAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smUnarmedMakeGangedImage), stateUnarmedAcquiring, stateIdle);
+	stateMachine->transition(stateUnarmedAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateUnarmedAcquiring);
+	stateMachine->transition(stateUnarmedAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
 	// State machine starting state
 	stateMachine->initialState(stateUninitialised);
 	// A timer for the trigger
@@ -364,6 +368,7 @@ StateMachine::StateSelector Pco::smConnectToCamera()
         initialiseCamera(takeLock);
         discardImages();
         stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
+        outputStatusMessage("");
         result = StateMachine::firstState;
     }
     catch(PcoException&)
@@ -450,38 +455,13 @@ StateMachine::StateSelector Pco::smArmComplete()
  * returns: firstState: success
  *          secondState: failure
  */
-StateMachine::StateSelector Pco::smArmAndAcquire()
+StateMachine::StateSelector Pco::smArmCompleteAcquire()
 {
-	StateMachine::StateSelector result;
-    try
-    {
-		try
-		{
-			doArm();
-		}
-		catch(std::exception&)
-		{
-			// Sometimes the arm fails in a way that is fixed by the clean up.
-			// This especially happens on the way back from a hardware ROI.
-			// So we disarm and try once more if that happens.
-			doDisarm();
-			doArm();
-		}
-        nowAcquiring();
-        startCamera();
-        stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
-        outputStatusMessage("");
-        result = StateMachine::firstState;
-    }
-    catch(std::exception& e)
-    {
-        acquisitionComplete();
-        doDisarm();
-        errorTrace << "Failed to arm, " << e.what() << std::endl;
-        outputStatusMessage(e.what());
-        result = StateMachine::secondState;
-    }
-    return result;
+    this->nowAcquiring();
+    this->startCamera();
+    this->stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
+    this->outputStatusMessage("");
+    return StateMachine::firstState;
 }
 
 /**
@@ -519,6 +499,7 @@ StateMachine::StateSelector Pco::smRequestReboot()
 	// Now do the reboot
 	doReboot();
     stateMachine->startTimer(Pco::rebootPeriod, Pco::requestTimerExpiry);
+    outputStatusMessage("Disconnected");
     return StateMachine::firstState;
 }
 
