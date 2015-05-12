@@ -128,8 +128,6 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramRoiVertSteps(this, "PCO_ROIVERTSTEPS", 0)
 , paramReboot(this, "PCO_REBOOT", 1, new AsynParam::Notify<Pco>(this, &Pco::onReboot))
 , paramCamlinkLongGap(this, "PCO_CAMLINKLONGGAP", 1)
-, paramArm(this, "PCO_ARM", 0, new AsynParam::Notify<Pco>(this, &Pco::onArm))
-, paramDisarm(this, "PCO_DISARM", 0, new AsynParam::Notify<Pco>(this, &Pco::onDisarm))
 , paramGangMode(this, "PCO_GANGMODE", gangModeNone)
 , paramADAcquire(ADDriverEx::paramADAcquire, new AsynParam::Notify<Pco>(this, &Pco::onAcquire))
 , paramADTemperature(ADDriverEx::paramADTemperature, new AsynParam::Notify<Pco>(this, &Pco::onADTemperature))
@@ -141,6 +139,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramHardwareVersion(this, "PCO_HARDWARE_VERSION", 0)
 , paramFirmwareVersion(this, "PCO_FIRMWARE_VERSION", 0)
 , paramCamRamUseFrames(this, "PCO_CAM_RAM_USE_FRAMES", 0)
+, paramArmComplete(this, "PCO_ARM_COMPLETE", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -447,6 +446,8 @@ StateMachine::StateSelector Pco::smRequestArm()
  */
 StateMachine::StateSelector Pco::smArmComplete()
 {
+	TakeLock takeLock(this);
+	paramArmComplete = 1;
     stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
 }
@@ -1149,38 +1150,6 @@ void Pco::onArmMode(TakeLock& takeLock)
 }
 
 /**
- * Handle a change to the Arm parameter
- */
-void Pco::onArm(TakeLock& takeLock)
-{
-    // Perform an arm
-    if(paramArm)
-    {
-        this->post(Pco::requestArm);
-    	if(gangServer)
-    	{
-    		gangServer->arm();
-    	}
-    }
-}
-
-/**
- * Handle a change to the disarm parameter
- */
-void Pco::onDisarm(TakeLock& takeLock)
-{
-    // Perform a disarm
-    if(paramDisarm)
-    {
-        this->post(Pco::requestDisarm);
-    	if(gangServer)
-    	{
-    		gangServer->disarm();
-    	}
-    }
-}
-
-/**
  * Handle a change to the ClearStateRecord parameter
  */
 void Pco::onClearStateRecord(TakeLock& takeLock)
@@ -1497,7 +1466,6 @@ void Pco::addAvailableBufferAll() throw(PcoException)
 void Pco::doArm() throw(std::bad_alloc, PcoException)
 {
 	TakeLock takeLock(this);
-    paramArm = 0;
 	// Camera now busy
 	paramADStatus = ADStatusReadout;
 	// Try to clear up from last time
@@ -2051,7 +2019,7 @@ void Pco::doDisarm() throw()
 {
 	TakeLock lock(this);
     paramArmMode = 0;
-    paramDisarm = 0;
+	paramArmComplete = 0;
     this->freeImageBuffers();
 }
 

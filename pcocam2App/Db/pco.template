@@ -263,6 +263,36 @@ record(bo, "$(P)$(R)ARM_MODE")
     field(ONAM, "Armed")
     field(VAL,  "0")
     field(PINI, "YES")
+	field(FLNK, "$(P)$(R)ARM_STARTBUSY")
+}
+
+# These records keep the ARM_MODE busy until it has completed
+record(calcout, "$(P)$(R)ARM_STARTBUSY")
+{
+	field(INPA, "$(P)$(R)ARM_MODE")
+	field(CALC, "A")
+	field(OOPT, "Transition To Non-zero")
+	field(DOPT, "Use OCAL")
+    field(OCAL, "1")
+	field(OUT,  "$(P)$(R)ARM_BUSY PP")
+}
+record(busy, "$(P)$(R)ARM_BUSY")
+{
+    field(ZNAM, "Idle")
+    field(ONAM, "Arming")
+    field(VAL,  "0")
+}
+record(bi, "$(P)$(R)ARM_COMPLETE")
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ARM_COMPLETE")
+    field(SCAN, "I/O Intr")
+	field(FLNK, "$(P)$(R)ARM_ENDBUSY")
+}
+record(dfanout, "$(P)$(R)ARM_ENDBUSY")
+{
+    field(DOL,  "0")
+	field(OUTA, "$(P)$(R)ARM_BUSY CA")
 }
 
 # % gdatag, mbbinary, ro, $(PORT)_pcocam, ARM_MODE_RBV, Readback for arm mode
@@ -274,30 +304,6 @@ record(bi, "$(P)$(R)ARM_MODE_RBV")
     field(ZNAM, "Disarmed")
     field(ONAM, "Armed")
     field(SCAN, "I/O Intr")
-}
-
-# % gdatag, mbbinary, rw, $(PORT)_pcocam, ARM_MODE, Set arm mode
-record(busy, "$(P)$(R)ARM")
-{
-    field(DESC, "arm")
-    field(DTYP, "asynInt32")
-    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ARM")
-    field(ZNAM, "Idle")
-    field(ONAM, "Arming")
-    field(VAL,  "0")
-    field(PINI, "YES")
-}
-
-# % gdatag, mbbinary, rw, $(PORT)_pcocam, ARM_MODE, Set arm mode
-record(busy, "$(P)$(R)DISARM")
-{
-    field(DESC, "disarm")
-    field(DTYP, "asynInt32")
-    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DISARM")
-    field(ZNAM, "Idle")
-    field(ONAM, "Disarming")
-    field(VAL,  "0")
-    field(PINI, "YES")
 }
 
 # % gdatag, pv, rw, $(PORT)_pcocam, DELAY_TIME, Set delay time

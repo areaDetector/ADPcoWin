@@ -82,8 +82,6 @@ public:
     IntegerParam paramRoiVertSteps;
     IntegerParam paramReboot;
     IntegerParam paramCamlinkLongGap;
-    IntegerParam paramArm;
-    IntegerParam paramDisarm;
     IntegerParam paramGangMode;
 	IntegerParam paramADAcquire;
 	DoubleParam paramADTemperature;
@@ -95,6 +93,7 @@ public:
 	IntegerParam paramHardwareVersion;
 	IntegerParam paramFirmwareVersion;
 	IntegerParam paramCamRamUseFrames;
+	IntegerParam paramArmComplete;
 
 // Constants
 public:
@@ -298,8 +297,6 @@ private:
     bool makeImages();
     void onAcquire(TakeLock& takeLock);
     void onArmMode(TakeLock& takeLock);
-    void onArm(TakeLock& takeLock);
-    void onDisarm(TakeLock& takeLock);
     void onClearStateRecord(TakeLock& takeLock);
     void onCoolingSetpoint(TakeLock& takeLock);
     void onADTemperature(TakeLock& takeLock);
