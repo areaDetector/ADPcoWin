@@ -116,6 +116,7 @@ public:
     static const long nybbleMask;
     static const long bcdDigitValue;
     static const int bcdPixelLength;
+	static const int binaryHeaderLength;
     static const int defaultHorzBin;
     static const int defaultVertBin;
     static const int defaultRoiMinX;
@@ -273,6 +274,7 @@ private:
     bool receiveImages() throw();
     void discardImages() throw();
     long extractImageNumber(unsigned short* imagebuffer) throw();
+    bool isImageValid(unsigned short* imagebuffer) throw();
     long bcdToInt(unsigned short pixel) throw();
     void extractImageTimeStamp(epicsTimeStamp* imageTime, unsigned short* imageBuffer) throw();
     void updateErrorCounters() throw();

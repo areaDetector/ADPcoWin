@@ -33,12 +33,13 @@ const double Pco::rebootPeriod = 10.0;
 const double Pco::connectPeriod = 5.0;
 const double Pco::statusPollPeriod = 2.0;
 const double Pco::acquisitionStatusPollPeriod = 5.0;
-const double Pco::armIgnoreImagesPeriod = 0.3;
+const double Pco::armIgnoreImagesPeriod = 0.1;
 const int Pco::bitsPerShortWord = 16;
 const int Pco::bitsPerNybble = 4;
 const long Pco::nybbleMask = 0x0f;
 const long Pco::bcdDigitValue = 10;
 const int Pco::bcdPixelLength = 4;
+const int Pco::binaryHeaderLength = 14;
 const int Pco::defaultHorzBin = 1;
 const int Pco::defaultVertBin = 1;
 const int Pco::defaultRoiMinX = 1;
@@ -2135,104 +2136,110 @@ bool Pco::receiveImages() throw()
         this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
         if(image != NULL)
         {
-            // What is the number of the image?  If the image does not
-            // contain the BCD image number
-            // use the dead reckoning number instead.
-            long imageNumber = this->lastImageNumber + 1;
-            if(this->timestampMode == DllApi::timestampModeBinary ||
-                this->timestampMode == DllApi::timestampModeBinaryAndAscii)
-            {
-                imageNumber = this->extractImageNumber(
-                        (unsigned short*)image->pData);
-            }
-            // If this is the image we are expecting?
-            if(imageNumber != this->lastImageNumber+1)
-            {
-                this->missingFrames++;
-                printf("Missing frame, got=%ld, exp=%ld\n", imageNumber, this->lastImageNumber+1);
-                TakeLock takeLock(this);
-                paramMissingFrames = this->missingFrames;
-            }
-            this->lastImageNumber = imageNumber;
-            // Do software ROI, binning and reversal if required
-            if(this->roiRequired)
-            {
-                NDArray* scratch;
-                this->pNDArrayPool->convert(image, &scratch,
-                        (NDDataType_t)this->dataType, this->arrayDims);
-                image->release();
-                image = scratch;
-            }
-            // Handle summing of multiple exposures
-            bool nextImageReady = false;
-            if(this->numExposures > 1)
-            {
-                this->numExposuresCounter++;
-                if(this->numExposuresCounter > 1)
-                {
-                    switch(image->dataType)
-                    {
-                    case NDUInt8:
-                    case NDInt8:
-                        sumArray<epicsUInt8>(image, this->imageSum);
-                        break;
-                    case NDUInt16:
-                    case NDInt16:
-                        sumArray<epicsUInt16>(image, this->imageSum);
-                        break;
-                    case NDUInt32:
-                    case NDInt32:
-                        sumArray<epicsUInt32>(image, this->imageSum);
-                        break;
-                    default:
-                        break;
-                    }
-                    // throw away the previous accumulator
-                    this->imageSum->release();
-                }
-                // keep the sum of previous images for the next iteration
-                this->imageSum = image;
-                if(this->numExposuresCounter >= this->numExposures)
-                {
-                    // we have finished accumulating
-                    nextImageReady = true;
-                    this->numExposuresCounter = 0;
-                }
-            }
-            else
-            {
-                nextImageReady = true;
-            }
-            if(nextImageReady)
-            {
-                // Attach the image information
-                image->uniqueId = this->arrayCounter;
-                epicsTimeStamp imageTime;
-                if(this->timestampMode == DllApi::timestampModeBinary ||
-                        this->timestampMode == DllApi::timestampModeBinaryAndAscii)
-                {
-                    this->extractImageTimeStamp(&imageTime,
-                            (unsigned short*)image->pData);
-                }
-                else
-                {
-                    epicsTimeGetCurrent(&imageTime);
-                }
-                image->timeStamp = imageTime.secPastEpoch +
-                        imageTime.nsec / Pco::oneNanosecond;
-                this->getAttributes(image->pAttributeList);
-                // Show the image to the gang system
-                if(this->gangConnection)
-                {
-                	this->gangConnection->sendImage(image, this->numImagesCounter);
-                }
-                if(!this->gangServer ||
-                		!gangServer->imageReceived(this->numImagesCounter, image))
-                {
-                	// Gang system did not consume it, pass it on now
-                	imageComplete(image);
-                }
-            }
+			// If there is a binary timestamp in the frame, we can sort
+			// out the invalid frames that some cameras output when 
+			// arming.
+			if(this->isImageValid((unsigned short*)image->pData))
+			{
+				// What is the number of the image?  If the image does not
+				// contain the BCD image number
+				// use the dead reckoning number instead.
+				long imageNumber = this->lastImageNumber + 1;
+				if(this->timestampMode == DllApi::timestampModeBinary ||
+					this->timestampMode == DllApi::timestampModeBinaryAndAscii)
+				{
+					imageNumber = this->extractImageNumber(
+							(unsigned short*)image->pData);
+				}
+				// If this is the image we are expecting?
+				if(imageNumber != this->lastImageNumber+1)
+				{
+					this->missingFrames++;
+					printf("Missing frame, got=%ld, exp=%ld\n", imageNumber, this->lastImageNumber+1);
+					TakeLock takeLock(this);
+					paramMissingFrames = this->missingFrames;
+				}
+				this->lastImageNumber = imageNumber;
+				// Do software ROI, binning and reversal if required
+				if(this->roiRequired)
+				{
+					NDArray* scratch;
+					this->pNDArrayPool->convert(image, &scratch,
+							(NDDataType_t)this->dataType, this->arrayDims);
+					image->release();
+					image = scratch;
+				}
+				// Handle summing of multiple exposures
+				bool nextImageReady = false;
+				if(this->numExposures > 1)
+				{
+					this->numExposuresCounter++;
+					if(this->numExposuresCounter > 1)
+					{
+						switch(image->dataType)
+						{
+						case NDUInt8:
+						case NDInt8:
+							sumArray<epicsUInt8>(image, this->imageSum);
+							break;
+						case NDUInt16:
+						case NDInt16:
+							sumArray<epicsUInt16>(image, this->imageSum);
+							break;
+						case NDUInt32:
+						case NDInt32:
+							sumArray<epicsUInt32>(image, this->imageSum);
+							break;
+						default:
+							break;
+						}
+						// throw away the previous accumulator
+						this->imageSum->release();
+					}
+					// keep the sum of previous images for the next iteration
+					this->imageSum = image;
+					if(this->numExposuresCounter >= this->numExposures)
+					{
+						// we have finished accumulating
+						nextImageReady = true;
+						this->numExposuresCounter = 0;
+					}
+				}
+				else
+				{
+					nextImageReady = true;
+				}
+				if(nextImageReady)
+				{
+					// Attach the image information
+					image->uniqueId = this->arrayCounter;
+					epicsTimeStamp imageTime;
+					if(this->timestampMode == DllApi::timestampModeBinary ||
+							this->timestampMode == DllApi::timestampModeBinaryAndAscii)
+					{
+						this->extractImageTimeStamp(&imageTime,
+								(unsigned short*)image->pData);
+					}
+					else
+					{
+						epicsTimeGetCurrent(&imageTime);
+					}
+					image->timeStamp = imageTime.secPastEpoch +
+							imageTime.nsec / Pco::oneNanosecond;
+					this->getAttributes(image->pAttributeList);
+					// Show the image to the gang system
+					if(this->gangConnection)
+					{
+                		this->gangConnection->sendImage(image, this->numImagesCounter);
+					}
+					if(!this->gangServer ||
+                			!gangServer->imageReceived(this->numImagesCounter, image))
+					{
+                		// Gang system did not consume it, pass it on now
+                		imageComplete(image);
+					}
+				}
+			}
         }
     }
     TakeLock takelLock(this);
@@ -2305,6 +2312,26 @@ long Pco::extractImageNumber(unsigned short* imagebuffer) throw()
         imageNumber += bcdToInt(imagebuffer[i]);
     };
     return imageNumber;
+}
+
+/**
+ * Check the image is valid.  Some cameras output completely zero
+ * frames on arming.  If there is an embedded timestamp we can detect
+ * this as the timestamp is also completely zero.  
+ */
+bool Pco::isImageValid(unsigned short* imagebuffer) throw()
+{
+	bool result = true;
+    if(this->timestampMode == DllApi::timestampModeBinary ||
+        this->timestampMode == DllApi::timestampModeBinaryAndAscii)
+    {
+		result = false;
+		for(int i=0; i<Pco::binaryHeaderLength && !result; i++)
+		{
+			result = imagebuffer[i] != 0;
+		}
+    }
+	return result;
 }
 
 /**
