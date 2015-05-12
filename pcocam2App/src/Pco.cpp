@@ -30,7 +30,7 @@ const int Pco::requestQueueCapacity = 10;
 const int Pco::numHandles = 300;
 const double Pco::reconnectPeriod = 5.0;
 const double Pco::rebootPeriod = 10.0;
-const double Pco::connectPeriod = 5.0;
+const double Pco::connectPeriod = 20.0;
 const double Pco::statusPollPeriod = 2.0;
 const double Pco::acquisitionStatusPollPeriod = 5.0;
 const double Pco::armIgnoreImagesPeriod = 0.1;
@@ -371,7 +371,6 @@ StateMachine::StateSelector Pco::smConnectToCamera()
         stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
         outputStatusMessage("");
         result = StateMachine::firstState;
-		paramConnected = 1;
     }
     catch(PcoException&)
     {
@@ -389,6 +388,7 @@ StateMachine::StateSelector Pco::smPollWhileIdle()
 {
     pollCameraNoAcquisition();
     pollCamera();
+	paramConnected = 1;
     stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
 }
