@@ -1307,7 +1307,7 @@ void Pco::freeImageBuffers() throw()
 	// we need to put the camera into recording state and back out again.
 	try
 	{
-		this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
+		this->api->setRecordingState(this->camera, DllApi::recorderStateOnNoEvent);
 	}
 	catch(PcoException&)
 	{
@@ -1615,6 +1615,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 
 	// Start the camera recording
 	this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
+
+	epicsThreadSleep(3.0);
 
 	// Give the buffers to the camera
 	this->addAvailableBufferAll();

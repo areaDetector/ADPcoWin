@@ -69,6 +69,7 @@ void PcoApi::run()
             waitEvents, FALSE, INFINITE);
         if(result == WAIT_OBJECT_0)
         {
+            std::cout << "#### Entering run event loop" << std::endl;
             bool running = true;
             while(running)
             {
@@ -549,6 +550,10 @@ int PcoApi::doSetRecordingState(Handle handle, unsigned short state)
     {
         ::SetEvent(this->startEvent);
     }
+	if(state == DllApi::recorderStateOnNoEvent)
+	{
+		state = DllApi::recorderStateOn;
+	}
     return PCO_SetRecordingState(handle, state);
 }
 
