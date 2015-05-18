@@ -1616,8 +1616,6 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	// Start the camera recording
 	this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 
-	epicsThreadSleep(3.0);
-
 	// Give the buffers to the camera
 	this->addAvailableBufferAll();
 	this->lastImageNumber = 0;
