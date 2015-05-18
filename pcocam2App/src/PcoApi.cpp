@@ -63,18 +63,15 @@ void PcoApi::run()
 {
     while(true)
     {
-        //std::cout << "#### Waiting for start event" << std::endl;
         // Wait for the start event
         HANDLE waitEvents[PcoApi::numberOfWaitingEvents] = {this->startEvent};
         DWORD result = ::WaitForMultipleObjects(PcoApi::numberOfWaitingEvents,
             waitEvents, FALSE, INFINITE);
-        //std::cout << "#### Wait event received: " << result << std::endl;
         if(result == WAIT_OBJECT_0)
         {
             bool running = true;
             while(running)
             {
-                //std::cout << "#### Waiting for buffer events" << std::endl;
                 // Wait for an image or the stop event
                 HANDLE runEvents[PcoApi::numberOfRunningEvents];
                 runEvents[PcoApi::stopEventIndex] = this->stopEvent;
@@ -92,10 +89,10 @@ void PcoApi::run()
                 }
                 result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
                     runEvents, FALSE, INFINITE);
-                //std::cout << "#### Run event received: " << result << std::endl;
                 if(result == WAIT_OBJECT_0+PcoApi::stopEventIndex)
                 {
                     running = false;
+	                std::cout << "#### Exiting run event loop" << std::endl;
                 }
                 else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
                     result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)

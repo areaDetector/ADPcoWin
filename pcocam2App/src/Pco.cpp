@@ -1613,13 +1613,13 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	// Now Arm the camera, so it is ready to take images, all settings should have been made by now
 	this->api->arm(this->camera);
 
+	// Start the camera recording
+	this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
+
 	// Give the buffers to the camera
 	this->addAvailableBufferAll();
 	this->lastImageNumber = 0;
 	this->lastImageNumberValid = false;
-
-	// Start the camera recording
-	this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 
 #if 0
 	// The PCO4000 and PCO1600 appear to output a few dodgy frames immediately on
