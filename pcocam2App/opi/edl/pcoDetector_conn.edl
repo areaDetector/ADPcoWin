@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2700
-y 128
+x 2704
+y 153
 w 397
 h 525
 font "arial-bold-r-12.0"
@@ -1134,8 +1134,8 @@ minor 1
 release 1
 x 250
 y 215
-w 25
-h 10
+w 26
+h 12
 font "helvetica-bold-r-10.0"
 fgColor index 14
 bgColor index 3
@@ -1201,5 +1201,44 @@ botShadowColor index 11
 controlPv "$(P)$(R)PIX_RATE"
 indicatorPv "$(P)$(R)PIX_RATE_RBV"
 font "helvetica-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 250
+y 235
+w 37
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Cap Err"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 305
+y 235
+w 60
+h 15
+controlPv "$(P)$(R)CAPTURE_ERRORS_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
 endObjectProperties
 
