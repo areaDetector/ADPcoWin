@@ -76,31 +76,33 @@ void PcoApi::run()
                 // Wait for an image or the stop event
                 HANDLE runEvents[PcoApi::numberOfRunningEvents];
                 runEvents[PcoApi::stopEventIndex] = this->stopEvent;
-                //int pos = this->queueHead;
                 for(int i=0; i<DllApi::maxNumBuffers; i++)
                 {
 					if(this->buffers[i].eventHandle != NULL)
 					{
 						assert(this->buffers[i].eventHandle != NULL);
 						runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[i].eventHandle;
-						//assert(this->buffers[pos].eventHandle != NULL);
-						//runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[pos].eventHandle;
-						//pos = (pos + 1) % DllApi::maxNumBuffers;
 					}
                 }
                 result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
-                    runEvents, FALSE, INFINITE);
+                    runEvents, FALSE, 1000 /* was INFINITE*/);
                 if(result == WAIT_OBJECT_0+PcoApi::stopEventIndex)
                 {
+					// Stop event received
                     running = false;
 	                std::cout << "#### Exiting run event loop" << std::endl;
                 }
+				else if(result == WAIT_TIMEOUT)
+				{
+					// A timeout received, do a quick poll
+					this->pco->pollForFrame(this->queueHead);
+				}
                 else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
                     result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
                 {
+					// A buffer event received
                     int bufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
                     ::ResetEvent(this->buffers[bufferNumber].eventHandle);
-                    //bufferNumber = (bufferNumber + this->queueHead) % DllApi::maxNumBuffers;
                     this->queueHead = (this->queueHead + 1) % DllApi::maxNumBuffers;
                     this->pco->frameReceived(bufferNumber);
                 }

@@ -141,6 +141,7 @@ public:
 public:
     void post(const StateMachine::Event* req);
     void frameReceived(int bufferNumber);
+	void pollForFrame(int bufferNumber);
     void trace(int flags, const char* format, ...);
     asynUser* getAsynUser();
     void registerDllApi(DllApi* api);

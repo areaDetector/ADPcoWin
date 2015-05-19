@@ -399,6 +399,9 @@ StateMachine::StateSelector Pco::smPollWhileIdle()
  */
 StateMachine::StateSelector Pco::smPollWhileAcquiring()
 {
+	// Note that the lock is used to control access to the parameters
+	// AND the PCO dll.
+    TakeLock takeLock(this);
     pollCamera();
     stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
@@ -1049,7 +1052,6 @@ bool Pco::pollCamera()
 		this->api->getExpTrigSignalStatus(this->camera, &expTrigger);
 		this->api->getAcqEnblSignalStatus(this->camera, &acqEnable);
         // Update EPICS
-        TakeLock takeLock(this);
         paramADTemperature = (double)ccdtemp/DllApi::ccdTemperatureScaleFactor;
         paramElectronicsTemp = (double)camtemp;
         paramPowerTemp = (double)powtemp;
@@ -1226,12 +1228,28 @@ void Pco::frameReceived(int bufferNumber)
         }
         this->post(Pco::requestImageReceived);
     }
-    // Give the buffer back to the API
-    this->lock();  // JAT: Why am I locking here?
+	// Note that the lock is used to control access to the parameters
+	// AND the PCO dll.
+    TakeLock takeLock(this);
     this->api->addBufferEx(this->camera, /*firstImage=*/0,
         /*lastImage=*/0, bufferNumber,
         this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
-    this->unlock();
+}
+
+/**
+ * Poll the given buffer for a frame
+ */
+void Pco::pollForFrame(int bufferNumber)
+{
+	// Note that the lock is used to control access to the parameters
+	// AND the PCO dll.
+    TakeLock takeLock(this);
+	// Check the status of the buffer
+	unsigned long dllStatus;
+	unsigned long drvStatus;
+	this->api->getBufferStatus(this->camera, bufferNumber, &dllStatus, &drvStatus);
+	apiTrace << "Poll buffer " << bufferNumber << " drvStatus=" << drvStatus << 
+		" dllStatus=" << dllStatus << std::endl;
 }
 
 /**
@@ -2213,7 +2231,7 @@ bool Pco::receiveImages() throw()
 			}
         }
     }
-    TakeLock takelLock(this);
+    TakeLock takeLock(this);
     paramADNumExposuresCounter = this->numExposuresCounter;
     paramImageNumber = this->lastImageNumber;
     return this->imageMode != ADImageContinuous &&
