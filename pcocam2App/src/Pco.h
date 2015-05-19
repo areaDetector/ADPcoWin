@@ -95,6 +95,7 @@ public:
 	IntegerParam paramCamRamUseFrames;
 	IntegerParam paramArmComplete;
 	IntegerParam paramConnected;
+	IntegerParam paramCaptureErrors;
 
 // Constants
 public:
@@ -141,7 +142,6 @@ public:
 public:
     void post(const StateMachine::Event* req);
     void frameReceived(int bufferNumber);
-	void pollForFrame(int bufferNumber);
     void trace(int flags, const char* format, ...);
     asynUser* getAsynUser();
     void registerDllApi(DllApi* api);
@@ -179,7 +179,7 @@ private:
     } buffers[Pco::numApiBuffers];
     long lastImageNumber;
     bool lastImageNumberValid;
-    epicsMessageQueue receivedFrameQueue;
+    epicsMessageQueue receivedBufferQueue;
     int numImagesCounter;
     int numExposuresCounter;
     int numImages;
@@ -244,6 +244,7 @@ private:
     NDArray* imageSum;
     NDDimension_t arrayDims[numDimensions];
     bool roiRequired;
+	int lastBufferReceived;
     // Error counters
     int outOfNDArrays;
     int bufferQueueReadFailures;
@@ -303,6 +304,7 @@ private:
     void onCoolingSetpoint(TakeLock& takeLock);
     void onADTemperature(TakeLock& takeLock);
     void onReboot(TakeLock& takeLock);
+	void pollForFrames() throw(PcoException);
 
 public:
     // States

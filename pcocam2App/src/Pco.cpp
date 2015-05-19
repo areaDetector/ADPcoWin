@@ -141,6 +141,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramCamRamUseFrames(this, "PCO_CAM_RAM_USE_FRAMES", 0)
 , paramArmComplete(this, "PCO_ARM_COMPLETE", 0)
 , paramConnected(this, "PCO_CONNECTED", 0)
+, paramCaptureErrors(this, "PCO_CAPTURE_ERRORS", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -148,7 +149,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , apiTrace(getAsynUser(), Pco::traceFlagsDllApi)
 , gangTrace(getAsynUser(), Pco::traceFlagsGang)
 , stateTrace(getAsynUser(), Pco::traceFlagsPcoState)
-, receivedFrameQueue(maxBuffers, sizeof(NDArray*))
+, receivedBufferQueue(maxBuffers, sizeof(int))
 , gangServer(NULL)
 , gangConnection(NULL)
 {
@@ -399,9 +400,6 @@ StateMachine::StateSelector Pco::smPollWhileIdle()
  */
 StateMachine::StateSelector Pco::smPollWhileAcquiring()
 {
-	// Note that the lock is used to control access to the parameters
-	// AND the PCO dll.
-    TakeLock takeLock(this);
     pollCamera();
     stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
@@ -1052,6 +1050,7 @@ bool Pco::pollCamera()
 		this->api->getExpTrigSignalStatus(this->camera, &expTrigger);
 		this->api->getAcqEnblSignalStatus(this->camera, &acqEnable);
         // Update EPICS
+		TakeLock takeLock(this);
         paramADTemperature = (double)ccdtemp/DllApi::ccdTemperatureScaleFactor;
         paramElectronicsTemp = (double)camtemp;
         paramPowerTemp = (double)powtemp;
@@ -1060,6 +1059,7 @@ bool Pco::pollCamera()
 		paramExpTrigger = (int)expTrigger;
 		paramAcqEnable = (int)acqEnable;
 		paramCamRamUseFrames = ramUseFrames;
+		paramCaptureErrors = this->api->captureErrors;
     }
     catch(PcoException& e)
     {
@@ -1213,29 +1213,12 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
  */
 void Pco::frameReceived(int bufferNumber)
 {
-    // Get an ND array
-    NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
-    if(image != NULL)
-    {
-        // Copy the image into an NDArray
-        ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
-                this->xCamSize*this->yCamSize*sizeof(unsigned short));
-        // Post the NDarray to the state machine thread
-        if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
-        {
-            // Failed to put on queue, better free the NDArray to avoid leaks
-            image->release();
-        }
-        this->post(Pco::requestImageReceived);
-    }
-	// Note that the lock is used to control access to the parameters
-	// AND the PCO dll.
-    TakeLock takeLock(this);
-    this->api->addBufferEx(this->camera, /*firstImage=*/0,
-        /*lastImage=*/0, bufferNumber,
-        this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+	// Send the buffer number to the state machine thread
+	this->receivedBufferQueue.send(&bufferNumber, sizeof(int));
+    this->post(Pco::requestImageReceived);
 }
 
+#if 0
 /**
  * Poll the given buffer for a frame
  */
@@ -1251,6 +1234,7 @@ void Pco::pollForFrame(int bufferNumber)
 	apiTrace << "Poll buffer " << bufferNumber << " drvStatus=" << drvStatus << 
 		" dllStatus=" << dllStatus << std::endl;
 }
+#endif
 
 /**
  * Return my asyn user object for use in tracing etc.
@@ -1287,6 +1271,7 @@ void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
             this->buffers[i].ready = true;
             //assert(this->buffers[i].bufferNumber == i);
         }
+		this->lastBufferReceived = -1;  // Indicate no buffers yet received
     }
     catch(std::bad_alloc& e)
     {
@@ -2092,15 +2077,36 @@ void Pco::startCamera() throw()
  */
 void Pco::discardImages() throw()
 {
-    while(this->receivedFrameQueue.pending() > 0)
+    while(this->receivedBufferQueue.pending() > 0)
     {
-        NDArray* image = NULL;
-        this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
-        if(image != NULL)
-        {
-            image->release();
-        }
+        int buffer;
+        this->receivedBufferQueue.tryReceive(&buffer, sizeof(int));
     }
+}
+
+/**
+ * Perform a single poll of the buffer queue for frames
+ */
+void Pco::pollForFrames() throw(PcoException)
+{
+#if 0
+	// First stop the driver's automatic frame reception
+	this->api->stopFrameCapture();
+
+
+	// Empty any images that might currently be queued
+	this->receiveImages()
+
+	// Check the status of the buffer
+	unsigned long dllStatus;
+	unsigned long drvStatus;
+	this->api->getBufferStatus(this->camera, bufferNumber, &dllStatus, &drvStatus);
+	apiTrace << "Poll buffer " << bufferNumber << " drvStatus=" << drvStatus << 
+		" dllStatus=" << dllStatus << std::endl;
+
+	// Restart the driver's automatic frame reception
+	this->api->startFrameCapture();
+#endif
 }
 
 /**
@@ -2116,13 +2122,25 @@ bool Pco::receiveImages() throw()
     // Note that the API has aready reset the event so the event status bit
     // returned by getBufferStatus will already be clear.  However, for
     // buffers that do have data ready return a statusDrv of zero.
-    while(this->receivedFrameQueue.pending() > 0 &&
+    while(this->receivedBufferQueue.pending() > 0 &&
     		(this->imageMode == ADImageContinuous ||
             this->numImagesCounter < this->numImages))
     {
-        // Get the image
-        NDArray* image = NULL;
-        this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
+		// Get the buffer
+        this->receivedBufferQueue.tryReceive(&lastBufferReceived, sizeof(int));
+		// Get an ND array
+		NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+		if(image != NULL)
+		{
+			// Copy the image into an NDArray
+			::memcpy(image->pData, this->buffers[lastBufferReceived].buffer,
+					this->xCamSize*this->yCamSize*sizeof(unsigned short));
+		}
+		// Give the buffer back to the driver
+		this->api->addBufferEx(this->camera, /*firstImage=*/0,
+			/*lastImage=*/0, lastBufferReceived,
+			this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+		// Continue processing the image
         if(image != NULL)
         {
 			// If there is a binary timestamp in the frame, we can sort

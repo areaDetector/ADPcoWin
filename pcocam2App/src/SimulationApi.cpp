@@ -1263,6 +1263,20 @@ int SimulationApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
     return DllApi::errorNone;
 }
 
+/*
+ * Start the frame acquisition thread
+ */
+void SimulationApi::doStartFrameCapture()
+{
+}
+
+/*
+ * Stop the frame acquisition thread
+ */
+void SimulationApi::doStopFrameCapture()
+{
+}
+
 // C entry point for iocinit
 extern "C" int simulationApiConfig(const char* portName)
 {

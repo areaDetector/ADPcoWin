@@ -115,6 +115,8 @@ protected:
 	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode);
 	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
 		unsigned long seg2, unsigned long seg3, unsigned long seg4);
+	virtual void doStartFrameCapture();
+	virtual void doStopFrameCapture();
 
 // Overrides of epicsThreadRunable
 public:

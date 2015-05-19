@@ -205,6 +205,8 @@ protected:
 	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode) = 0;
 	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
 		unsigned long seg2, unsigned long seg3, unsigned long seg4) = 0;
+	virtual void doStartFrameCapture() = 0;
+	virtual void doStopFrameCapture() = 0;
 
 // API for Pco class
 public:
@@ -291,6 +293,12 @@ public:
 	void setNoiseFilterMode(Handle handle, unsigned short mode) throw(PcoException);
 	void setCameraRamSegmentSize(Handle handle, unsigned long seg1, unsigned long seg2,
 		unsigned long seg3, unsigned long seg4) throw(PcoException);
+	void startFrameCapture();
+	void stopFrameCapture();
+
+// Error counters
+public:
+	int captureErrors;
 
 // Members
 protected:

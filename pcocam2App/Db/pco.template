@@ -838,3 +838,12 @@ record(bi, "$(P)$(R)CONNECTED_RBV")
 	field(ZNAM, "Disconnected")
 	field(ONAM, "Connected")
 }
+
+# Capture errors
+record(longin, "$(P)$(R)CAPTURE_ERRORS_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CAPTURE_ERRORS")
+    field(SCAN, "I/O Intr")
+}
+

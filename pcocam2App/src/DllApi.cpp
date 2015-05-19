@@ -26,6 +26,7 @@ const double DllApi::timebaseScaleFactor[DllApi::numTimebases] =
 DllApi::DllApi(Pco* pco, TraceStream* trace)
 : pco(pco)
 , trace(trace)
+, captureErrors(0)
 {
     this->pco->registerDllApi(this);
 }
@@ -1036,3 +1037,23 @@ void DllApi::setCameraRamSegmentSize(Handle handle, unsigned long seg1,
         throw PcoException("setCameraRamSegmentSize", result);
     }
 }
+
+/**
+ * Start the frame capturing loop
+ */
+void DllApi::startFrameCapture()
+{
+	doStartFrameCapture();
+	*this->trace << "DllApi->startFrameCapture()" << std::endl;
+}
+
+/**
+ * Stop the frame capturing loop
+ */
+void DllApi::stopFrameCapture()
+{
+	doStopFrameCapture();
+	*this->trace << "DllApi->stopFrameCapture()" << std::endl;
+}
+
+

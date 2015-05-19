@@ -85,26 +85,34 @@ void PcoApi::run()
 					}
                 }
                 result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
-                    runEvents, FALSE, 1000 /* was INFINITE*/);
+                    runEvents, FALSE, INFINITE);
                 if(result == WAIT_OBJECT_0+PcoApi::stopEventIndex)
                 {
 					// Stop event received
                     running = false;
 	                std::cout << "#### Exiting run event loop" << std::endl;
                 }
-				else if(result == WAIT_TIMEOUT)
-				{
-					// A timeout received, do a quick poll
-					this->pco->pollForFrame(this->queueHead);
-				}
                 else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
                     result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
                 {
-					// A buffer event received
-                    int bufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
-                    ::ResetEvent(this->buffers[bufferNumber].eventHandle);
-                    this->queueHead = (this->queueHead + 1) % DllApi::maxNumBuffers;
-                    this->pco->frameReceived(bufferNumber);
+                    int eventBufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
+					// Search for triggered events from the current head to the buffer number
+					int bufferNumber;
+					do
+					{
+						bufferNumber = this->queueHead;
+						if(::WaitForSingleObject(this->buffers[bufferNumber].eventHandle, 0) == WAIT_OBJECT_0)
+						{
+							::ResetEvent(this->buffers[bufferNumber].eventHandle);
+							this->pco->frameReceived(bufferNumber);
+							this->queueHead = (bufferNumber + 1) % DllApi::maxNumBuffers;
+						}
+						else
+						{
+							this->captureErrors++;
+						}
+					}
+					while(eventBufferNumber != bufferNumber);
                 }
             }
         }
@@ -550,6 +558,7 @@ int PcoApi::doSetRecordingState(Handle handle, unsigned short state)
 {
     if(state == DllApi::recorderStateOn)
     {
+		this->captureErrors = 0;
         ::SetEvent(this->startEvent);
     }
 	if(state == DllApi::recorderStateOnNoEvent)
@@ -806,6 +815,22 @@ int PcoApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
 {
 	unsigned long segs[4] = {seg1, seg2, seg3, seg4};
 	return PCO_SetCameraRamSegmentSize(handle, segs);
+}
+
+/*
+ * Start the frame acquisition thread
+ */
+void PcoApi::doStartFrameCapture()
+{
+    ::SetEvent(this->startEvent);
+}
+
+/*
+ * Stop the frame acquisition thread
+ */
+void PcoApi::doStopFrameCapture()
+{
+    ::SetEvent(this->stopEvent);
 }
 
 // C entry point for iocinit
