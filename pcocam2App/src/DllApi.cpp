@@ -1065,4 +1065,12 @@ void DllApi::pollDuringCapture()
 	*this->trace << "DllApi->pollDuringCapture()" << std::endl;
 }
 
+/**
+ * Request a soft trigger during capturing
+ */
+void DllApi::softTrigger()
+{
+	doSoftTrigger();
+	*this->trace << "DllApi->softTrigger()" << std::endl;
+}
 
