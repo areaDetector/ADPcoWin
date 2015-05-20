@@ -1277,6 +1277,13 @@ void SimulationApi::doStopFrameCapture()
 {
 }
 
+/*
+ * Perform a poll during frame capturing
+ */
+void SimulationApi::doPollDuringCapture()
+{
+}
+
 // C entry point for iocinit
 extern "C" int simulationApiConfig(const char* portName)
 {

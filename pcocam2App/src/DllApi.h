@@ -207,6 +207,7 @@ protected:
 		unsigned long seg2, unsigned long seg3, unsigned long seg4) = 0;
 	virtual void doStartFrameCapture() = 0;
 	virtual void doStopFrameCapture() = 0;
+	virtual void doPollDuringCapture() = 0;
 
 // API for Pco class
 public:
@@ -295,6 +296,7 @@ public:
 		unsigned long seg3, unsigned long seg4) throw(PcoException);
 	void startFrameCapture();
 	void stopFrameCapture();
+	void pollDuringCapture();
 
 // Error counters
 public:

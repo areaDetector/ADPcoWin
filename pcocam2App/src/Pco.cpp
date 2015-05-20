@@ -149,7 +149,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , apiTrace(getAsynUser(), Pco::traceFlagsDllApi)
 , gangTrace(getAsynUser(), Pco::traceFlagsGang)
 , stateTrace(getAsynUser(), Pco::traceFlagsPcoState)
-, receivedBufferQueue(maxBuffers, sizeof(int))
+, receivedFrameQueue(maxBuffers, sizeof(NDArray*))
 , gangServer(NULL)
 , gangConnection(NULL)
 {
@@ -400,7 +400,7 @@ StateMachine::StateSelector Pco::smPollWhileIdle()
  */
 StateMachine::StateSelector Pco::smPollWhileAcquiring()
 {
-    pollCamera();
+	api->pollDuringCapture();
     stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
 }
@@ -1213,10 +1213,31 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
  */
 void Pco::frameReceived(int bufferNumber)
 {
-	// Send the buffer number to the state machine thread
-	this->receivedBufferQueue.send(&bufferNumber, sizeof(int));
-    this->post(Pco::requestImageReceived);
+    // Get an ND array
+    NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+    if(image != NULL)
+    {
+        // Copy the image into an NDArray
+        ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
+                this->xCamSize*this->yCamSize*sizeof(unsigned short));
+        // Post the NDarray to the state machine thread
+        if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
+        {
+            // Failed to put on queue, better free the NDArray to avoid leaks
+            image->release();
+        }
+        this->post(Pco::requestImageReceived);
+    }
+	else
+	{
+		// Out of ND arrays
+	}
+    // Give the buffer back to the API
+    this->api->addBufferEx(this->camera, /*firstImage=*/0,
+        /*lastImage=*/0, bufferNumber,
+        this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
 }
+
 
 #if 0
 /**
@@ -2077,36 +2098,31 @@ void Pco::startCamera() throw()
  */
 void Pco::discardImages() throw()
 {
-    while(this->receivedBufferQueue.pending() > 0)
+    while(this->receivedFrameQueue.pending() > 0)
     {
-        int buffer;
-        this->receivedBufferQueue.tryReceive(&buffer, sizeof(int));
+        NDArray* image = NULL;
+        this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
+        if(image != NULL)
+        {
+            image->release();
+        }
     }
 }
 
 /**
- * Perform a single poll of the buffer queue for frames
+ * Perform a poll during frame capture.  
+ * Returns true if the frame at the queue head is ready
  */
-void Pco::pollForFrames() throw(PcoException)
+bool Pco::pollDuringCapture(int queueHead)
 {
-#if 0
-	// First stop the driver's automatic frame reception
-	this->api->stopFrameCapture();
+	// Poll for camera state
+    pollCamera();
 
-
-	// Empty any images that might currently be queued
-	this->receiveImages()
-
-	// Check the status of the buffer
+	// Now check the state of the buffer at the queue head
 	unsigned long dllStatus;
 	unsigned long drvStatus;
-	this->api->getBufferStatus(this->camera, bufferNumber, &dllStatus, &drvStatus);
-	apiTrace << "Poll buffer " << bufferNumber << " drvStatus=" << drvStatus << 
-		" dllStatus=" << dllStatus << std::endl;
-
-	// Restart the driver's automatic frame reception
-	this->api->startFrameCapture();
-#endif
+	this->api->getBufferStatus(this->camera, this->buffers[queueHead].bufferNumber, &dllStatus, &drvStatus);
+	return (dllStatus & 0x00008000) != 0;
 }
 
 /**
@@ -2122,25 +2138,13 @@ bool Pco::receiveImages() throw()
     // Note that the API has aready reset the event so the event status bit
     // returned by getBufferStatus will already be clear.  However, for
     // buffers that do have data ready return a statusDrv of zero.
-    while(this->receivedBufferQueue.pending() > 0 &&
+    while(this->receivedFrameQueue.pending() > 0 &&
     		(this->imageMode == ADImageContinuous ||
             this->numImagesCounter < this->numImages))
     {
-		// Get the buffer
-        this->receivedBufferQueue.tryReceive(&lastBufferReceived, sizeof(int));
-		// Get an ND array
-		NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
-		if(image != NULL)
-		{
-			// Copy the image into an NDArray
-			::memcpy(image->pData, this->buffers[lastBufferReceived].buffer,
-					this->xCamSize*this->yCamSize*sizeof(unsigned short));
-		}
-		// Give the buffer back to the driver
-		this->api->addBufferEx(this->camera, /*firstImage=*/0,
-			/*lastImage=*/0, lastBufferReceived,
-			this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
-		// Continue processing the image
+        // Get the image
+        NDArray* image = NULL;
+        this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
         if(image != NULL)
         {
 			// If there is a binary timestamp in the frame, we can sort

@@ -1056,4 +1056,13 @@ void DllApi::stopFrameCapture()
 	*this->trace << "DllApi->stopFrameCapture()" << std::endl;
 }
 
+/**
+ * Perform a poll during frame capturing
+ */
+void DllApi::pollDuringCapture()
+{
+	doPollDuringCapture();
+	*this->trace << "DllApi->pollDuringCapture()" << std::endl;
+}
+
 

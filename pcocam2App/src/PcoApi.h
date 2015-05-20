@@ -117,6 +117,7 @@ protected:
 		unsigned long seg2, unsigned long seg3, unsigned long seg4);
 	virtual void doStartFrameCapture();
 	virtual void doStopFrameCapture();
+	virtual void doPollDuringCapture();
 
 // Overrides of epicsThreadRunable
 public:
@@ -127,7 +128,7 @@ protected:
     enum {numberOfRunningEvents = DllApi::maxNumBuffers+1};
     enum {numberOfWaitingEvents = 1};
     enum {waitTimeoutMs = 1000};
-    enum {stopEventIndex=0, firstBufferEventIndex=1};
+    enum {stopEventIndex=0, pollEventIndex=1, firstBufferEventIndex=2};
 
 
 // Members
@@ -140,6 +141,7 @@ protected:
     } buffers[DllApi::maxNumBuffers];
     Handle stopEvent;
     Handle startEvent;
+    Handle pollEvent;
     int queueHead;
     int queueTail;
     bool buffersValid;
