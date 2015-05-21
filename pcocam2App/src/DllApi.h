@@ -56,7 +56,7 @@ public:
     enum {sccmosFormatMask=0xff00, sccmosFormatTopBottom=0x0000,
         sccmosFormatTopCenterBottomCenter=0x0100, sccmosFormatCenterTopCenterBottom=0x0200,
         sccmosFormatCenterTopBottomCenter=0x0300, sccmosFormatTopCenterCenterBottom=0x0400};
-    enum {recorderStateOff=0, recorderStateOn=1};
+    enum {recorderStateOff=0, recorderStateOn=1, recorderStateOnNoEvent=2};
     enum {statusDllBufferAllocated=0x80000000, statusDllEventCreated=0x40000000,
         statusDllExternalBuffer=0x20000000, statusDllEventSet=0x00008000};
     static const double ccdTemperatureScaleFactor;
@@ -207,8 +207,6 @@ protected:
 		unsigned long seg2, unsigned long seg3, unsigned long seg4) = 0;
 	virtual void doStartFrameCapture() = 0;
 	virtual void doStopFrameCapture() = 0;
-	virtual void doPollDuringCapture() = 0;
-	virtual void doSoftTrigger() = 0;
 
 // API for Pco class
 public:
@@ -297,8 +295,6 @@ public:
 		unsigned long seg3, unsigned long seg4) throw(PcoException);
 	void startFrameCapture();
 	void stopFrameCapture();
-	void pollDuringCapture();
-	void softTrigger();
 
 // Error counters
 public:

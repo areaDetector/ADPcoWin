@@ -116,8 +116,6 @@ protected:
 		unsigned long seg2, unsigned long seg3, unsigned long seg4);
 	virtual void doStartFrameCapture();
 	virtual void doStopFrameCapture();
-	virtual void doPollDuringCapture();
-	virtual void doSoftTrigger();
 
 // Parameters
 private:

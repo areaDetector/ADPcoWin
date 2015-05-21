@@ -142,9 +142,6 @@ public:
 public:
     void post(const StateMachine::Event* req);
     void frameReceived(int bufferNumber);
-	int pollDuringCapture();
-	void captureStopped();
-	void softwareTrigger();
     void trace(int flags, const char* format, ...);
     asynUser* getAsynUser();
     void registerDllApi(DllApi* api);
@@ -182,7 +179,7 @@ private:
     } buffers[Pco::numApiBuffers];
     long lastImageNumber;
     bool lastImageNumberValid;
-	epicsMessageQueue receivedFrameQueue;
+    epicsMessageQueue receivedBufferQueue;
     int numImagesCounter;
     int numExposuresCounter;
     int numImages;
@@ -307,6 +304,7 @@ private:
     void onCoolingSetpoint(TakeLock& takeLock);
     void onADTemperature(TakeLock& takeLock);
     void onReboot(TakeLock& takeLock);
+	void pollForFrames() throw(PcoException);
 
 public:
     // States
@@ -330,7 +328,6 @@ public:
 	const StateMachine::Event* requestTrigger;
 	const StateMachine::Event* requestReboot;
 	const StateMachine::Event* requestMakeImages;
-	const StateMachine::Event* requestStopped;
 
 public:
     StateMachine::StateSelector smInitialiseWait();
@@ -353,7 +350,6 @@ public:
     StateMachine::StateSelector smStopAcquisition();
     StateMachine::StateSelector smExternalStopAcquisition();
     StateMachine::StateSelector smArmComplete();
-    StateMachine::StateSelector smStopCapture();
 
 };
 

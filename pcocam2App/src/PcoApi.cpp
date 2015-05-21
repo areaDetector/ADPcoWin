@@ -41,10 +41,8 @@ PcoApi::PcoApi(Pco* pco, TraceStream* trace)
     this->queueHead = 0;
     this->queueTail = 0;
     // Create the start/stop events
-    this->startEvent = ::CreateEvent(NULL, TRUE, FALSE, "StartEvent");
-    this->stopEvent = ::CreateEvent(NULL, TRUE, FALSE, "StopEvent");
-    this->pollEvent = ::CreateEvent(NULL, TRUE, FALSE, "PollEvent");
-    this->triggerEvent = ::CreateEvent(NULL, TRUE, FALSE, "TriggerEvent");
+    this->startEvent = ::CreateEvent(NULL, FALSE, FALSE, "StartEvent");
+    this->stopEvent = ::CreateEvent(NULL, FALSE, FALSE, "StopEvent");
     // Start the thread
     this->thread.start();
 }
@@ -56,8 +54,6 @@ PcoApi::~PcoApi()
 {
     ::CloseHandle(this->startEvent);
     ::CloseHandle(this->stopEvent);
-    ::CloseHandle(this->pollEvent);
-    ::CloseHandle(this->triggerEvent);
 }
 
 /**
@@ -68,26 +64,18 @@ void PcoApi::run()
     while(true)
     {
         // Wait for the start event
-        HANDLE waitEvents[PcoApi::numberOfWaitingEvents] = {this->stopEvent, this->startEvent};
+        HANDLE waitEvents[PcoApi::numberOfWaitingEvents] = {this->startEvent};
         DWORD result = ::WaitForMultipleObjects(PcoApi::numberOfWaitingEvents,
             waitEvents, FALSE, INFINITE);
-		if(result == WAIT_OBJECT_0+PcoApi::stopEventIndex)
-		{
-			::ResetEvent(this->stopEvent);
-			this->pco->captureStopped();
-		}
-        else if(result == WAIT_OBJECT_0+PcoApi::startEventIndex)
+        if(result == WAIT_OBJECT_0)
         {
-			::ResetEvent(this->startEvent);
-            *this->trace << "Entering run event loop" << std::endl;
+            std::cout << "#### Entering run event loop" << std::endl;
             bool running = true;
             while(running)
             {
                 // Wait for an image or the stop event
                 HANDLE runEvents[PcoApi::numberOfRunningEvents];
                 runEvents[PcoApi::stopEventIndex] = this->stopEvent;
-                runEvents[PcoApi::pollEventIndex] = this->pollEvent;
-                runEvents[PcoApi::triggerEventIndex] = this->triggerEvent;
                 for(int i=0; i<DllApi::maxNumBuffers; i++)
                 {
 					if(this->buffers[i].eventHandle != NULL)
@@ -101,32 +89,8 @@ void PcoApi::run()
                 if(result == WAIT_OBJECT_0+PcoApi::stopEventIndex)
                 {
 					// Stop event received
-					::ResetEvent(this->stopEvent);
                     running = false;
-					this->pco->captureStopped();
-	                *this->trace << "Exiting run event loop" << std::endl;
-                }
-                else if(result == WAIT_OBJECT_0+PcoApi::pollEventIndex)
-                {
-					// Poll event received
-					::ResetEvent(this->pollEvent);
-					int ready = this->pco->pollDuringCapture();
-					int mask = 1;
-					for(int i=0; i<DllApi::maxNumBuffers; i++)
-					{
-						// If a buffer is ready force trigger the event
-						if((ready & mask) != 0)
-						{
-							::SetEvent(this->buffers[i].eventHandle);
-						}
-						mask = mask << 1;
-					}
-                }
-                else if(result == WAIT_OBJECT_0+PcoApi::triggerEventIndex)
-                {
-					// Trigger event received
-					::ResetEvent(this->triggerEvent);
-					this->pco->softwareTrigger();
+	                std::cout << "#### Exiting run event loop" << std::endl;
                 }
                 else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
                     result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
@@ -592,6 +556,15 @@ int PcoApi::doGetRecordingState(Handle handle, unsigned short* state)
  */
 int PcoApi::doSetRecordingState(Handle handle, unsigned short state)
 {
+    if(state == DllApi::recorderStateOn)
+    {
+		this->captureErrors = 0;
+        ::SetEvent(this->startEvent);
+    }
+	if(state == DllApi::recorderStateOnNoEvent)
+	{
+		state = DllApi::recorderStateOn;
+	}
     return PCO_SetRecordingState(handle, state);
 }
 
@@ -630,6 +603,7 @@ int PcoApi::doCancelImages(Handle handle)
 {
     this->buffersValid = false;
     int result = PCO_CancelImages(handle);
+    ::SetEvent(this->stopEvent);
     for(int i=0; i<DllApi::maxNumBuffers; i++)
     {
         ::ResetEvent(this->buffers[i].eventHandle);
@@ -848,7 +822,6 @@ int PcoApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
  */
 void PcoApi::doStartFrameCapture()
 {
-	this->captureErrors = 0;
     ::SetEvent(this->startEvent);
 }
 
@@ -859,23 +832,6 @@ void PcoApi::doStopFrameCapture()
 {
     ::SetEvent(this->stopEvent);
 }
-
-/*
- * Perform a poll during frame capturing
- */
-void PcoApi::doPollDuringCapture()
-{
-    ::SetEvent(this->pollEvent);
-}
-
-/*
- * Perform a soft trigger during frame capturing
- */
-void PcoApi::doSoftTrigger()
-{
-    ::SetEvent(this->triggerEvent);
-}
-
 
 // C entry point for iocinit
 extern "C" int pcoApiConfig(const char* portName)

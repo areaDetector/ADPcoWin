@@ -1277,20 +1277,6 @@ void SimulationApi::doStopFrameCapture()
 {
 }
 
-/*
- * Perform a poll during frame capturing
- */
-void SimulationApi::doPollDuringCapture()
-{
-}
-
-/*
- * Perform a soft trigger
- */
-void SimulationApi::doSoftTrigger()
-{
-}
-
 // C entry point for iocinit
 extern "C" int simulationApiConfig(const char* portName)
 {

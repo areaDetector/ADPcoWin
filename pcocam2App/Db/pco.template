@@ -140,7 +140,7 @@ record(mbbo, "$(P)$(R)STORAGE_MODE")
     field(ONVL, "1")
     field(ONST, "FIFO buffer")
     field(IVOA, "Don't drive outputs")
-    field(VAL,  "1")
+    field(VAL,  "0")
     field(PINI, "YES")
 }
 

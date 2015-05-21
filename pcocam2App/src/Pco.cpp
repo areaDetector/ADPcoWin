@@ -84,7 +84,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramCamRamUse(this, "PCO_CAM_RAM_USE", 0)
 , paramElectronicsTemp(this, "PCO_ELECTRONICS_TEMP", 0.0)
 , paramPowerTemp(this, "PCO_POWER_TEMP", 0.0)
-, paramStorageMode(this, "PCO_STORAGE_MODE", 1)
+, paramStorageMode(this, "PCO_STORAGE_MODE", DllApi::storageModeRecorder)
 , paramRecorderSubmode(this, "PCO_RECORDER_SUBMODE", 1)
 , paramTimestampMode(this, "PCO_TIMESTAMP_MODE", 2)
 , paramAcquireMode(this, "PCO_ACQUIRE_MODE", 0)
@@ -149,7 +149,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , apiTrace(getAsynUser(), Pco::traceFlagsDllApi)
 , gangTrace(getAsynUser(), Pco::traceFlagsGang)
 , stateTrace(getAsynUser(), Pco::traceFlagsPcoState)
-, receivedFrameQueue(maxBuffers, sizeof(NDArray*))
+, receivedBufferQueue(maxBuffers, sizeof(int))
 , gangServer(NULL)
 , gangConnection(NULL)
 {
@@ -206,7 +206,6 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	requestTrigger = stateMachine->event("Trigger");
 	requestReboot = stateMachine->event("Reboot");
 	requestMakeImages = stateMachine->event("MakeImages");
-	requestStopped = stateMachine->event("Stopped");
 	// Transitions
 	stateMachine->transition(stateUninitialised, requestInitialise, new StateMachine::Act<Pco>(this, &Pco::smInitialiseWait), stateUnconnected);
 	stateMachine->transition(stateUnconnected, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smConnectToCamera), stateIdle, stateUnconnected);
@@ -221,20 +220,17 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateArmed, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateAcquiring);
 	stateMachine->transition(stateArmed, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smFirstImageWhileArmed), stateExternalAcquiring, stateIdle, stateArmed, stateArmed);
 	stateMachine->transition(stateArmed, requestDisarm, new StateMachine::Act<Pco>(this, &Pco::smDisarmAndDiscard), stateIdle);
-	stateMachine->transition(stateArmed, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopCapture), stateArmed);
-	stateMachine->transition(stateArmed, requestStopped, new StateMachine::Act<Pco>(this, &Pco::smDisarmAndDiscard), stateIdle);
+	stateMachine->transition(stateArmed, requestStop, new StateMachine::Act<Pco>(this, &Pco::smDisarmAndDiscard), stateIdle);
 	stateMachine->transition(stateAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateAcquiring);
 	stateMachine->transition(stateAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smAcquireImage), stateAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateAcquiring);
-	stateMachine->transition(stateAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopCapture), stateAcquiring);
-	stateMachine->transition(stateAcquiring, requestStopped, new StateMachine::Act<Pco>(this, &Pco::smStopAcquisition), stateIdle, stateArmed);
+	stateMachine->transition(stateAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopAcquisition), stateIdle, stateArmed);
 	stateMachine->transition(stateAcquiring, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateAcquiring);
 	stateMachine->transition(stateExternalAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateExternalAcquiring);
 	stateMachine->transition(stateExternalAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smExternalAcquireImage), stateExternalAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateExternalAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateExternalAcquiring, stateIdle, stateArmed);
-	stateMachine->transition(stateExternalAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopCapture), stateExternalAcquiring);
-	stateMachine->transition(stateExternalAcquiring, requestStopped, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
+	stateMachine->transition(stateExternalAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
 	stateMachine->transition(stateExternalAcquiring, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateExternalAcquiring);
 	stateMachine->transition(stateUnarmedAcquiringDelay, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smArmCompleteAcquire), stateUnarmedAcquiring);
 	stateMachine->transition(stateUnarmedAcquiringDelay, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateUnarmedAcquiringDelay);
@@ -242,8 +238,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateUnarmedAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smUnarmedAcquireImage), stateUnarmedAcquiring, stateIdle);
 	stateMachine->transition(stateUnarmedAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smUnarmedMakeGangedImage), stateUnarmedAcquiring, stateIdle);
 	stateMachine->transition(stateUnarmedAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateUnarmedAcquiring);
-	stateMachine->transition(stateUnarmedAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopCapture), stateUnarmedAcquiring);
-	stateMachine->transition(stateUnarmedAcquiring, requestStopped, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
+	stateMachine->transition(stateUnarmedAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
 	// State machine starting state
 	stateMachine->initialState(stateUninitialised);
 	// A timer for the trigger
@@ -257,7 +252,6 @@ Pco::~Pco()
 {
     try
     {
-		api->stopFrameCapture();
         api->setRecordingState(this->camera, DllApi::recorderStateOff);
         api->cancelImages(this->camera);
         for(int i=0; i<Pco::numApiBuffers; i++)
@@ -273,6 +267,7 @@ Pco::~Pco()
     {
         if(buffers[i].buffer != NULL)
         {
+            //delete[] buffers[i].buffer;
 			_aligned_free(buffers[i].buffer);
         }
     }
@@ -405,7 +400,7 @@ StateMachine::StateSelector Pco::smPollWhileIdle()
  */
 StateMachine::StateSelector Pco::smPollWhileAcquiring()
 {
-	api->pollDuringCapture();
+    pollCamera();
     stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
 }
@@ -457,16 +452,6 @@ StateMachine::StateSelector Pco::smArmComplete()
 	TakeLock takeLock(this);
 	paramArmComplete = 1;
     stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
-    return StateMachine::firstState;
-}
-
-/**
- * Ask the capture loop to stop
- * returns: firstState: always
- */
-StateMachine::StateSelector Pco::smStopCapture()
-{
-	api->stopFrameCapture();
     return StateMachine::firstState;
 }
 
@@ -1069,11 +1054,19 @@ bool Pco::pollCamera()
         paramADTemperature = (double)ccdtemp/DllApi::ccdTemperatureScaleFactor;
         paramElectronicsTemp = (double)camtemp;
         paramPowerTemp = (double)powtemp;
-        paramCamRamUse = ramUsePercent;
 		paramCameraBusy = (int)camBusy;
 		paramExpTrigger = (int)expTrigger;
 		paramAcqEnable = (int)acqEnable;
-		paramCamRamUseFrames = ramUseFrames;
+		if(paramStorageMode == DllApi::storageModeFifoBuffer)
+		{
+	        paramCamRamUse = ramUsePercent;
+			paramCamRamUseFrames = ramUseFrames;
+		}
+		else
+		{
+	        paramCamRamUse = 0;
+			paramCamRamUseFrames = 0;
+		}
 		paramCaptureErrors = this->api->captureErrors;
     }
     catch(PcoException& e)
@@ -1228,60 +1221,28 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
  */
 void Pco::frameReceived(int bufferNumber)
 {
-    // Get an ND array
-    NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
-    if(image != NULL)
-    {
-        // Copy the image into an NDArray
-        ::memcpy(image->pData, this->buffers[bufferNumber].buffer,
-                this->xCamSize*this->yCamSize*sizeof(unsigned short));
-        // Post the NDarray to the state machine thread
-        if(this->receivedFrameQueue.send(&image, sizeof(NDArray*)) != 0)
-        {
-            // Failed to put on queue, better free the NDArray to avoid leaks
-            image->release();
-        }
-        this->post(Pco::requestImageReceived);
-    }
-    // Give the buffer back to the API
-    this->api->addBufferEx(this->camera, /*firstImage=*/0,
-        /*lastImage=*/0, bufferNumber,
-        this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+	// Send the buffer number to the state machine thread
+	this->receivedBufferQueue.send(&bufferNumber, sizeof(int));
+    this->post(Pco::requestImageReceived);
 }
 
+#if 0
 /**
- * Perform a poll during frame capture.  
- * Returns the list of readyBuffers as a bitmap, bit 0 is buffer index 0, etc.
+ * Poll the given buffer for a frame
  */
-int Pco::pollDuringCapture()
+void Pco::pollForFrame(int bufferNumber)
 {
-	// Poll for camera state
-    pollCamera();
-
-	// Now check the state of the buffers
-	int result = 0;
-	int mask = 1;
+	// Note that the lock is used to control access to the parameters
+	// AND the PCO dll.
+    TakeLock takeLock(this);
+	// Check the status of the buffer
 	unsigned long dllStatus;
 	unsigned long drvStatus;
-	for(int i=0; i<Pco::numApiBuffers; i++)
-	{
-		this->api->getBufferStatus(this->camera, this->buffers[i].bufferNumber, &dllStatus, &drvStatus);
-		if((dllStatus & DllApi::statusDllEventSet) != 0)
-		{
-			result |= mask;
-		}
-		mask = mask << 1;
-	}
-	return result;
+	this->api->getBufferStatus(this->camera, bufferNumber, &dllStatus, &drvStatus);
+	apiTrace << "Poll buffer " << bufferNumber << " drvStatus=" << drvStatus << 
+		" dllStatus=" << dllStatus << std::endl;
 }
-
-/**
- * Capture is complete and control of the DLL is passed back to the state machine.
- */
-void Pco::captureStopped()
-{
-    this->post(Pco::requestStopped);
-}
+#endif
 
 /**
  * Return my asyn user object for use in tracing etc.
@@ -1357,7 +1318,7 @@ void Pco::freeImageBuffers() throw()
 	// we need to put the camera into recording state and back out again.
 	try
 	{
-		this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
+		this->api->setRecordingState(this->camera, DllApi::recorderStateOnNoEvent);
 	}
 	catch(PcoException&)
 	{
@@ -1671,8 +1632,17 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->lastImageNumber = 0;
 	this->lastImageNumberValid = false;
 
-	// Let the capture loop start and hand over control of the DLL
-	this->api->startFrameCapture();
+#if 0
+	// The PCO4000 and PCO1600 appear to output a few dodgy frames immediately on
+	// getting the arm.  This bit of code tries to drop them.
+	if(this->camType.camType == DllApi::cameraType4000 || 
+			this->camType.camType == DllApi::cameraType1600)
+	{
+		FreeLock freeLock(takeLock);
+		epicsThreadSleep(0.3);
+		this->discardImages();        // Dump any images
+	}
+#endif
 }
 
 /**
@@ -2091,31 +2061,22 @@ void Pco::startCamera() throw()
     if(this->triggerMode == DllApi::triggerSoftware ||
         this->triggerMode == DllApi::triggerExternal)
     {
-		this->api->softTrigger();
-    }
-}
-
-/**
- * Start the camera by sending a software trigger.  This function
- * is called by the capture thread to request the soft trigger
- */
-void Pco::softwareTrigger() throw()
-{
-    unsigned short triggerState = 0;
-    try
-    {
-        this->api->forceTrigger(this->camera, &triggerState);
-    }
-    catch(PcoException&)
-    {
-        this->driverLibraryErrors++;
-        this->updateErrorCounters();
-    }
-    // Schedule a retry if it fails
-    if(!triggerState)
-    {
-        // Trigger did not succeed, try again soon
-        this->triggerTimer->start(Pco::triggerRetryPeriod, Pco::requestTrigger);
+        unsigned short triggerState = 0;
+        try
+        {
+            this->api->forceTrigger(this->camera, &triggerState);
+        }
+        catch(PcoException&)
+        {
+            this->driverLibraryErrors++;
+            this->updateErrorCounters();
+        }
+        // Schedule a retry if it fails
+        if(!triggerState)
+        {
+            // Trigger did not succeed, try again soon
+            this->triggerTimer->start(Pco::triggerRetryPeriod, Pco::requestTrigger);
+        }
     }
 }
 
@@ -2124,15 +2085,36 @@ void Pco::softwareTrigger() throw()
  */
 void Pco::discardImages() throw()
 {
-    while(this->receivedFrameQueue.pending() > 0)
+    while(this->receivedBufferQueue.pending() > 0)
     {
-        NDArray* image = NULL;
-        this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
-        if(image != NULL)
-        {
-            image->release();
-        }
+        int buffer;
+        this->receivedBufferQueue.tryReceive(&buffer, sizeof(int));
     }
+}
+
+/**
+ * Perform a single poll of the buffer queue for frames
+ */
+void Pco::pollForFrames() throw(PcoException)
+{
+#if 0
+	// First stop the driver's automatic frame reception
+	this->api->stopFrameCapture();
+
+
+	// Empty any images that might currently be queued
+	this->receiveImages()
+
+	// Check the status of the buffer
+	unsigned long dllStatus;
+	unsigned long drvStatus;
+	this->api->getBufferStatus(this->camera, bufferNumber, &dllStatus, &drvStatus);
+	apiTrace << "Poll buffer " << bufferNumber << " drvStatus=" << drvStatus << 
+		" dllStatus=" << dllStatus << std::endl;
+
+	// Restart the driver's automatic frame reception
+	this->api->startFrameCapture();
+#endif
 }
 
 /**
@@ -2148,13 +2130,25 @@ bool Pco::receiveImages() throw()
     // Note that the API has aready reset the event so the event status bit
     // returned by getBufferStatus will already be clear.  However, for
     // buffers that do have data ready return a statusDrv of zero.
-    while(this->receivedFrameQueue.pending() > 0 &&
+    while(this->receivedBufferQueue.pending() > 0 &&
     		(this->imageMode == ADImageContinuous ||
             this->numImagesCounter < this->numImages))
     {
-        // Get the image
-        NDArray* image = NULL;
-        this->receivedFrameQueue.tryReceive(&image, sizeof(NDArray*));
+		// Get the buffer
+        this->receivedBufferQueue.tryReceive(&lastBufferReceived, sizeof(int));
+		// Get an ND array
+		NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+		if(image != NULL)
+		{
+			// Copy the image into an NDArray
+			::memcpy(image->pData, this->buffers[lastBufferReceived].buffer,
+					this->xCamSize*this->yCamSize*sizeof(unsigned short));
+		}
+		// Give the buffer back to the driver
+		this->api->addBufferEx(this->camera, /*firstImage=*/0,
+			/*lastImage=*/0, lastBufferReceived,
+			this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+		// Continue processing the image
         if(image != NULL)
         {
 			// If there is a binary timestamp in the frame, we can sort
