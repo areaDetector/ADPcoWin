@@ -56,7 +56,7 @@ public:
     enum {sccmosFormatMask=0xff00, sccmosFormatTopBottom=0x0000,
         sccmosFormatTopCenterBottomCenter=0x0100, sccmosFormatCenterTopCenterBottom=0x0200,
         sccmosFormatCenterTopBottomCenter=0x0300, sccmosFormatTopCenterCenterBottom=0x0400};
-    enum {recorderStateOff=0, recorderStateOn=1, recorderStateOnNoEvent=2};
+    enum {recorderStateOff=0, recorderStateOn=1};
     enum {statusDllBufferAllocated=0x80000000, statusDllEventCreated=0x40000000,
         statusDllExternalBuffer=0x20000000, statusDllEventSet=0x00008000};
     static const double ccdTemperatureScaleFactor;
@@ -68,6 +68,7 @@ public:
     enum {binSteppingLinearBinary=0, binSteppingLinear=1};
     enum {bitAlignmentMsb=0, bitAlignmentLsb=1};
     enum {transferTransmitEnable=1, transferTransmitLongGap=2};
+	enum {storageNumSegments=4};
 
 // Types
 public:
@@ -118,8 +119,13 @@ public:
 		unsigned long hardwareVersion;  // hardware version
 		unsigned long firmwareVersion;  // firmware version
 	};
-
-
+	struct Storage
+	{
+		unsigned long ramSizePages;     // Size of camera ram in pages
+		unsigned short pageSizePixels;  // Size of a page in pixels
+		unsigned long segmentSizePages[storageNumSegments];  // Segment sizes in pages
+		unsigned short activeSegment;   // The active segment number
+	};
 
 // API for derived classes to implement
 protected:
@@ -131,7 +137,7 @@ protected:
     virtual int doGetSensorStruct(Handle handle) = 0;
     virtual int doGetTimingStruct(Handle handle) = 0;
     virtual int doGetCameraDescription(Handle handle, Description* description) = 0;
-    virtual int doGetStorageStruct(Handle handle, unsigned long* ramSize, unsigned int* pageSize) = 0;
+    virtual int doGetStorageStruct(Handle handle, Storage* storage) = 0;
     virtual int doGetRecordingStruct(Handle handle) = 0;
     virtual int doResetSettingsToDefault(Handle handle) = 0;
     virtual int doGetTransferParameters(Handle handle, Transfer* transfer) = 0;
@@ -181,6 +187,9 @@ protected:
     virtual int doArm(Handle handle) = 0;
     virtual int doAddBufferEx(Handle handle, unsigned long firstImage, unsigned long lastImage, 
         short bufferNumber, unsigned short xRes, unsigned short yRes, unsigned short bitRes) = 0;
+	virtual int doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
+		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+		unsigned short yRes, unsigned short bitRes) = 0;
     virtual int doGetBufferStatus(Handle handle, short bufferNumber, unsigned long* statusDll, 
         unsigned long* statusDrv) = 0;
     virtual int doForceTrigger(Handle handle, unsigned short* triggered) = 0;
@@ -218,7 +227,7 @@ public:
     void getSensorStruct(Handle handle) throw(PcoException);
     void getTimingStruct(Handle handle) throw(PcoException);
     void getCameraDescription(Handle handle, Description* description) throw(PcoException);
-    void getStorageStruct(Handle handle, unsigned long* ramSize, unsigned int* pageSize) throw(PcoException);
+    void getStorageStruct(Handle handle, Storage* storage) throw(PcoException);
     void getRecordingStruct(Handle handle) throw(PcoException);
     void resetSettingsToDefault(Handle handle) throw(PcoException);
     void getTransferParameters(Handle handle, Transfer* transfer) throw(PcoException);
@@ -269,6 +278,9 @@ public:
     void addBufferEx(Handle handle, unsigned long firstImage, unsigned long lastImage, 
         short bufferNumber, unsigned short xRes, unsigned short yRes, 
         unsigned short bitRes) throw(PcoException);
+	void getImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
+		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+		unsigned short yRes, unsigned short bitRes) throw(PcoException);
     void getBufferStatus(Handle handle, short bufferNumber, unsigned long* statusDll, 
         unsigned long* statusDrv) throw(PcoException);
     void forceTrigger(Handle handle, unsigned short* triggered) throw(PcoException);

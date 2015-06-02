@@ -26,7 +26,6 @@ record(mbbo, "$(P)$(R)TriggerMode")
     field(FRST, "Ext Only")
     field(FRVL, "5")
 }
-
 record(mbbi, "$(P)$(R)TriggerMode_RBV")
 {
     field(ZRST, "Auto")
@@ -39,6 +38,18 @@ record(mbbi, "$(P)$(R)TriggerMode_RBV")
     field(THVL, "3")
     field(FRST, "Ext Only")
     field(FRVL, "5")
+}
+
+# Add the burst mode to the image mode options
+record(mbbo, "$(P)$(R)ImageMode")
+{
+   field(THST, "Burst")
+   field(THVL, "3")
+}
+record(mbbi, "$(P)$(R)ImageMode_RBV")
+{
+   field(THST, "Burst")
+   field(THVL, "3")
 }
 
 
@@ -847,3 +858,10 @@ record(longin, "$(P)$(R)CAPTURE_ERRORS_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# Buffer status
+record(longin, "$(P)$(R)BUFFERS_READY_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BUFFERS_READY")
+    field(SCAN, "I/O Intr")
+}

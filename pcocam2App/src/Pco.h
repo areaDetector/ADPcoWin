@@ -20,6 +20,7 @@
 #include "IntegerParam.h"
 #include "DoubleParam.h"
 #include "StringParam.h"
+#include "epicsMutex.h"
 class GangServer;
 class GangConnection;
 class TakeLock;
@@ -96,6 +97,7 @@ public:
 	IntegerParam paramArmComplete;
 	IntegerParam paramConnected;
 	IntegerParam paramCaptureErrors;
+	IntegerParam paramBuffersReady;
 
 // Constants
 public:
@@ -137,6 +139,7 @@ public:
     enum {xDimension=0, yDimension=1, numDimensions=2};
     enum {recordingStateRetry=10};
     enum {gangModeNone=0, gangModeServer=1, gangModeConnection=2};
+	enum {ADImageBurst=3};
 
 // API for use by component classes
 public:
@@ -158,8 +161,7 @@ private:
     DllApi::Handle camera;
 	DllApi::CameraType camType;
     DllApi::Description camDescription;
-    unsigned long camRamSize;
-    unsigned int camPageSize;
+	DllApi::Storage camStorage;
     DllApi::Transfer camTransfer;
     DllApi::Sizes camSizes;
     int shiftLowBcd;         // Shift for decoding the BCD frame number in image
@@ -262,6 +264,7 @@ public:
 private:
     void initialiseCamera(TakeLock& takeLock);
     bool pollCameraNoAcquisition();
+    bool pollCameraAcquisition();
     bool pollCamera();
     void doArm() throw(std::bad_alloc, PcoException);
     void doDisarm() throw();
@@ -274,7 +277,7 @@ private:
     void addAvailableBuffer(int index) throw(PcoException);
     void addAvailableBufferAll() throw(PcoException);
     bool receiveImages() throw();
-    void discardImages() throw();
+    void discardImages(bool returnBufferToApi=false) throw();
     long extractImageNumber(unsigned short* imagebuffer) throw();
     bool isImageValid(unsigned short* imagebuffer) throw();
     long bcdToInt(unsigned short pixel) throw();
@@ -292,6 +295,7 @@ private:
     void cfgBitAlignmentMode() throw(PcoException);
     void cfgPixelRate() throw(PcoException);
     void cfgAcquisitionTimes() throw(PcoException);
+	void cfgStorage() throw(PcoException);
     template<typename T> void sumArray(NDArray* startingArray,
             NDArray* addArray) throw();
     void initialisePixelRate();
@@ -304,7 +308,8 @@ private:
     void onCoolingSetpoint(TakeLock& takeLock);
     void onADTemperature(TakeLock& takeLock);
     void onReboot(TakeLock& takeLock);
-	void pollForFrames() throw(PcoException);
+	void readStoredFrames();
+	void processFrame(NDArray* image);
 
 public:
     // States
@@ -328,6 +333,7 @@ public:
 	const StateMachine::Event* requestTrigger;
 	const StateMachine::Event* requestReboot;
 	const StateMachine::Event* requestMakeImages;
+	const StateMachine::Event* requestGetImage;
 
 public:
     StateMachine::StateSelector smInitialiseWait();

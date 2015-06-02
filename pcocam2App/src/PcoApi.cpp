@@ -41,8 +41,8 @@ PcoApi::PcoApi(Pco* pco, TraceStream* trace)
     this->queueHead = 0;
     this->queueTail = 0;
     // Create the start/stop events
-    this->startEvent = ::CreateEvent(NULL, FALSE, FALSE, "StartEvent");
-    this->stopEvent = ::CreateEvent(NULL, FALSE, FALSE, "StopEvent");
+    this->startEvent = ::CreateEvent(NULL, TRUE, FALSE, "StartEvent");
+    this->stopEvent = ::CreateEvent(NULL, TRUE, FALSE, "StopEvent");
     // Start the thread
     this->thread.start();
 }
@@ -63,13 +63,17 @@ void PcoApi::run()
 {
     while(true)
     {
+		::ResetEvent(this->startEvent);
         // Wait for the start event
         HANDLE waitEvents[PcoApi::numberOfWaitingEvents] = {this->startEvent};
+		*trace << "#### Waiting for start event" << std::endl;
         DWORD result = ::WaitForMultipleObjects(PcoApi::numberOfWaitingEvents,
             waitEvents, FALSE, INFINITE);
+		::ResetEvent(this->startEvent);
         if(result == WAIT_OBJECT_0)
         {
-            std::cout << "#### Entering run event loop" << std::endl;
+			*trace << "#### Entering run event loop" << std::endl;
+			::ResetEvent(this->stopEvent);
             bool running = true;
             while(running)
             {
@@ -80,17 +84,17 @@ void PcoApi::run()
                 {
 					if(this->buffers[i].eventHandle != NULL)
 					{
-						assert(this->buffers[i].eventHandle != NULL);
 						runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[i].eventHandle;
 					}
                 }
                 result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
                     runEvents, FALSE, INFINITE);
-                if(result == WAIT_OBJECT_0+PcoApi::stopEventIndex)
+                if(::WaitForSingleObject(this->stopEvent, 0) == WAIT_OBJECT_0)
                 {
 					// Stop event received
+					::ResetEvent(this->stopEvent);
                     running = false;
-	                std::cout << "#### Exiting run event loop" << std::endl;
+					*trace << "#### Exiting run event loop" << std::endl;
                 }
                 else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
                     result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
@@ -249,16 +253,20 @@ int PcoApi::doGetCameraDescription(Handle handle, Description* description)
 /**
  * Get camera storage information
  */
-int PcoApi::doGetStorageStruct(Handle handle, unsigned long* ramSize,
-        unsigned int* pageSize)
+int PcoApi::doGetStorageStruct(Handle handle, Storage* storage)
 {
     PCO_Storage info;
     info.wSize =  sizeof(info);
     int result = PCO_GetStorageStruct(handle, &info);
     if(result == DllApi::errorNone)
     {
-        *ramSize = info.dwRamSize;
-        *pageSize = info.wPageSize;
+		storage->ramSizePages = info.dwRamSize;
+		storage->pageSizePixels = info.wPageSize;
+		for(int i=0; i<DllApi::storageNumSegments; i++)
+		{
+			storage->segmentSizePages[i] = info.dwRamSegSize[i];
+		}
+		storage->activeSegment = info.wActSeg;
     }
     return result;
 }
@@ -559,12 +567,7 @@ int PcoApi::doSetRecordingState(Handle handle, unsigned short state)
     if(state == DllApi::recorderStateOn)
     {
 		this->captureErrors = 0;
-        ::SetEvent(this->startEvent);
     }
-	if(state == DllApi::recorderStateOnNoEvent)
-	{
-		state = DllApi::recorderStateOn;
-	}
     return PCO_SetRecordingState(handle, state);
 }
 
@@ -603,7 +606,6 @@ int PcoApi::doCancelImages(Handle handle)
 {
     this->buffersValid = false;
     int result = PCO_CancelImages(handle);
-    ::SetEvent(this->stopEvent);
     for(int i=0; i<DllApi::maxNumBuffers; i++)
     {
         ::ResetEvent(this->buffers[i].eventHandle);
@@ -650,6 +652,17 @@ int PcoApi::doAddBufferEx(Handle handle, unsigned long firstImage, unsigned long
     {
         return 0;
     }
+}
+
+/**
+ * Get an image from memory.
+ */
+int PcoApi::doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
+		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+		unsigned short yRes, unsigned short bitRes)
+{
+    return PCO_GetImageEx(handle, segment, firstImage, lastImage, bufferNumber,
+            xRes, yRes, bitRes);
 }
 
 /**

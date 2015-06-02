@@ -40,7 +40,7 @@ protected:
     virtual int doGetSensorStruct(Handle handle);
     virtual int doGetTimingStruct(Handle handle);
     virtual int doGetCameraDescription(Handle handle, Description* description);
-    virtual int doGetStorageStruct(Handle handle, unsigned long* ramSize, unsigned int* pageSize);
+    virtual int doGetStorageStruct(Handle handle, Storage* storage);
     virtual int doGetRecordingStruct(Handle handle);
     virtual int doResetSettingsToDefault(Handle handle);
     virtual int doGetTransferParameters(Handle handle, Transfer* transfer);
@@ -85,6 +85,9 @@ protected:
     virtual int doSetRecorderSubmode(Handle handle, unsigned short mode);
     virtual int doAllocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
             unsigned short** buffer, Handle* event);
+	virtual int doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
+		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+		unsigned short yRes, unsigned short bitRes);
     virtual int doCancelImages(Handle handle);
     virtual int doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes);
     virtual int doArm(Handle handle);

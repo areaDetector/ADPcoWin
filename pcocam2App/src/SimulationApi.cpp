@@ -418,14 +418,18 @@ int SimulationApi::doGetCameraDescription(Handle handle, Description* descriptio
 /**
  * Get camera storage information
  */
-int SimulationApi::doGetStorageStruct(Handle handle, unsigned long* ramSize,
-        unsigned int* pageSize)
+int SimulationApi::doGetStorageStruct(Handle handle, Storage* storage)
 {
     int result = DllApi::errorAny;
     if(paramConnected && paramOpen)
     {
-        *ramSize = (unsigned long)paramRamSize;
-        *pageSize = (unsigned int)paramPageSize;
+		storage->ramSizePages = (unsigned long)paramRamSize;
+		storage->pageSizePixels= (unsigned short)paramPageSize;
+		for(int i=0; i<DllApi::storageNumSegments; i++)
+		{
+			storage->segmentSizePages[storageNumSegments] = 0;
+		}
+		storage->activeSegment = 0;
         result = DllApi::errorNone;
     }
     return result;
@@ -1068,6 +1072,16 @@ int SimulationApi::doAddBufferEx(Handle handle, unsigned long firstImage, unsign
         result = DllApi::errorNone;
     }
     return result;
+}
+
+/**
+ * Get an image from memory.
+ */
+int SimulationApi::doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
+		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+		unsigned short yRes, unsigned short bitRes)
+{
+    return DllApi::errorAny;
 }
 
 /**

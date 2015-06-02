@@ -164,11 +164,14 @@ void DllApi::getCameraDescription(Handle handle, Description* description) throw
 /**
  * Get camera storage information
  */
-void DllApi::getStorageStruct(Handle handle, unsigned long* ramSize, unsigned int* pageSize) throw(PcoException)
+void DllApi::getStorageStruct(Handle handle, Storage* storage) throw(PcoException)
 {
-    int result = doGetStorageStruct(handle, ramSize, pageSize);
+    int result = doGetStorageStruct(handle, storage);
     *this->trace << "DllApi->GetStorageStruct(" << handle << ", " <<
-        *ramSize << ", " << *pageSize << ") = " << result << std::endl;
+		storage->ramSizePages << ", " << storage->pageSizePixels << ", {" <<
+		storage->segmentSizePages[0] << ", " << storage->segmentSizePages[1] << ", " <<
+		storage->segmentSizePages[2] << ", " << storage->segmentSizePages[3] << "}, " <<
+		storage->activeSegment << ") = " << result << std::endl;
     if(result != DllApi::errorNone)
     {
         throw PcoException("getStorageStruct", result);
@@ -762,6 +765,23 @@ void DllApi::addBufferEx(Handle handle, unsigned long firstImage, unsigned long 
     if(result != DllApi::errorNone)
     {
         throw PcoException("addBufferEx", result);
+    }
+}
+
+/**
+ * Get an image from memory
+ */
+void DllApi::getImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
+		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+		unsigned short yRes, unsigned short bitRes) throw(PcoException)
+{
+    int result = doGetImageEx(handle, segment, firstImage, lastImage, 
+			bufferNumber, xRes, yRes, bitRes);
+    this->trace->printf("DllApi->GetImageEx(%p, %hu, %lu, %lu, %hd, %hu, %hu, %hu) = 0x%x\n",
+            handle, segment, firstImage, lastImage, bufferNumber, xRes, yRes, bitRes, result);
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getImageEx", result);
     }
 }
 

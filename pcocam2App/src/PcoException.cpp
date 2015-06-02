@@ -10,7 +10,7 @@ PcoException::PcoException(const char* function, int errorCode)
     , function(function)
 {
     std::stringstream s;
-    s << "PCO error, " << this->function << " returned " << this->errorCode << std::endl;
+    s << "PCO error, " << this->function << " returned " << std::hex << this->errorCode;
     this->text = s.str();
 }
 
