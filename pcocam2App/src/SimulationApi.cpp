@@ -643,6 +643,15 @@ int SimulationApi::doGetCameraSetup(Handle handle, unsigned short* setupType,
 }
 
 /**
+ * Set an Edge's camera setup information
+ */
+int SimulationApi::doSetCameraSetup(Handle handle, unsigned short setupType,
+        unsigned long* setupData, unsigned short setupDataLen)
+{
+	return DllApi::errorNone;
+}
+
+/**
  * Set the binning parameters.
  */
 int SimulationApi::doSetBinning(Handle handle, unsigned short binHorz, unsigned short binVert)

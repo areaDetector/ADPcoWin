@@ -153,7 +153,7 @@ void DllApi::getCameraDescription(Handle handle, Description* description) throw
         description->pixelRate[2] << "," << description->pixelRate[3] << "}, " <<
         description->convFact << "," << description->minCoolingSetpoint << "," <<
         description->maxCoolingSetpoint << "," << description->defaultCoolingSetpoint <<
-        ", " << description->generalCaps <<
+        ", " << std::hex << description->generalCaps << std::dec <<
         "}) = " << result << std::endl;
     if(result != DllApi::errorNone)
     {
@@ -383,6 +383,22 @@ void DllApi::getCameraSetup(Handle handle, unsigned short* setupType,
     if(result != DllApi::errorNone)
     {
         throw PcoException("getCameraSetup", result);
+    }
+}
+
+/**
+ * Set an Edge's camera setup information
+ */
+void DllApi::setCameraSetup(Handle handle, unsigned short setupType,
+        unsigned long* setupData, unsigned short setupDataLen) throw(PcoException)
+{
+    int result = doSetCameraSetup(handle, setupType, setupData, setupDataLen);
+    *this->trace << "DllApi->SetCameraSetup(" << handle << ", " <<
+        setupType << ", " << setupData[0] << ", " << setupDataLen << ") = " <<
+        result << std::endl;
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("setCameraSetup", result);
     }
 }
 

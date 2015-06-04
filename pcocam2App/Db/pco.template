@@ -865,3 +865,19 @@ record(longin, "$(P)$(R)BUFFERS_READY_RBV")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BUFFERS_READY")
     field(SCAN, "I/O Intr")
 }
+
+# Frame status errors
+record(longin, "$(P)$(R)FRAME_STATUS_ERRORS_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_FRAME_STATUS_ERRORS")
+    field(SCAN, "I/O Intr")
+}
+
+# The camera is an Edge
+record(longin, "$(P)$(R)IS_EDGE_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_IS_EDGE")
+    field(SCAN, "I/O Intr")
+}

@@ -66,7 +66,6 @@ void PcoApi::run()
 		::ResetEvent(this->startEvent);
         // Wait for the start event
         HANDLE waitEvents[PcoApi::numberOfWaitingEvents] = {this->startEvent};
-		*trace << "#### Waiting for start event" << std::endl;
         DWORD result = ::WaitForMultipleObjects(PcoApi::numberOfWaitingEvents,
             waitEvents, FALSE, INFINITE);
 		::ResetEvent(this->startEvent);
@@ -102,21 +101,18 @@ void PcoApi::run()
                     int eventBufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
 					// Search for triggered events from the current head to the buffer number
 					int bufferNumber;
+					bool going = true;
 					do
 					{
 						bufferNumber = this->queueHead;
-						if(::WaitForSingleObject(this->buffers[bufferNumber].eventHandle, 0) == WAIT_OBJECT_0)
+						going = this->pco->frameReceived(bufferNumber);
+						if(going)
 						{
 							::ResetEvent(this->buffers[bufferNumber].eventHandle);
-							this->pco->frameReceived(bufferNumber);
 							this->queueHead = (bufferNumber + 1) % DllApi::maxNumBuffers;
 						}
-						else
-						{
-							this->captureErrors++;
-						}
 					}
-					while(eventBufferNumber != bufferNumber);
+					while(eventBufferNumber != bufferNumber && going);
                 }
             }
         }
@@ -129,7 +125,9 @@ void PcoApi::run()
  */
 int PcoApi::doOpenCamera(Handle* handle, unsigned short camNum)
 {
-    return PCO_OpenCamera(handle, camNum);
+    int result = PCO_OpenCamera(handle, camNum);
+	this->handle = *handle;
+	return result;
 }
 
 /**
@@ -145,19 +143,6 @@ int PcoApi::doCloseCamera(Handle handle)
  */
 int PcoApi::doRebootCamera(Handle handle)
 {
-//	HANDLE h;
-//	// Force the PCO libraries to be loaded
-//	h = ::LoadLibrary("sc2_cl_me4.dll");
-//	printf("####Load sc2_cl_me4.dll = %p\n", h);
-//	h = ::LoadLibrary("PCO_CDlg.dll");
-//	printf("####Load PCO_CDlg.dll = %p\n", h);
-//	h = ::LoadLibrary("PCO_Conv.dll");
-//	printf("####Load PCO_Conv.dll = %p\n", h);
-//	h = ::LoadLibrary("SC2_DLG.dll");
-//	printf("####Load SC2_DLG.dll = %p\n", h);
-//	h = ::LoadLibrary("SC2_Cam.dll");
-//	printf("####Load SC2_Cam.dll = %p\n", h);
-
     return PCO_RebootCamera(handle);
 }
 
@@ -405,6 +390,15 @@ int PcoApi::doGetCameraSetup(Handle handle, unsigned short* setupType,
         unsigned long* setupData, unsigned short* setupDataLen)
 {
     return PCO_GetCameraSetup(handle, setupType, setupData, setupDataLen);
+}
+
+/**
+ * Set an Edge's camera setup information
+ */
+int PcoApi::doSetCameraSetup(Handle handle, unsigned short setupType,
+        unsigned long* setupData, unsigned short setupDataLen)
+{
+    return PCO_SetCameraSetup(handle, setupType, setupData, setupDataLen);
 }
 
 /**

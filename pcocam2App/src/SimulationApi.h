@@ -56,6 +56,8 @@ protected:
     virtual int doSetBitAlignment(Handle handle, unsigned short bitAlignment);
     virtual int doGetCameraSetup(Handle handle, unsigned short* setupType,
             unsigned long* setupData, unsigned short* setupDataLen);
+    virtual int doSetCameraSetup(Handle handle, unsigned short setupType,
+            unsigned long* setupData, unsigned short setupDataLen);
     virtual int doSetBinning(Handle handle, unsigned short binHorz, unsigned short binVert);
     virtual int doGetBinning(Handle handle, unsigned short* binHorz, unsigned short* binVert);
     virtual int doSetRoi(Handle handle, unsigned short x0, unsigned short y0,

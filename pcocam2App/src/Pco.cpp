@@ -91,7 +91,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramDelayTime(this, "PCO_DELAY_TIME", 0.0)
 , paramArmMode(this, "PCO_ARM_MODE", 0, new AsynParam::Notify<Pco>(this, &Pco::onArmMode))
 , paramImageNumber(this, "PCO_IMAGE_NUMBER", 0)
-, paramCameraSetup(this, "PCO_CAMERA_SETUP", 1)
+, paramCameraSetup(this, "PCO_CAMERA_SETUP", 1, new AsynParam::Notify<Pco>(this, &Pco::onReboot))
 , paramBitAlignment(this, "PCO_BIT_ALIGNMENT", 1)
 , paramStateRecord(this, "PCO_STATERECORD", "")
 , paramClearStateRecord(this, "PCO_CLEARSTATERECORD", 0, new AsynParam::Notify<Pco>(this, &Pco::onClearStateRecord))
@@ -143,6 +143,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramConnected(this, "PCO_CONNECTED", 0)
 , paramCaptureErrors(this, "PCO_CAPTURE_ERRORS", 0)
 , paramBuffersReady(this, "PCO_BUFFERS_READY", 0)
+, paramFrameStatusErrors(this, "PCO_FRAME_STATUS_ERRORS", 0)
+, paramIsEdge(this, "PCO_IS_EDGE", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -150,7 +152,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , apiTrace(getAsynUser(), Pco::traceFlagsDllApi)
 , gangTrace(getAsynUser(), Pco::traceFlagsGang)
 , stateTrace(getAsynUser(), Pco::traceFlagsPcoState)
-, receivedBufferQueue(maxBuffers, sizeof(int))
+, receivedImageQueue(1000, sizeof(NDArray*))
 , gangServer(NULL)
 , gangConnection(NULL)
 {
@@ -308,16 +310,22 @@ Pco* Pco::getPco(const char* portName)
  */
 void Pco::doReboot()
 {
+	TakeLock takeLock(this);
+	unsigned long setupData[DllApi::cameraSetupDataSize];
+	unsigned short setupDataLen = DllApi::cameraSetupDataSize;
+	unsigned short setupType;
+	this->api->getCameraSetup(this->camera, &setupType, setupData, &setupDataLen);
 	api->setTimeouts(this->camera, 2000, 3000, 250);
-	switch(this->camType.camType)
+	printf("#### from=%d\n", (int)setupData[0]);
+	if(paramCameraSetup == DllApi::cameraSetupRollingShutter ||
+			paramCameraSetup == DllApi::cameraSetupGlobalShutter)
 	{
-	case DllApi::cameraTypeEdge:
-	case DllApi::cameraTypeEdgeGl:
-		api->rebootCamera(this->camera);
-		break;
-	default:
-		break;
+		setupData[0] = paramCameraSetup;
 	}
+	printf("#### to=%d\n", (int)setupData[0]);
+	this->api->setCameraSetup(this->camera, setupType, setupData, setupDataLen);
+	printf("#### after=%d\n", (int)setupData[0]);
+	api->rebootCamera(this->camera);
     api->closeCamera(this->camera);
     camera = NULL;
 }
@@ -406,8 +414,15 @@ StateMachine::StateSelector Pco::smPollWhileAcquiring()
 	// and it gets in the way of fast acquisitions.
 	if(this->camType.camType != DllApi::cameraTypeEdge && this->camType.camType != DllApi::cameraTypeEdgeGl)
 	{
-		pollCameraAcquisition();
-		pollCamera();
+		TakeLock takeLock(&this->apiLock);
+		try
+		{
+			pollCameraAcquisition();
+			pollCamera();
+		}
+		catch(PcoException&)
+		{
+		}
 	}
     stateMachine->startTimer(Pco::acquisitionStatusPollPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
@@ -507,7 +522,7 @@ StateMachine::StateSelector Pco::smAcquire()
  */
 StateMachine::StateSelector Pco::smDiscardImages()
 {
-    discardImages(/*returnBufferToApi=*/true);
+    discardImages();
     return StateMachine::firstState;
 }
 
@@ -784,6 +799,7 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	{
 		// Swallow errors from this
 	}
+#if 0
 	try
 	{
 		api->resetSettingsToDefault(camera);
@@ -792,7 +808,7 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	{
 		// Swallow errors from this
 	}
-
+#endif
 	// Camera RAM size
 	paramCameraRam = camStorage.ramSizePages * camStorage.pageSizePixels * 
 		sizeof(unsigned short) / 1048576; // MBytes
@@ -870,6 +886,8 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	paramSerialNumber = (int)this->camType.serialNumber;
 	paramHardwareVersion = (int)this->camType.hardwareVersion;
 	paramFirmwareVersion = (int)this->camType.firmwareVersion;
+	paramIsEdge = (int)(this->camType.camType == DllApi::cameraTypeEdge ||
+			this->camType.camType == DllApi::cameraTypeEdgeGl);
 
 	// Work out how to decode the BCD frame number in the image
 	this->shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
@@ -1220,11 +1238,20 @@ void Pco::onClearStateRecord(TakeLock& takeLock)
 }
 
 /**
- * Handle a change to the Reboot parameter
+ * Start a camera reboot
  */
 void Pco::onReboot(TakeLock& takeLock)
 {
-	this->post(Pco::requestReboot);
+	// Reboot only supported on the edge camera
+	switch(this->camType.camType)
+	{
+	case DllApi::cameraTypeEdge:
+	case DllApi::cameraTypeEdgeGl:
+		this->post(Pco::requestReboot);
+		break;
+	default:
+		break;
+	}
 }
 
 /**
@@ -1256,19 +1283,63 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
     {
         // Out of area detector NDArrays
     	TakeLock takeLock(this);
-        paramOutOfNDArrays = ++this->outOfNDArrays;
+        paramOutOfNDArrays = paramOutOfNDArrays + 1;
     }
     return image;
 }
 
 /**
- * A frame has been received
+ * A frame has been received.
+ * Returns true if the buffer was handed to us for processing, false otherwise.
  */
-void Pco::frameReceived(int bufferNumber)
+bool Pco::frameReceived(int bufferNumber)
 {
-	// Send the buffer number to the state machine thread
-	this->receivedBufferQueue.send(&bufferNumber, sizeof(int));
-    this->post(Pco::requestImageReceived);
+// JAT: This version needs a lock to avoid reentrant calls to the dll
+//      We need to get the image out of the DLL buffer as soon as possible
+//      and return the buffer to the DLL.  Otherwise, the edge at high
+//      rates loses frames.
+	bool result = false;
+	// Get the buffer status
+	unsigned long statusDll;
+	unsigned long statusDrv;
+	this->api->getBufferStatus(this->camera, bufferNumber, &statusDll, &statusDrv);
+	if((statusDll & DllApi::statusDllEventSet) != 0)
+	{
+		// Buffer is good for further processing
+		result = true;
+		if(statusDrv == 0)
+		{
+			// Copy the image from the buffer into a frame
+			NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+			if(image != NULL)
+			{
+				// Copy the image into an NDArray
+				::memcpy(image->pData, this->buffers[bufferNumber].buffer,
+						this->xCamSize*this->yCamSize*sizeof(unsigned short));
+				// And pass it to the state machine
+				this->receivedImageQueue.send(&image, sizeof(NDArray*));
+				this->post(Pco::requestImageReceived);
+			}
+		}
+		else
+		{
+			// There was an error associated with the frame
+			TakeLock takeLock(this);
+			paramFrameStatusErrors = paramFrameStatusErrors + 1;
+		}
+		// Give the buffer back to the driver
+		TakeLock takeLock(&this->apiLock);
+		this->api->addBufferEx(this->camera, /*firstImage=*/0,
+			/*lastImage=*/0, bufferNumber,
+			this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+	}
+	else
+	{
+		// Buffer has not been given to us
+		TakeLock takeLock(this);
+		paramCaptureErrors = paramCaptureErrors + 1;
+	}
+	return result;
 }
 
 /**
@@ -1304,9 +1375,7 @@ void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
                     bufferSize * sizeof(short), &this->buffers[i].buffer,
                     &this->buffers[i].eventHandle);
             this->buffers[i].ready = true;
-            //assert(this->buffers[i].bufferNumber == i);
         }
-		this->lastBufferReceived = -1;  // Indicate no buffers yet received
     }
     catch(std::bad_alloc& e)
     {
@@ -1511,31 +1580,6 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	TakeLock takeLock(this);
 	// Camera now busy
 	paramADStatus = ADStatusReadout;
-	// Try to clear up from last time
-#if 0
-	try
-	{
-		// Experimental additions from Pete's code
-		unsigned long long1, long2;
-		unsigned short short1, short2, short3, short4;
-		short short5, short6, short7;
-		this->api->getDelayExposureTime(this->camera, &long1, &long2, &short1, &short2);
-		this->api->getRoi(this->camera, &short1, &short2, &short3, &short4);
-		this->api->getBinning(this->camera, &short1, &short2);
-		this->api->getTriggerMode(this->camera, &short1);
-		this->api->getPixelRate(this->camera, &long1);
-		this->api->getStorageMode(this->camera, &short1);
-		this->api->getRecorderSubmode(this->camera, &short1);
-		this->api->getTimestampMode(this->camera, &short1);
-		this->api->getAcquireMode(this->camera, &short1);
-		this->api->getBitAlignment(this->camera, &short1);
-		this->api->getAdcOperation(this->camera, &short1);
-		this->api->getTemperature(this->camera, &short5, &short6, &short7);
-	}
-	catch(PcoException&)
-	{
-	}
-#endif
 	try
 	{
 		this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
@@ -1550,14 +1594,6 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	catch(PcoException&)
 	{
 	}
-	//try
-	//{
-	//	this->api->setActiveRamSegment(this->camera, 1);
-	//    this->api->clearRamSegment(this->camera);
-	//}
-	//catch(PcoException&)
-	//{
-	//}
 	// Get configuration information
 	this->triggerMode = paramADTriggerMode;
 	this->numImages = paramADNumImages;
@@ -2054,12 +2090,14 @@ void Pco::nowAcquiring() throw()
     // Clear counters
     this->numImagesCounter = 0;
     this->numExposuresCounter = 0;
-    this->outOfNDArrays = 0;
-    this->bufferQueueReadFailures = 0;
-    this->buffersWithNoData = 0;
-    this->misplacedBuffers = 0;
-    this->missingFrames = 0;
-    this->driverLibraryErrors = 0;
+    paramOutOfNDArrays = 0;
+    paramBufferQueueReadFailures = 0;
+    paramBuffersWithNoData = 0;
+    paramMisplacedBuffers = 0;
+    paramMissingFrames = 0;
+    paramDriverLibraryErrors = 0;
+	paramCaptureErrors = 0;
+	paramFrameStatusErrors = 0;
     // Set info
     paramADStatus = ADStatusReadout;
     paramADAcquire = 1;
@@ -2068,8 +2106,6 @@ void Pco::nowAcquiring() throw()
     paramNDArraySizeY = this->yCamSize;
     paramADNumImagesCounter = this->numImagesCounter;
     paramADNumExposuresCounter = this->numExposuresCounter;
-    // Update EPICS
-    this->updateErrorCounters();
 }
 
 /**
@@ -2112,20 +2148,6 @@ void Pco::doDisarm() throw()
 }
 
 /**
- * Update EPICS with the state of the error counters
- */
-void Pco::updateErrorCounters() throw()
-{
-	TakeLock takeLock(this);
-    paramOutOfNDArrays = this->outOfNDArrays;
-    paramBufferQueueReadFailures = this->bufferQueueReadFailures;
-    paramBuffersWithNoData = this->buffersWithNoData;
-    paramMisplacedBuffers = this->misplacedBuffers;
-    paramMissingFrames = this->missingFrames;
-    paramDriverLibraryErrors = this->driverLibraryErrors;
-}
-
-/**
  * Start the camera by sending a software trigger if we are in one
  * of the soft modes
  */
@@ -2136,14 +2158,15 @@ void Pco::startCamera() throw()
         this->triggerMode == DllApi::triggerExternal)
     {
         unsigned short triggerState = 0;
+		TakeLock takeLock(&this->apiLock);
         try
         {
             this->api->forceTrigger(this->camera, &triggerState);
         }
         catch(PcoException&)
         {
-            this->driverLibraryErrors++;
-            this->updateErrorCounters();
+			TakeLock takeLock(this);
+			paramDriverLibraryErrors = paramDriverLibraryErrors + 1;
         }
         // Schedule a retry if it fails
         if(!triggerState)
@@ -2157,18 +2180,13 @@ void Pco::startCamera() throw()
 /**
  * Discard all images waiting in the queue.
  */
-void Pco::discardImages(bool returnBufferToApi) throw()
+void Pco::discardImages() throw()
 {
-    while(this->receivedBufferQueue.pending() > 0)
+    while(this->receivedImageQueue.pending() > 0)
     {
-        int buffer;
-        this->receivedBufferQueue.tryReceive(&buffer, sizeof(int));
-		if(returnBufferToApi)
-		{
-			this->api->addBufferEx(this->camera, /*firstImage=*/0,
-				/*lastImage=*/0, buffer,
-				this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
-		}
+        NDArray* image;
+        this->receivedImageQueue.tryReceive(&image, sizeof(NDArray*));
+		image->release();
     }
 }
 
@@ -2186,32 +2204,17 @@ bool Pco::receiveImages() throw()
     // Note that the API has aready reset the event so the event status bit
     // returned by getBufferStatus will already be clear.  However, for
     // buffers that do have data ready return a statusDrv of zero.
-    while(this->receivedBufferQueue.pending() > 0 &&
+    while(this->receivedImageQueue.pending() > 0 &&
     		(this->imageMode == ADImageContinuous ||
             this->numImagesCounter < this->numImages))
     {
-		// Get the buffer
-        this->receivedBufferQueue.tryReceive(&lastBufferReceived, sizeof(int));
+		// Get the image
+		NDArray* image;
+        this->receivedImageQueue.tryReceive(&image, sizeof(NDArray*));
 		if(this->imageMode != ADImageBurst)
 		{
 			// Not burst mode...
-			// Get an ND array
-			NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
-			if(image != NULL)
-			{
-				// Copy the image into an NDArray
-				::memcpy(image->pData, this->buffers[lastBufferReceived].buffer,
-						this->xCamSize*this->yCamSize*sizeof(unsigned short));
-			}
-			// Give the buffer back to the driver
-			this->api->addBufferEx(this->camera, /*firstImage=*/0,
-				/*lastImage=*/0, lastBufferReceived,
-				this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
-			// Continue processing the image
-			if(image != NULL)
-			{
-				processFrame(image);
-			}
+			processFrame(image);
 			// Update statistics
 			TakeLock takeLock(this);
 			paramADNumExposuresCounter = this->numExposuresCounter;
@@ -2223,10 +2226,7 @@ bool Pco::receiveImages() throw()
 		else
 		{
 			// Burst mode...
-			// Give the buffer back to the driver
-			this->api->addBufferEx(this->camera, /*firstImage=*/0,
-				/*lastImage=*/0, lastBufferReceived,
-				this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+			image->release();
 			// Read the memory state
 			int ramUsePercent;
 			int ramUseFrames;
@@ -2265,10 +2265,9 @@ void Pco::processFrame(NDArray* image)
 		// If this is the image we are expecting?
 		if(imageNumber != this->lastImageNumber+1)
 		{
-			this->missingFrames++;
 			printf("Missing frame, got=%ld, exp=%ld\n", imageNumber, this->lastImageNumber+1);
 			TakeLock takeLock(this);
-			paramMissingFrames = this->missingFrames;
+			paramMissingFrames = paramMissingFrames + 1;
 		}
 		this->lastImageNumber = imageNumber;
 		// Do software ROI, binning and reversal if required

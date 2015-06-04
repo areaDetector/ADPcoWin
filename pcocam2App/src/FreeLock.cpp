@@ -12,13 +12,28 @@
 // Constructor.  Free a taken lock
 FreeLock::FreeLock(TakeLock& takeLock)
 	: driver(takeLock.driver)
+	, mutex(takeLock.mutex)
 {
-	driver->unlock();
+	if(driver != NULL)
+	{
+		driver->unlock();
+	}
+	else
+	{
+		mutex->unlock();
+	}
 }
 
 // Destructor.  Return the lock to the taken state.
 FreeLock::~FreeLock()
 {
-	driver->lock();
+	if(driver != NULL)
+	{
+		driver->lock();
+	}
+	else
+	{
+		mutex->lock();
+	}
 }
 

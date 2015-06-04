@@ -25,12 +25,14 @@
 #define TAKELOCK_H_
 
 class asynPortDriver;
+class epicsMutex;
 class FreeLock;
 
 class TakeLock {
 friend class FreeLock;
 public:
 	TakeLock(asynPortDriver* driver, bool alreadyTaken=false);
+	TakeLock(epicsMutex* mutex);
 	TakeLock(FreeLock& freeLock);
 	virtual ~TakeLock();
 	void lock();
@@ -41,6 +43,7 @@ private:
 	TakeLock(const TakeLock& other);
 	TakeLock& operator=(const TakeLock& other);
 	asynPortDriver* driver;
+	epicsMutex* mutex;
 	bool initiallyTaken;
 };
 

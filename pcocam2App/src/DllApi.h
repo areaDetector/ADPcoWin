@@ -61,7 +61,7 @@ public:
         statusDllExternalBuffer=0x20000000, statusDllEventSet=0x00008000};
     static const double ccdTemperatureScaleFactor;
     enum {descriptionNumPixelRates=4};
-    enum {cameraSetupDataSize=10};
+    enum {cameraSetupDataSize=10, cameraSetupRollingShutter=1, cameraSetupGlobalShutter=2};
     static const double timebaseScaleFactor[numTimebases];
     enum {maxNumBuffers=8};
     enum {bufferUnallocated=-1};
@@ -153,6 +153,8 @@ protected:
     virtual int doSetBitAlignment(Handle handle, unsigned short bitAlignment) = 0;
     virtual int doGetCameraSetup(Handle handle, unsigned short* setupType,
             unsigned long* setupData, unsigned short* setupDataLen) = 0;
+    virtual int doSetCameraSetup(Handle handle, unsigned short setupType,
+            unsigned long* setupData, unsigned short setupDataLen) = 0;
     virtual int doSetBinning(Handle handle, unsigned short binHorz, unsigned short binVert) = 0;
     virtual int doGetBinning(Handle handle, unsigned short* binHorz, unsigned short* binVert) = 0;
     virtual int doSetRoi(Handle handle, unsigned short x0, unsigned short y0,
@@ -243,6 +245,8 @@ public:
     void setBitAlignment(Handle handle, unsigned short bitAlignment) throw(PcoException);
     void getCameraSetup(Handle handle, unsigned short* setupType,
             unsigned long* setupData, unsigned short* setupDataLen) throw(PcoException);
+    void setCameraSetup(Handle handle, unsigned short setupType,
+            unsigned long* setupData, unsigned short setupDataLen) throw(PcoException);
     void setBinning(Handle handle, unsigned short binHorz, unsigned short binVert) throw(PcoException);
     void getBinning(Handle handle, unsigned short* binHorz, unsigned short* binVert) throw(PcoException);
     void setRoi(Handle handle, unsigned short x0, unsigned short y0,

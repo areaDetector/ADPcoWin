@@ -10,11 +10,12 @@
 #include "asynPortDriver.h"
 
 /**
- * Constructor.  Use this to take the lock (or represent an already
+ * Constructor.  Use this to take the driver lock (or represent an already
  * taken lock if alreadyTaken is true).
  */
 TakeLock::TakeLock(asynPortDriver* driver, bool alreadyTaken)
 	: driver(driver)
+	, mutex(NULL)
 	, initiallyTaken(alreadyTaken)
 {
 	if(!alreadyTaken)
@@ -28,9 +29,28 @@ TakeLock::TakeLock(asynPortDriver* driver, bool alreadyTaken)
  */
 TakeLock::TakeLock(FreeLock& freeLock)
 	: driver(freeLock.driver)
+	, mutex(freeLock.mutex)
 	, initiallyTaken(false)
 {
-	driver->lock();
+	if(driver != NULL)
+	{
+		driver->lock();
+	}
+	else
+	{
+		mutex->lock();
+	}
+}
+
+/**
+ * Constructor.  Use this to take an arbitary mutext.
+ */
+TakeLock::TakeLock(epicsMutex* mutex)
+	: driver(NULL)
+	, mutex(mutex)
+	, initiallyTaken(false)
+{
+	mutex->lock();
 }
 
 /**
@@ -39,10 +59,20 @@ TakeLock::TakeLock(FreeLock& freeLock)
  */
 TakeLock::~TakeLock()
 {
-	driver->callParamCallbacks();
-	if(!initiallyTaken)
+	if(driver != NULL)
 	{
-		driver->unlock();
+		driver->callParamCallbacks();
+		if(!initiallyTaken)
+		{
+			driver->unlock();
+		}
+	}
+	else
+	{
+		if(!initiallyTaken)
+		{
+			mutex->unlock();
+		}
 	}
 }
 

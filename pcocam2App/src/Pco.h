@@ -98,6 +98,8 @@ public:
 	IntegerParam paramConnected;
 	IntegerParam paramCaptureErrors;
 	IntegerParam paramBuffersReady;
+	IntegerParam paramFrameStatusErrors;
+	IntegerParam paramIsEdge;
 
 // Constants
 public:
@@ -144,7 +146,7 @@ public:
 // API for use by component classes
 public:
     void post(const StateMachine::Event* req);
-    void frameReceived(int bufferNumber);
+    bool frameReceived(int bufferNumber);
     void trace(int flags, const char* format, ...);
     asynUser* getAsynUser();
     void registerDllApi(DllApi* api);
@@ -181,7 +183,7 @@ private:
     } buffers[Pco::numApiBuffers];
     long lastImageNumber;
     bool lastImageNumberValid;
-    epicsMessageQueue receivedBufferQueue;
+    epicsMessageQueue receivedImageQueue;
     int numImagesCounter;
     int numExposuresCounter;
     int numImages;
@@ -246,16 +248,10 @@ private:
     NDArray* imageSum;
     NDDimension_t arrayDims[numDimensions];
     bool roiRequired;
-	int lastBufferReceived;
-    // Error counters
-    int outOfNDArrays;
-    int bufferQueueReadFailures;
-    int buffersWithNoData;
-    int misplacedBuffers;
-    int missingFrames;
-    int driverLibraryErrors;
     GangServer* gangServer;
     GangConnection* gangConnection;
+	epicsMutex apiLock;
+
 public:
     static std::map<std::string, Pco*> thePcos;
     static Pco* getPco(const char* portName);
@@ -277,12 +273,11 @@ private:
     void addAvailableBuffer(int index) throw(PcoException);
     void addAvailableBufferAll() throw(PcoException);
     bool receiveImages() throw();
-    void discardImages(bool returnBufferToApi=false) throw();
+    void discardImages() throw();
     long extractImageNumber(unsigned short* imagebuffer) throw();
     bool isImageValid(unsigned short* imagebuffer) throw();
     long bcdToInt(unsigned short pixel) throw();
     void extractImageTimeStamp(epicsTimeStamp* imageTime, unsigned short* imageBuffer) throw();
-    void updateErrorCounters() throw();
     void acquisitionComplete() throw();
     void checkMemoryBuffer(int& percentUsed, int& numFrames) throw(PcoException);
     void setValidBinning(std::set<int>& valid, int max, int step) throw();
