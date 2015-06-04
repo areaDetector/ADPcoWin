@@ -40,19 +40,6 @@ record(mbbi, "$(P)$(R)TriggerMode_RBV")
     field(FRVL, "5")
 }
 
-# Add the burst mode to the image mode options
-record(mbbo, "$(P)$(R)ImageMode")
-{
-   field(THST, "Burst")
-   field(THVL, "3")
-}
-record(mbbi, "$(P)$(R)ImageMode_RBV")
-{
-   field(THST, "Burst")
-   field(THVL, "3")
-}
-
-
 # % gdatag, pv, rw, $(PORT)_pcocam, PIX_RATE, Set pixel rate
 record(mbbo, "$(P)$(R)PIX_RATE")
 {

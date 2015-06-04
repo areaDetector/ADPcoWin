@@ -251,6 +251,7 @@ private:
     GangServer* gangServer;
     GangConnection* gangConnection;
 	epicsMutex apiLock;
+	unsigned long memoryImageCounter;
 
 public:
     static std::map<std::string, Pco*> thePcos;
@@ -317,6 +318,7 @@ public:
 	const StateMachine::State* stateUnarmedAcquiring;
     const StateMachine::State* stateUnarmedAcquiringDelay;
 	const StateMachine::State* stateExternalAcquiring;
+	const StateMachine::State* stateUnarmedDraining;
 	// Events
     const StateMachine::Event* requestInitialise;
 	const StateMachine::Event* requestTimerExpiry;
@@ -328,13 +330,13 @@ public:
 	const StateMachine::Event* requestTrigger;
 	const StateMachine::Event* requestReboot;
 	const StateMachine::Event* requestMakeImages;
-	const StateMachine::Event* requestGetImage;
 
 public:
     StateMachine::StateSelector smInitialiseWait();
     StateMachine::StateSelector smConnectToCamera();
     StateMachine::StateSelector smPollWhileIdle();
     StateMachine::StateSelector smPollWhileAcquiring();
+    StateMachine::StateSelector smPollWhileDraining();
     StateMachine::StateSelector smRequestArm();
     StateMachine::StateSelector smArmCompleteAcquire();
     StateMachine::StateSelector smAcquire();
@@ -351,7 +353,7 @@ public:
     StateMachine::StateSelector smStopAcquisition();
     StateMachine::StateSelector smExternalStopAcquisition();
     StateMachine::StateSelector smArmComplete();
-
+    StateMachine::StateSelector smUnarmedDrainImage();
 };
 
 #endif

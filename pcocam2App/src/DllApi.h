@@ -37,6 +37,7 @@ public:
         triggerExternalExposure=0x0003, triggerSourceHdsdi=0x0102,
         triggerExternalSynchronised=0x0004, triggerExternalOnly=0x0005};
     enum {storageModeRecorder=0, storageModeFifoBuffer=1};
+	enum {recorderSubmodeSequence=0, recorderSubmodeRingBuffer=1};
     enum {timestampModeOff=0, timestampModeBinary=1,
         timestampModeBinaryAndAscii=2, timestampModeAscii=3};
     enum {acquireModeAuto=0, acquireModeExternal=1,
