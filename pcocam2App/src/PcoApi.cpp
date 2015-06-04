@@ -13,6 +13,7 @@
 #include "PcoApi.h"
 #include "TraceStream.h"
 #include "Pco.h"
+#include "TakeLock.h"
 #include "epicsExport.h"
 #include "iocsh.h"
 #include "sc2_SDKStructures.h"
@@ -88,32 +89,35 @@ void PcoApi::run()
                 }
                 result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
                     runEvents, FALSE, INFINITE);
-                if(::WaitForSingleObject(this->stopEvent, 0) == WAIT_OBJECT_0)
-                {
-					// Stop event received
-					::ResetEvent(this->stopEvent);
-                    running = false;
-					*trace << "#### Exiting run event loop" << std::endl;
-                }
-                else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
-                    result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
-                {
-                    int eventBufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
-					// Search for triggered events from the current head to the buffer number
-					int bufferNumber;
-					bool going = true;
-					do
+				{
+					TakeLock takeLock(&frameLock);
+					if(::WaitForSingleObject(this->stopEvent, 0) == WAIT_OBJECT_0)
 					{
-						bufferNumber = this->queueHead;
-						going = this->pco->frameReceived(bufferNumber);
-						if(going)
-						{
-							::ResetEvent(this->buffers[bufferNumber].eventHandle);
-							this->queueHead = (bufferNumber + 1) % DllApi::maxNumBuffers;
-						}
+						// Stop event received
+						::ResetEvent(this->stopEvent);
+						running = false;
+						*trace << "#### Exiting run event loop" << std::endl;
 					}
-					while(eventBufferNumber != bufferNumber && going);
-                }
+					else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
+						result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
+					{
+						int eventBufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
+						// Search for triggered events from the current head to the buffer number
+						int bufferNumber;
+						bool going = true;
+						do
+						{
+							bufferNumber = this->queueHead;
+							going = this->pco->frameReceived(bufferNumber);
+							if(going)
+							{
+								::ResetEvent(this->buffers[bufferNumber].eventHandle);
+								this->queueHead = (bufferNumber + 1) % DllApi::maxNumBuffers;
+							}
+						}
+						while(eventBufferNumber != bufferNumber && going);
+					}
+				}
             }
         }
     }
@@ -837,6 +841,7 @@ void PcoApi::doStartFrameCapture()
  */
 void PcoApi::doStopFrameCapture()
 {
+	TakeLock takeLock(&frameLock);
     ::SetEvent(this->stopEvent);
 }
 

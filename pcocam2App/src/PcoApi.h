@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include "winsock2.h"
 #include "epicsThread.h"
+#include "epicsMutex.h"
 class Pco;
 class TraceStream;
 
@@ -149,6 +150,7 @@ protected:
     int queueTail;
     bool buffersValid;
 	Handle handle;
+	epicsMutex frameLock;
 
 // Functions
 protected:

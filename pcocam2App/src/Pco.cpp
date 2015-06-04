@@ -165,7 +165,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     paramADManufacturer = "PCO";
     paramADModel = "Unknown";
     paramADMaxSizeX = 0;
-    paramADMaxSizeY = 1024;
+    paramADMaxSizeY = 0;
     paramNDArraySize = 0;
 	paramADStatusMessage = "Disconnected";
     // We are not connected to a camera
