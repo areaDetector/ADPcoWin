@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2704
-y 153
+x 2614
+y 38
 w 397
 h 525
 font "arial-bold-r-12.0"
@@ -554,64 +554,6 @@ bgColor index 3
 useDisplayBg
 value {
   "Image Num"
-}
-autoSize
-endObjectProperties
-
-# (Textupdate)
-object TextupdateClass
-beginObjectProperties
-major 10
-minor 0
-release 0
-x 260
-y 150
-w 105
-h 15
-controlPv "$(P)$(R)CAMERA_SETUP_RBV"
-fgColor index 16
-bgColor index 10
-fill
-font "helvetica-bold-r-10.0"
-fontAlign "center"
-endObjectProperties
-
-# (Menu Button)
-object activeMenuButtonClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 150
-y 150
-w 100
-h 15
-fgColor index 25
-bgColor index 3
-inconsistentColor index 3
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(P)$(R)CAMERA_SETUP"
-indicatorPv "$(P)$(R)CAMERA_SETUP_RBV"
-font "helvetica-bold-r-10.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 45
-y 150
-w 98
-h 12
-font "helvetica-bold-r-10.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "Edge Camera Setup"
 }
 autoSize
 endObjectProperties
@@ -1240,5 +1182,123 @@ bgColor index 10
 fill
 font "helvetica-bold-r-10.0"
 fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 315
+y 255
+w 50
+h 15
+controlPv "$(P)$(R)CAPTURE_ERRORS_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 250
+y 255
+w 60
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Frm Stat Err"
+}
+autoSize
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 45
+y 150
+w 320
+h 15
+
+beginGroup
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 260
+y 150
+w 105
+h 15
+controlPv "$(P)$(R)CAMERA_SETUP_RBV"
+fgColor index 16
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Menu Button)
+object activeMenuButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 150
+y 150
+w 100
+h 15
+fgColor index 25
+bgColor index 3
+inconsistentColor index 3
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(P)$(R)CAMERA_SETUP"
+indicatorPv "$(P)$(R)CAMERA_SETUP_RBV"
+font "helvetica-bold-r-10.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 45
+y 150
+w 98
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Edge Camera Setup"
+}
+autoSize
+endObjectProperties
+
+endGroup
+
+visPv "$(P)$(R)IS_EDGE_RBV"
+visInvert
+visMin "0"
+visMax "1"
 endObjectProperties
 
