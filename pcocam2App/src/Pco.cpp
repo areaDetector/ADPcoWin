@@ -133,7 +133,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramCamlinkLongGap(this, "PCO_CAMLINKLONGGAP", 1)
 , paramGangMode(this, "PCO_GANGMODE", gangModeNone)
 , paramADAcquire(ADDriverEx::paramADAcquire, new AsynParam::Notify<Pco>(this, &Pco::onAcquire))
-, paramADTemperature(ADDriverEx::paramADTemperature, new AsynParam::Notify<Pco>(this, &Pco::onADTemperature))
+, paramADTemperature(ADDriverEx::paramADTemperature, 
+		new AsynParam::Notify<Pco>(this, &Pco::onADTemperature))
 , paramCameraRam(this, "PCO_CAM_RAM", 0)
 , paramCameraBusy(this, "PCO_CAM_BUSY", 0)
 , paramExpTrigger(this, "PCO_EXP_TRIGGER", 0)
@@ -148,6 +149,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramBuffersReady(this, "PCO_BUFFERS_READY", 0)
 , paramFrameStatusErrors(this, "PCO_FRAME_STATUS_ERRORS", 0)
 , paramIsEdge(this, "PCO_IS_EDGE", 0)
+, paramGetImage(this, "PCO_GET_IMAGE", 0,
+		new AsynParam::Notify<Pco>(this, &Pco::onGetImage))
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -195,13 +198,13 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateUninitialised = stateMachine->state("Uninitialised");
 	stateUnconnected = stateMachine->state("Unconnected");
 	stateIdle = stateMachine->state("Idle");
-    stateArmedDelay = stateMachine->state("ArmedDelay");
     stateArmed = stateMachine->state("Armed");
     stateAcquiring = stateMachine->state("Acquiring");
 	stateUnarmedAcquiring = stateMachine->state("UnarmedAcquiring");
-	stateUnarmedAcquiringDelay = stateMachine->state("UnarmedAcquiringDelay");
 	stateExternalAcquiring = stateMachine->state("ExternalAcquiring");
 	stateUnarmedDraining = stateMachine->state("UnarmedDraining");
+	stateExternalDraining = stateMachine->state("ExternalDraining");
+	stateDraining = stateMachine->state("Draining");
 	// Events
     requestInitialise = stateMachine->event("Initialise");
 	requestTimerExpiry = stateMachine->event("TimerExpiry");
@@ -217,30 +220,32 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateUninitialised, requestInitialise, new StateMachine::Act<Pco>(this, &Pco::smInitialiseWait), stateUnconnected);
 	stateMachine->transition(stateUnconnected, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smConnectToCamera), stateIdle, stateUnconnected);
 	stateMachine->transition(stateIdle, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileIdle), stateIdle);
-	stateMachine->transition(stateIdle, requestArm, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateArmedDelay, stateIdle);
-	stateMachine->transition(stateIdle, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateUnarmedAcquiringDelay, stateIdle);
+	stateMachine->transition(stateIdle, requestArm, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateArmed, stateIdle);
+	stateMachine->transition(stateIdle, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smArmAndAcquire), stateUnarmedAcquiring, stateIdle);
 	stateMachine->transition(stateIdle, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateIdle);
 	stateMachine->transition(stateIdle, requestReboot, new StateMachine::Act<Pco>(this, &Pco::smRequestReboot), stateUnconnected);
-	stateMachine->transition(stateArmedDelay, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smArmComplete), stateArmed);
-	stateMachine->transition(stateArmedDelay, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateArmedDelay);
 	stateMachine->transition(stateArmed, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateArmed);
 	stateMachine->transition(stateArmed, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateAcquiring);
 	stateMachine->transition(stateArmed, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smFirstImageWhileArmed), stateExternalAcquiring, stateIdle, stateArmed, stateArmed);
 	stateMachine->transition(stateArmed, requestDisarm, new StateMachine::Act<Pco>(this, &Pco::smDisarmAndDiscard), stateIdle);
 	stateMachine->transition(stateArmed, requestStop, new StateMachine::Act<Pco>(this, &Pco::smDisarmAndDiscard), stateIdle);
 	stateMachine->transition(stateAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateAcquiring);
-	stateMachine->transition(stateAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smAcquireImage), stateAcquiring, stateIdle, stateArmed);
+	stateMachine->transition(stateAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smAcquireImage), stateAcquiring, stateIdle, stateArmed, stateDraining);
 	stateMachine->transition(stateAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateAcquiring, stateIdle, stateArmed);
 	stateMachine->transition(stateAcquiring, requestTrigger, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateAcquiring);
 	stateMachine->transition(stateAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopAcquisition), stateIdle, stateArmed);
 	stateMachine->transition(stateAcquiring, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smTrigger), stateAcquiring);
+	stateMachine->transition(stateDraining, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDrainImage), stateDraining, stateIdle, stateArmed);
+	stateMachine->transition(stateDraining, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileDraining), stateDraining);
+	stateMachine->transition(stateDraining, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopAcquisition), stateIdle, stateArmed);
 	stateMachine->transition(stateExternalAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateExternalAcquiring);
-	stateMachine->transition(stateExternalAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smExternalAcquireImage), stateExternalAcquiring, stateIdle, stateArmed);
+	stateMachine->transition(stateExternalAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smExternalAcquireImage), stateExternalAcquiring, stateIdle, stateArmed, stateExternalDraining);
 	stateMachine->transition(stateExternalAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smMakeGangedImage), stateExternalAcquiring, stateIdle, stateArmed);
-	stateMachine->transition(stateExternalAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
+	stateMachine->transition(stateExternalAcquiring, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopAcquisition), stateIdle, stateArmed);
 	stateMachine->transition(stateExternalAcquiring, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateExternalAcquiring);
-	stateMachine->transition(stateUnarmedAcquiringDelay, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smArmCompleteAcquire), stateUnarmedAcquiring);
-	stateMachine->transition(stateUnarmedAcquiringDelay, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateUnarmedAcquiringDelay);
+	stateMachine->transition(stateExternalDraining, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smExternalDrainImage), stateExternalDraining, stateIdle, stateArmed);
+	stateMachine->transition(stateExternalDraining, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileDraining), stateExternalDraining);
+	stateMachine->transition(stateExternalDraining, requestStop, new StateMachine::Act<Pco>(this, &Pco::smStopAcquisition), stateIdle, stateArmed);
 	stateMachine->transition(stateUnarmedAcquiring, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateUnarmedAcquiring);
 	stateMachine->transition(stateUnarmedAcquiring, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smUnarmedAcquireImage), stateUnarmedAcquiring, stateIdle, stateUnarmedDraining);
 	stateMachine->transition(stateUnarmedAcquiring, requestMakeImages, new StateMachine::Act<Pco>(this, &Pco::smUnarmedMakeGangedImage), stateUnarmedAcquiring, stateIdle);
@@ -451,7 +456,6 @@ StateMachine::StateSelector Pco::smRequestArm()
 	StateMachine::StateSelector result;
     try
     {
-		stateMachine->stopTimer();
 		try
 		{
 			doArm();
@@ -464,44 +468,22 @@ StateMachine::StateSelector Pco::smRequestArm()
 			doDisarm();
 			doArm();
 		}
-		if(this->camType.camType == DllApi::cameraTypeEdge || this->camType.camType == DllApi::cameraTypeEdgeGl)
-		{
-			// Immediate time out for the edge
-	        stateMachine->startTimer(0, Pco::requestTimerExpiry);
-		}
-		else
-		{
-		    stateMachine->startTimer(Pco::armIgnoreImagesPeriod, Pco::requestTimerExpiry);
-		}
         outputStatusMessage("");
         result = StateMachine::firstState;
+		paramArmComplete = 1;
     }
     catch(std::exception& e)
     {
 		this->api->stopFrameCapture();
-		this->triggerTimer->stop();
         doDisarm();
         errorTrace << "Failed to arm, " << e.what() << std::endl;
         outputStatusMessage(e.what());
 		TakeLock takeLock(this);
 		paramADStatus = ADStatusIdle;
 		paramADAcquire = 0;
-        stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
         result = StateMachine::secondState;
     }
     return result;
-}
-
-/**
- * Camera arming is complete
- * returns: firstState: always
- */
-StateMachine::StateSelector Pco::smArmComplete()
-{
-	TakeLock takeLock(this);
-	paramArmComplete = 1;
-    stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
-    return StateMachine::firstState;
 }
 
 /**
@@ -509,13 +491,41 @@ StateMachine::StateSelector Pco::smArmComplete()
  * returns: firstState: success
  *          secondState: failure
  */
-StateMachine::StateSelector Pco::smArmCompleteAcquire()
+StateMachine::StateSelector Pco::smArmAndAcquire()
 {
-    this->nowAcquiring();
-    this->startCamera();
-    this->stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
-    this->outputStatusMessage("");
-    return StateMachine::firstState;
+	StateMachine::StateSelector result;
+    try
+    {
+		try
+		{
+			doArm();
+		}
+		catch(std::exception&)
+		{
+			// Sometimes the arm fails in a way that is fixed by the clean up.
+			// This especially happens on the way back from a hardware ROI.
+			// So we disarm and try once more if that happens.
+			doDisarm();
+			doArm();
+		}
+        outputStatusMessage("");
+        result = StateMachine::firstState;
+		paramArmComplete = 1;
+		this->nowAcquiring();
+		this->startCamera();
+    }
+    catch(std::exception& e)
+    {
+		this->api->stopFrameCapture();
+        doDisarm();
+        errorTrace << "Failed to arm, " << e.what() << std::endl;
+        outputStatusMessage(e.what());
+		TakeLock takeLock(this);
+		paramADStatus = ADStatusIdle;
+		paramADAcquire = 0;
+        result = StateMachine::secondState;
+    }
+    return result;
 }
 
 /**
@@ -598,6 +608,7 @@ StateMachine::StateSelector Pco::smFirstImageWhileArmed()
  * Returns: firstState: further images to be acquired
  *          secondState: acquisition complete and disarmed
  *          thirdState: acquisition complete and still armed
+ *          fourthState: start draining memory
  */
 StateMachine::StateSelector Pco::smAcquireImage()
 {
@@ -607,16 +618,27 @@ StateMachine::StateSelector Pco::smAcquireImage()
         //startCamera();
         result = StateMachine::firstState;
     }
-	else if((triggerMode == DllApi::triggerAuto) || (triggerMode == DllApi::triggerExternalOnly))
-    {
-        acquisitionComplete();
-        doDisarm();
-        result = StateMachine::secondState;
-    }
     else
     {
-        acquisitionComplete();
-        result = StateMachine::thirdState;
+		if(paramStorageMode == DllApi::storageModeRecorder)
+		{
+			// Burst mode, start reading the memory
+			readFirstMemoryImage();
+			result = StateMachine::fourthState;
+		}
+		else if((triggerMode == DllApi::triggerAuto) || (triggerMode == DllApi::triggerExternalOnly))
+		{
+			// Normal mode, automatic triggering
+			acquisitionComplete();
+			doDisarm();
+			result = StateMachine::secondState;
+		}
+		else
+		{
+			// Normal mode, non-automatic triggering
+			acquisitionComplete();
+			result = StateMachine::thirdState;
+		}
     }
     return result;
 }
@@ -641,30 +663,7 @@ StateMachine::StateSelector Pco::smUnarmedAcquireImage()
 		if(paramStorageMode == DllApi::storageModeRecorder)
 		{
 			// Burst mode, start reading the memory
-			this->api->cancelImages(this->camera);
-			try
-			{
-				this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
-			}
-			catch(PcoException&)
-			{
-			}
-			memoryImageCounter = 1;
-			this->api->getImageEx(this->camera, /*segment=*/1, memoryImageCounter,
-				memoryImageCounter, /*bufferNumber=*/0, 
-				this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
-			discardImages();
-			// Get an ND array
-			NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
-			if(image != NULL)
-			{
-				// Copy the image into an NDArray
-				::memcpy(image->pData, this->buffers[0].buffer,
-						this->xCamSize*this->yCamSize*sizeof(unsigned short));
-				// And pass it to the state machine
-				this->receivedImageQueue.send(&image, sizeof(NDArray*));
-			}
-			this->post(Pco::requestImageReceived);
+			readFirstMemoryImage();
 			result = StateMachine::thirdState;
 		}
 		else
@@ -687,6 +686,172 @@ StateMachine::StateSelector Pco::smUnarmedAcquireImage()
 StateMachine::StateSelector Pco::smUnarmedDrainImage()
 {
 	StateMachine::StateSelector result;
+	// Process this image and read next
+	if(readNextMemoryImage())
+	{
+		// More to handle
+		result = StateMachine::firstState;
+	}
+	else
+	{
+		// Draining complete
+	    this->api->clearRamSegment(this->camera);
+		acquisitionComplete();
+		doDisarm();
+		discardImages();
+		result = StateMachine::secondState;
+	}
+	return result;
+}
+
+/**
+ * Handle an image during an externally triggered acquisition.
+ * Returns: firstState: further images to be acquired
+ *          secondState: acquisition complete and disarmed
+ *          thirdState: acquisition complete and still armed
+ *          fourthState: start draining memory
+ */
+StateMachine::StateSelector Pco::smExternalAcquireImage()
+{
+	StateMachine::StateSelector result;
+    if(!receiveImages())
+    {
+        result = StateMachine::firstState;
+    }
+    else
+    {
+		if(paramStorageMode == DllApi::storageModeRecorder)
+		{
+			// Burst mode, start reading the memory
+			readFirstMemoryImage();
+			result = StateMachine::fourthState;
+		}
+		else if(triggerMode == DllApi::triggerAuto)
+		{
+			// Normal mode, automatic triggering
+			acquisitionComplete();
+			doDisarm();
+			result = StateMachine::secondState;
+		}
+		else
+		{
+			// Normal mode, non-automatic triggering
+			acquisitionComplete();
+			result = StateMachine::thirdState;
+		}
+    }
+    return result;
+}
+
+/**
+ * Handle an image during memory draining.
+ * Returns: firstState: further images to be drained
+ *          secondState: acquisition complete and disarmed
+ *          thirdState: acquisition complete and still armed
+ */
+StateMachine::StateSelector Pco::smDrainImage()
+{
+	StateMachine::StateSelector result;
+	// Process this image and read next
+	if(readNextMemoryImage())
+	{
+		// More draining to perform
+		result = StateMachine::firstState;
+	}
+	else if((triggerMode == DllApi::triggerAuto) || (triggerMode == DllApi::triggerExternalOnly))
+	{
+		// Complete and disarmed
+	    this->api->clearRamSegment(this->camera);
+		acquisitionComplete();
+		doDisarm();
+		discardImages();
+		result = StateMachine::secondState;
+	}
+	else
+	{
+		// Complete but still armed
+	    this->api->clearRamSegment(this->camera);
+		acquisitionComplete();
+		discardImages();
+		result = StateMachine::thirdState;
+	}
+	return result;
+}
+
+/**
+ * Handle an image during unarmed memory draining.
+ * Returns: firstState: further images to be drained
+ *          secondState: acquisition complete and disarmed
+ *          thirdState: acquisition complete and still armed
+ */
+StateMachine::StateSelector Pco::smExternalDrainImage()
+{
+	StateMachine::StateSelector result;
+	// Process this image and read next
+	if(readNextMemoryImage())
+	{
+		// More to handle
+		result = StateMachine::firstState;
+	}
+	else if(triggerMode == DllApi::triggerAuto)
+	{
+		// Normal mode, automatic triggering
+	    this->api->clearRamSegment(this->camera);
+		acquisitionComplete();
+		doDisarm();
+		discardImages();
+		result = StateMachine::secondState;
+	}
+	else
+	{
+		// Normal mode, non-automatic triggering
+	    this->api->clearRamSegment(this->camera);
+		acquisitionComplete();
+		discardImages();
+		result = StateMachine::thirdState;
+	}
+	return result;
+}
+
+/**
+ * Start reading the camera's internal memory
+ */
+void Pco::readFirstMemoryImage()
+{
+	// Read the first image
+	this->api->cancelImages(this->camera);
+	try
+	{
+		this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
+	}
+	catch(PcoException&)
+	{
+	}
+	memoryImageCounter = 1;
+	this->api->getImageEx(this->camera, /*segment=*/1, memoryImageCounter,
+		memoryImageCounter, /*bufferNumber=*/0, 
+		this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+	discardImages();
+	// Get an ND array
+	NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+	if(image != NULL)
+	{
+		// Copy the image into an NDArray
+		::memcpy(image->pData, this->buffers[0].buffer,
+				this->xCamSize*this->yCamSize*sizeof(unsigned short));
+		// And pass it to the state machine
+		this->receivedImageQueue.send(&image, sizeof(NDArray*));
+	}
+	this->post(Pco::requestImageReceived);
+}
+
+/**
+ * Process the previous image and read the next image from the camera's internal memory.
+ * Returns true if another image is read.
+ */
+bool Pco::readNextMemoryImage()
+{
+	bool result = false;
 	// Get the image from the queue
 	NDArray* image;
     this->receivedImageQueue.tryReceive(&image, sizeof(NDArray*));
@@ -719,44 +884,9 @@ StateMachine::StateSelector Pco::smUnarmedDrainImage()
 			this->receivedImageQueue.send(&image, sizeof(NDArray*));
 		}
 		this->post(Pco::requestImageReceived);
-		result = StateMachine::firstState;
-	}
-	else
-	{
-		// Acquisition complete
-		acquisitionComplete();
-		doDisarm();
-		discardImages();
-		result = StateMachine::secondState;
+		result = true;
 	}
 	return result;
-}
-
-/**
- * Handle an image during an externally triggered acquisition.
- * Returns: firstState: further images to be acquired
- *          secondState: acquisition complete and disarmed
- *          thirdState: acquisition complete and still armed
- */
-StateMachine::StateSelector Pco::smExternalAcquireImage()
-{
-	StateMachine::StateSelector result;
-    if(!receiveImages())
-    {
-        result = StateMachine::firstState;
-    }
-    else if(triggerMode == DllApi::triggerAuto)
-    {
-        acquisitionComplete();
-        doDisarm();
-        result = StateMachine::secondState;
-    }
-    else
-    {
-        acquisitionComplete();
-        result = StateMachine::thirdState;
-    }
-    return result;
 }
 
 /**
@@ -842,11 +972,13 @@ StateMachine::StateSelector Pco::smStopAcquisition()
     {
         acquisitionComplete();
         doDisarm();
+		discardImages();
         result = StateMachine::firstState;
     }
     else
     {
         acquisitionComplete();
+		discardImages();
         result = StateMachine::secondState;
     }
     return result;
@@ -1343,6 +1475,37 @@ void Pco::onReboot(TakeLock& takeLock)
 	default:
 		break;
 	}
+}
+
+/**
+ * Force get the top image (experimental fix for PCO4000 jamming issue)
+ */
+void Pco::onGetImage(TakeLock& takeLock)
+{
+	try
+	{
+		this->api->cancelImages(this->camera);
+		this->api->getImageEx(this->camera, /*segment=*/1, 0,
+			0, /*bufferNumber=*/0, 
+			this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+		// Get an ND array
+		NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+		if(image != NULL)
+		{
+			// Copy the image into an NDArray
+			::memcpy(image->pData, this->buffers[0].buffer,
+					this->xCamSize*this->yCamSize*sizeof(unsigned short));
+			// And pass it to the state machine
+			this->receivedImageQueue.send(&image, sizeof(NDArray*));
+			this->post(Pco::requestImageReceived);
+		}
+		addAvailableBufferAll();
+	}
+	catch(PcoException&)
+	{
+	}
+
+	paramGetImage = 0;
 }
 
 /**
@@ -2205,22 +2368,6 @@ void Pco::nowAcquiring() throw()
 void Pco::acquisitionComplete() throw()
 {
 	TakeLock takeLock(this);
-// JAT: I can't do this as it messes up the armed --> armed transition
-#if 0
-	this->api->stopFrameCapture();
-	this->api->cancelImages(this->camera);
-	try
-	{
-		this->api->setRecordingState(this->camera, DllApi::recorderStateOff);
-	}
-	catch(PcoException&)
-	{
-	}
-	if(this->imageMode == ADImageBurst)
-	{
-		readStoredFrames();
-	}
-#endif
     paramADStatus = ADStatusIdle;
     paramADAcquire = 0;
     this->triggerTimer->stop();
@@ -2441,49 +2588,6 @@ void Pco::processFrame(NDArray* image)
 			}
 		}
 	}
-}
-
-/**
- * Read out the images from the camera's internal memory.
- */
-void Pco::readStoredFrames()
-{
-	try
-	{
-		unsigned long memoryImageCounter = 1;
-		// Read frames until capture complete
-		while(this->numImagesCounter < this->numImages)
-		{
-			// Read a frame from memory
-			this->api->getImageEx(this->camera, /*segment=*/1, memoryImageCounter,
-				memoryImageCounter, /*bufferNumber=*/0, 
-				this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
-			// Get an ND array
-			NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
-			if(image != NULL)
-			{
-				// Copy the image into an NDArray
-				::memcpy(image->pData, this->buffers[0].buffer,
-						this->xCamSize*this->yCamSize*sizeof(unsigned short));
-			}
-			// Continue processing the image
-			if(image != NULL)
-			{
-				processFrame(image);
-			}
-			// Update statistics
-			TakeLock takeLock(this);
-			paramADNumExposuresCounter = this->numExposuresCounter;
-			paramImageNumber = this->lastImageNumber;
-			paramCamRamUseFrames = paramCamRamUseFrames - 1;
-			memoryImageCounter++;
-		}
-	}
-    catch(PcoException& e)
-    {
-        errorTrace << "Burst buffer fault: " << e.what() << std::endl;
-        outputStatusMessage(e.what());
-    }
 }
 
 /**

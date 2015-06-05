@@ -100,6 +100,7 @@ public:
 	IntegerParam paramBuffersReady;
 	IntegerParam paramFrameStatusErrors;
 	IntegerParam paramIsEdge;
+	IntegerParam paramGetImage;
 
 // Constants
 public:
@@ -304,8 +305,10 @@ private:
     void onCoolingSetpoint(TakeLock& takeLock);
     void onADTemperature(TakeLock& takeLock);
     void onReboot(TakeLock& takeLock);
-	void readStoredFrames();
+	void onGetImage(TakeLock& takeLock);
 	void processFrame(NDArray* image);
+	void readFirstMemoryImage();
+	bool readNextMemoryImage();
 
 public:
     // States
@@ -313,12 +316,12 @@ public:
 	const StateMachine::State* stateUnconnected;
 	const StateMachine::State* stateIdle;
     const StateMachine::State* stateArmed;
-    const StateMachine::State* stateArmedDelay;
     const StateMachine::State* stateAcquiring;
 	const StateMachine::State* stateUnarmedAcquiring;
-    const StateMachine::State* stateUnarmedAcquiringDelay;
 	const StateMachine::State* stateExternalAcquiring;
 	const StateMachine::State* stateUnarmedDraining;
+	const StateMachine::State* stateExternalDraining;
+	const StateMachine::State* stateDraining;
 	// Events
     const StateMachine::Event* requestInitialise;
 	const StateMachine::Event* requestTimerExpiry;
@@ -338,7 +341,7 @@ public:
     StateMachine::StateSelector smPollWhileAcquiring();
     StateMachine::StateSelector smPollWhileDraining();
     StateMachine::StateSelector smRequestArm();
-    StateMachine::StateSelector smArmCompleteAcquire();
+    StateMachine::StateSelector smArmAndAcquire();
     StateMachine::StateSelector smAcquire();
     StateMachine::StateSelector smDiscardImages();
     StateMachine::StateSelector smRequestReboot();
@@ -352,8 +355,9 @@ public:
     StateMachine::StateSelector smTrigger();
     StateMachine::StateSelector smStopAcquisition();
     StateMachine::StateSelector smExternalStopAcquisition();
-    StateMachine::StateSelector smArmComplete();
     StateMachine::StateSelector smUnarmedDrainImage();
+    StateMachine::StateSelector smExternalDrainImage();
+    StateMachine::StateSelector smDrainImage();
 };
 
 #endif
