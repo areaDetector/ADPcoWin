@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2614
-y 38
+x 3279
+y 814
 w 397
 h 525
 font "arial-bold-r-12.0"
@@ -49,7 +49,7 @@ release 0
 x 5
 y 5
 w 380
-h 330
+h 335
 lineColor index 14
 fill
 fillColor index 3
@@ -525,9 +525,9 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 75
-y 315
-w 45
+x 315
+y 275
+w 50
 h 15
 controlPv "$(P)$(R)IMAGE_NUMBER_RBV"
 fgColor index 16
@@ -544,8 +544,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 315
+x 250
+y 275
 w 56
 h 12
 font "helvetica-bold-r-10.0"
@@ -564,8 +564,8 @@ beginObjectProperties
 major 4
 minor 4
 release 0
-x 265
-y 310
+x 275
+y 315
 w 100
 h 20
 fgColor index 43
@@ -610,45 +610,7 @@ x 75
 y 215
 w 45
 h 15
-controlPv "$(P)$(R)BUFFERQUEUEREADFAILURES_RBV"
-fgColor index 16
-fgAlarm
-bgColor index 10
-fill
-font "helvetica-bold-r-10.0"
-fontAlign "center"
-endObjectProperties
-
-# (Textupdate)
-object TextupdateClass
-beginObjectProperties
-major 10
-minor 0
-release 0
-x 75
-y 235
-w 45
-h 15
-controlPv "$(P)$(R)BUFFERSWITHNODATA_RBV"
-fgColor index 16
-fgAlarm
-bgColor index 10
-fill
-font "helvetica-bold-r-10.0"
-fontAlign "center"
-endObjectProperties
-
-# (Textupdate)
-object TextupdateClass
-beginObjectProperties
-major 10
-minor 0
-release 0
-x 75
-y 255
-w 45
-h 15
-controlPv "$(P)$(R)MISPLACEDBUFFERS_RBV"
+controlPv "$(P)$(R)INVALID_FRAMES_RBV"
 fgColor index 16
 fgAlarm
 bgColor index 10
@@ -701,7 +663,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
+x 10
 y 195
 w 54
 h 12
@@ -721,16 +683,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
+x 10
 y 215
-w 51
+w 61
 h 12
 font "helvetica-bold-r-10.0"
 fgColor index 14
 bgColor index 3
 useDisplayBg
 value {
-  "Q Rd Fails"
+  "Invalid Frms"
 }
 autoSize
 endObjectProperties
@@ -741,47 +703,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 235
-w 58
-h 12
-font "helvetica-bold-r-10.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "Buffs N Dat"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 15
-y 255
-w 55
-h 12
-font "helvetica-bold-r-10.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "Misp Buffs"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 15
+x 10
 y 275
 w 53
 h 12
@@ -801,16 +723,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
+x 10
 y 295
-w 40
+w 53
 h 12
 font "helvetica-bold-r-10.0"
 fgColor index 14
 bgColor index 3
 useDisplayBg
 value {
-  "Drv Errs"
+  "Driver Errs"
 }
 autoSize
 endObjectProperties
@@ -1151,16 +1073,16 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 250
-y 235
-w 37
+x 10
+y 315
+w 57
 h 12
 font "helvetica-bold-r-10.0"
 fgColor index 14
 bgColor index 3
 useDisplayBg
 value {
-  "Cap Err"
+  "Capture Err"
 }
 autoSize
 endObjectProperties
@@ -1171,9 +1093,9 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 305
-y 235
-w 60
+x 75
+y 315
+w 45
 h 15
 controlPv "$(P)$(R)CAPTURE_ERRORS_RBV"
 fgColor index 16
@@ -1190,9 +1112,9 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 315
-y 255
-w 50
+x 75
+y 235
+w 45
 h 15
 controlPv "$(P)$(R)CAPTURE_ERRORS_RBV"
 fgColor index 16
@@ -1209,8 +1131,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 250
-y 255
+x 10
+y 235
 w 60
 h 12
 font "helvetica-bold-r-10.0"
@@ -1300,5 +1222,83 @@ visPv "$(P)$(R)IS_EDGE_RBV"
 visInvert
 visMin "0"
 visMax "1"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 10
+y 255
+w 58
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Wait Faults"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 75
+y 255
+w 45
+h 15
+controlPv "$(P)$(R)FRAME_WAIT_FAULTS_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 250
+y 295
+w 59
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Polled Frms"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 315
+y 295
+w 50
+h 15
+controlPv "$(P)$(R)POLL_GET_FRAMES_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
 endObjectProperties
 
