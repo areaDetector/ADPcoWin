@@ -121,7 +121,7 @@ protected:
 	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode);
 	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
 		unsigned long seg2, unsigned long seg3, unsigned long seg4);
-	virtual void doStartFrameCapture();
+	virtual void doStartFrameCapture(bool useGetImage);
 	virtual void doStopFrameCapture();
 
 // Overrides of epicsThreadRunable
@@ -132,7 +132,7 @@ public:
 protected:
     enum {numberOfRunningEvents = DllApi::maxNumBuffers+1};
     enum {numberOfWaitingEvents = 1};
-    enum {waitTimeoutMs = 1000};
+    enum {waitTimeoutMs = 5000};
     enum {stopEventIndex=0, firstBufferEventIndex=1};
 
 
@@ -146,11 +146,10 @@ protected:
     } buffers[DllApi::maxNumBuffers];
     Handle stopEvent;
     Handle startEvent;
-    int queueHead;
-    int queueTail;
     bool buffersValid;
 	Handle handle;
 	epicsMutex frameLock;
+	bool useGetImage;
 
 // Functions
 protected:

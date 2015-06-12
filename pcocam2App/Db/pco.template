@@ -411,30 +411,6 @@ record(longin, "$(P)$(R)OUTOFNDARRAYS_RBV")
     field(SCAN, "I/O Intr")
 }
 
-# Error counter, buffer queue read failures
-record(longin, "$(P)$(R)BUFFERQUEUEREADFAILURES_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BUFFERQUEUEREADFAILURES")
-    field(SCAN, "I/O Intr")
-}
-
-# Error counter, buffers with no data
-record(longin, "$(P)$(R)BUFFERSWITHNODATA_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BUFFERSWITHNODATA")
-    field(SCAN, "I/O Intr")
-}
-
-# Error counter, out of ND arrays
-record(longin, "$(P)$(R)MISPLACEDBUFFERS_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_MISPLACEDBUFFERS")
-    field(SCAN, "I/O Intr")
-}
-
 # Error counter, missing frames
 record(longin, "$(P)$(R)MISSINGFRAMES_RBV")
 {
@@ -875,3 +851,28 @@ record(longout, "$(P)$(R)GET_IMAGE")
     field(DTYP, "asynInt32")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_GET_IMAGE")
 }
+
+# Frame wait faults
+record(longin, "$(P)$(R)FRAME_WAIT_FAULTS_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_FRAME_WAIT_FAULTS")
+    field(SCAN, "I/O Intr")
+}
+
+# Frames read by the poll function
+record(longin, "$(P)$(R)POLL_GET_FRAMES_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_POLL_GET_FRAMES")
+    field(SCAN, "I/O Intr")
+}
+
+# Invalid frames
+record(longin, "$(P)$(R)INVALID_FRAMES_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_INVALID_FRAMES")
+    field(SCAN, "I/O Intr")
+}
+

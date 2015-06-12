@@ -21,6 +21,14 @@
 #include "TakeLock.h"
 #include "FreeLock.h"
 
+// Set this symbol to 1 if you want to be able to set
+// an arbitary ROI and binning that uses the hardware
+// as much as it can and finishes it off in software.
+// Set this symbol to 0 if you want to only do hardware
+// ROI and binning, the achieved values being reported
+// back.
+#define DO_SOFTWARE_ROI 0
+
 /** Constants
  */
 const int Pco::traceFlagsDllApi = 0x0100;
@@ -98,9 +106,6 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramClearStateRecord(this, "PCO_CLEARSTATERECORD", 0, 
 		new AsynParam::Notify<Pco>(this, &Pco::onClearStateRecord))
 , paramOutOfNDArrays(this, "PCO_OUTOFNDARRAYS", 0)
-, paramBufferQueueReadFailures(this, "PCO_BUFFERQUEUEREADFAILURES", 0)
-, paramBuffersWithNoData(this, "PCO_BUFFERSWITHNODATA", 0)
-, paramMisplacedBuffers(this, "PCO_MISPLACEDBUFFERS", 0)
 , paramMissingFrames(this, "PCO_MISSINGFRAMES", 0)
 , paramDriverLibraryErrors(this, "PCO_DRIVERLIBRARYERRORS", 0)
 , paramHwBinX(this, "PCO_HWBINX", 0)
@@ -151,6 +156,9 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramIsEdge(this, "PCO_IS_EDGE", 0)
 , paramGetImage(this, "PCO_GET_IMAGE", 0,
 		new AsynParam::Notify<Pco>(this, &Pco::onGetImage))
+, paramFrameWaitFaults(this, "PCO_FRAME_WAIT_FAULTS", 0)
+, paramPollGetFrames(this, "PCO_POLL_GET_FRAMES", 0)
+, paramInvalidFrames(this, "PCO_INVALID_FRAMES", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -1062,8 +1070,8 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	// Get more camera information
 	this->api->getTransferParameters(this->camera, &this->camTransfer);
 	this->api->getSizes(this->camera, &this->camSizes);
-	paramADMaxSizeX = (int)this->camSizes.xResActual;
-	paramADMaxSizeY = (int)this->camSizes.yResActual;
+	paramADMaxSizeX = (int)this->camDescription.maxHorzRes;
+	paramADMaxSizeY = (int)this->camDescription.maxVertRes;
 	paramADSizeX = (int)this->camSizes.xResActual;
 	paramADSizeY = (int)this->camSizes.yResActual;
 	paramCamlinkClock = (int)this->camTransfer.clockFrequency;
@@ -1353,7 +1361,6 @@ bool Pco::pollCamera()
 		paramAcqEnable = (int)acqEnable;
 	    paramCamRamUse = ramUsePercent;
 		paramCamRamUseFrames = ramUseFrames;
-		paramCaptureErrors = this->api->captureErrors;
     }
     catch(PcoException& e)
     {
@@ -1484,9 +1491,9 @@ void Pco::onGetImage(TakeLock& takeLock)
 {
 	try
 	{
-		this->api->cancelImages(this->camera);
+		TakeLock(&this->apiLock);
 		this->api->getImageEx(this->camera, /*segment=*/1, 0,
-			0, /*bufferNumber=*/0, 
+			0, /*bufferNumber=*/Pco::getImageBuffer, 
 			this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
 		// Get an ND array
 		NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
@@ -1499,12 +1506,10 @@ void Pco::onGetImage(TakeLock& takeLock)
 			this->receivedImageQueue.send(&image, sizeof(NDArray*));
 			this->post(Pco::requestImageReceived);
 		}
-		addAvailableBufferAll();
 	}
 	catch(PcoException&)
 	{
 	}
-
 	paramGetImage = 0;
 }
 
@@ -1543,57 +1548,188 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
 }
 
 /**
- * A frame has been received.
- * Returns true if the buffer was handed to us for processing, false otherwise.
+ * A frame has been received.  This is an indication that
+ * a frame is ready in the specified buffer.  We must also
+ * check all buffers from the last frame to this one for
+ * valid frames otherwise things may go out of order.
  */
-bool Pco::frameReceived(int bufferNumber)
+void Pco::frameReceived(int bufferNumber)
 {
 // JAT: This version needs a lock to avoid reentrant calls to the dll
 //      We need to get the image out of the DLL buffer as soon as possible
 //      and return the buffer to the DLL.  Otherwise, the edge at high
 //      rates loses frames.
-	bool result = false;
-	// Get the buffer status
-	unsigned long statusDll;
-	unsigned long statusDrv;
-	this->api->getBufferStatus(this->camera, bufferNumber, &statusDll, &statusDrv);
-	if((statusDll & DllApi::statusDllEventSet) != 0)
+	// We need to grab the API for the whole of this function
+	TakeLock takeLock(&this->apiLock);
+	// Try receiving from the current head to the given buffer number
+	int tryBuffer;
+	bool going = true;
+	do
 	{
-		// Buffer is good for further processing
-		result = true;
-		if(statusDrv == 0)
+		tryBuffer = this->queueHead;
+		// Get the buffer status
+		unsigned long statusDll;
+		unsigned long statusDrv;
+		this->api->getBufferStatus(this->camera, tryBuffer, &statusDll, &statusDrv);
+		if((statusDll & DllApi::statusDllEventSet) != 0)
 		{
-			// Copy the image from the buffer into a frame
+			// Buffer is good for further processing
+			// No error or buffer cancelled.
+			if(statusDrv == 0 || (statusDrv & 0xffff) ==  0x2010)
+			{
+				// Copy the image from the buffer into a frame
+				NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+				if(image != NULL)
+				{
+					// Copy the image into an NDArray
+					::memcpy(image->pData, this->buffers[tryBuffer].buffer,
+							this->xCamSize*this->yCamSize*sizeof(unsigned short));
+					// And pass it to the state machine
+					this->receivedImageQueue.send(&image, sizeof(NDArray*));
+					this->post(Pco::requestImageReceived);
+				}
+			}
+			else
+			{
+				// There was an error associated with the frame
+				TakeLock takeLock(this);
+				paramFrameStatusErrors = paramFrameStatusErrors + 1;
+			}
+			// Give the buffer back to the driver
+			this->api->addBufferEx(this->camera, /*firstImage=*/0,
+				/*lastImage=*/0, tryBuffer,
+				this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+		}
+		else
+		{
+			// Buffer has not been given to us
+			TakeLock takeLock(this);
+			paramCaptureErrors = paramCaptureErrors + 1;
+			going = false;
+		}
+		if(going)
+		{
+			this->queueHead = (tryBuffer + 1) % this->fifoQueueSize;
+		}
+	}
+	while(tryBuffer != bufferNumber && going);
+}
+
+/**
+ * The driver dll is signalling a fault while waiting for a frame
+ */
+void Pco::frameWaitFault()
+{
+	TakeLock takeLock(this);
+	paramFrameWaitFaults = paramFrameWaitFaults + 1;
+}
+
+/**
+ * Get frames from the PCO4000.  This version
+ * uses the getImageEx function to receive
+ * images from the camera rather than the usual
+ * event driven system.
+ */
+void Pco::getFrames()
+{
+	try
+	{
+		// We need to grab the API for the whole of this function
+		TakeLock takeLock(&this->apiLock);
+		// Are there any frames in memory?
+		unsigned long maxImages;
+		unsigned long validImages;
+		this->api->getNumberOfImagesInSegment(this->camera, /*segment=*/1, &validImages, &maxImages);
+		while(validImages > 0 && !this->api->isStopped())
+		{
+			// Try to receive an image
+			this->api->getImageEx(this->camera, /*segment=*/1, 0,
+				0, /*bufferNumber=*/Pco::getImageBuffer, 
+				this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+			// Get an ND array
 			NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
 			if(image != NULL)
 			{
 				// Copy the image into an NDArray
-				::memcpy(image->pData, this->buffers[bufferNumber].buffer,
+				::memcpy(image->pData, this->buffers[Pco::getImageBuffer].buffer,
 						this->xCamSize*this->yCamSize*sizeof(unsigned short));
 				// And pass it to the state machine
 				this->receivedImageQueue.send(&image, sizeof(NDArray*));
-				this->post(Pco::requestImageReceived);
+			}
+			this->post(Pco::requestImageReceived);
+			// More frames?
+			this->api->getNumberOfImagesInSegment(this->camera, /*segment=*/1, &validImages, &maxImages);
+		}
+	}
+	catch(PcoException&)
+	{
+	}
+}
+
+/**
+ * The driver is asking for a frame ready poll.
+ */
+void Pco::pollForFrames()
+{
+	// The PCO4000 sometimes jams up, here we extract stuck frames
+	if(this->camType.camType == DllApi::cameraType4000 &&
+		this->storageMode == DllApi::storageModeFifoBuffer)
+	{
+		// We need to grab the API for the whole of this function
+		TakeLock takeLock(&this->apiLock);
+		unsigned long validImages;
+		bool anyReady = false;
+		do
+		{
+			// Are there any frames in memory?
+			unsigned long maxImages;
+			this->api->getNumberOfImagesInSegment(this->camera, /*segment=*/1, &validImages, &maxImages);
+			// See if any of the queue buffers admit to being ready
+			unsigned long statusDll;
+			unsigned long statusDrv;
+			for(int i=0; i<this->fifoQueueSize; i++)
+			{
+				this->api->getBufferStatus(this->camera, this->buffers[i].bufferNumber, &statusDll, &statusDrv);
+				if((statusDll & DllApi::statusDllEventSet) != 0)
+				{
+					anyReady = true;
+				}
+			}
+			// If there's no buffers ready and frames in memory, try to recover
+			if(validImages > 3 && !anyReady)
+			{
+
+				// This version does a get
+				try
+				{
+					printf("#### Getting an image\n");
+					this->api->getImageEx(this->camera, /*segment=*/1, 0,
+						0, /*bufferNumber=*/Pco::getImageBuffer, 
+						this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+				}
+				catch(PcoException&)
+				{
+					TakeLock takeLock(this);
+					paramDriverLibraryErrors = paramDriverLibraryErrors + 1;
+				}
+				// Get an ND array
+				NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+				if(image != NULL)
+				{
+					// Copy the image into an NDArray
+					::memcpy(image->pData, this->buffers[0].buffer,
+							this->xCamSize*this->yCamSize*sizeof(unsigned short));
+					// And pass it to the state machine
+					this->receivedImageQueue.send(&image, sizeof(NDArray*));
+					this->post(Pco::requestImageReceived);
+				}
+				// Count frames read by the poll
+				TakeLock takeLock(this);
+				paramPollGetFrames = paramPollGetFrames + 1;
 			}
 		}
-		else
-		{
-			// There was an error associated with the frame
-			TakeLock takeLock(this);
-			paramFrameStatusErrors = paramFrameStatusErrors + 1;
-		}
-		// Give the buffer back to the driver
-		TakeLock takeLock(&this->apiLock);
-		this->api->addBufferEx(this->camera, /*firstImage=*/0,
-			/*lastImage=*/0, bufferNumber,
-			this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+		while(validImages > 3 && !anyReady);
 	}
-	else
-	{
-		// Buffer has not been given to us
-		TakeLock takeLock(this);
-		paramCaptureErrors = paramCaptureErrors + 1;
-	}
-	return result;
 }
 
 /**
@@ -1819,10 +1955,12 @@ void Pco::addAvailableBuffer(int index) throw(PcoException)
  */
 void Pco::addAvailableBufferAll() throw(PcoException)
 {
-    for(int i=0; i<Pco::numApiBuffers; i++)
+	this->queueHead = 0;
+    for(int i=0; i<Pco::numQueuedBuffers; i++)
     {
         addAvailableBuffer(i);
     }
+	this->fifoQueueSize = Pco::numQueuedBuffers;
 }
 
 /**
@@ -1882,6 +2020,9 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->recoderSubmode = paramRecorderSubmode;
 	this->storageMode = paramStorageMode;
 
+	// Clear error counters
+	this->clearErrorCounters();
+
 	// Configure the camera (reading back the actual settings)
 	this->api->setSensorFormat(this->camera, 0);
 	if(this->camType.camType == DllApi::cameraType4000)
@@ -1913,6 +2054,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	paramADMinY = this->reqRoiStartY;
 	paramADSizeX = this->reqRoiSizeX;
 	paramADSizeY = this->reqRoiSizeY;
+	paramADBinX = this->reqBinX;
+	paramADBinY = this->reqBinY;
 	paramADTriggerMode = this->triggerMode;
 	paramTimestampMode = this->timestampMode;
 	paramAcquireMode = this->acquireMode;
@@ -1938,6 +2081,13 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 		gangConnection->sendMemberConfig(takeLock);
 	}
 
+	// Should we use the special PCO4000 poll mode to avoid the wierdo FIFO
+	// jamming up problem?
+	this->useGetFrames = this->camType.camType == DllApi::cameraType4000 &&
+		this->storageMode == DllApi::storageModeFifoBuffer &&
+		this->acquisitionPeriod >= 0.1 &&
+		(this->triggerMode == DllApi::triggerExternal || this->triggerMode == DllApi::triggerExternalOnly);
+
 	// Now Arm the camera, so it is ready to take images, all settings should have been made by now
 	this->api->arm(this->camera);
 
@@ -1948,10 +2098,13 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	}
 
 	// Start the api capturing frames
-	this->api->startFrameCapture();
+	this->api->startFrameCapture(this->useGetFrames);
 
-	// Give the buffers to the camera
-	this->addAvailableBufferAll();
+	// Give the buffers to the camera unless we are using get frame poll mode
+	if(this->useGetFrames)
+	{
+		this->addAvailableBufferAll();
+	}
 	this->lastImageNumber = 0;
 	this->lastImageNumberValid = false;
 
@@ -2101,7 +2254,14 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
     {
         // Not a binning the camera can do
         this->hwBinX = Pco::defaultHorzBin;
-        this->swBinX = this->reqBinX;
+#if DO_SOFTWARE_ROI
+		// Software to do the job
+		this->swBinX = this->reqBinX;
+#else
+		// Don't do ones hardware cannot manage
+		this->swBinX = Pco::defaultHorzBin;
+		this->reqBinX = Pco::defaultHorzBin;
+#endif
     }
     else
     {
@@ -2113,7 +2273,14 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
     {
         // Not a binning the camera can do
         this->hwBinY = Pco::defaultVertBin;
+#if DO_SOFTWARE_ROI
+		// Software to do the job
         this->swBinY = this->reqBinY;
+#else
+		// Don't do ones hardware cannot manage
+		this->swBinY = Pco::defaultVertBin;
+		this->reqBinY = Pco::defaultVertBin;
+#endif
     }
     else
     {
@@ -2186,14 +2353,29 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
 
     // Work out the software ROI that cuts off the remaining bits in coordinates
     // relative to the hardware ROI
+#if DO_SOFTWARE_ROI
+	// Version that does SW ROI to complete the job
     this->swRoiStartX = this->reqRoiStartX - this->hwRoiX1;
     this->swRoiStartY = this->reqRoiStartY - this->hwRoiY1;
     this->swRoiSizeX = this->reqRoiSizeX;
     this->swRoiSizeY = this->reqRoiSizeY;
+#else
+	// Version that just accepts what the HW ROI can do
+	this->swRoiStartX = 0;
+	this->swRoiStartY = 0;
+    this->swRoiSizeX = this->hwRoiX2 - this->hwRoiX1;
+    this->swRoiSizeY = this->hwRoiY2 - this->hwRoiY1;
+#endif
 
     // Record the size of the frame coming from the camera
     this->xCamSize = this->hwRoiX2 - this->hwRoiX1;
     this->yCamSize = this->hwRoiY2 - this->hwRoiY1;
+
+	// Record the ROI parameters achieved
+	this->reqRoiStartX = this->swRoiStartX + this->hwRoiX1;
+	this->reqRoiStartY = this->swRoiStartY + this->hwRoiY1;
+	this->reqRoiSizeX = this->swRoiSizeX;
+	this->reqRoiSizeY = this->swRoiSizeY;
 
     // Now change to 1 based coordinates and inclusive end, set the ROI
     // in the hardware
@@ -2344,14 +2526,6 @@ void Pco::nowAcquiring() throw()
     // Clear counters
     this->numImagesCounter = 0;
     this->numExposuresCounter = 0;
-    paramOutOfNDArrays = 0;
-    paramBufferQueueReadFailures = 0;
-    paramBuffersWithNoData = 0;
-    paramMisplacedBuffers = 0;
-    paramMissingFrames = 0;
-    paramDriverLibraryErrors = 0;
-	paramCaptureErrors = 0;
-	paramFrameStatusErrors = 0;
     // Set info
     paramADStatus = ADStatusReadout;
     paramADAcquire = 1;
@@ -2360,6 +2534,22 @@ void Pco::nowAcquiring() throw()
     paramNDArraySizeY = this->yCamSize;
     paramADNumImagesCounter = this->numImagesCounter;
     paramADNumExposuresCounter = this->numExposuresCounter;
+}
+
+/**
+ * Clear the error counters.
+ */
+void Pco::clearErrorCounters()
+{
+	TakeLock takeLock(this);
+    paramOutOfNDArrays = 0;
+    paramMissingFrames = 0;
+    paramDriverLibraryErrors = 0;
+	paramCaptureErrors = 0;
+	paramFrameStatusErrors = 0;
+	paramPollGetFrames = 0;
+	paramFrameWaitFaults = 0;
+	paramInvalidFrames = 0;
 }
 
 /**
@@ -2378,11 +2568,16 @@ void Pco::acquisitionComplete() throw()
  */
 void Pco::doDisarm() throw()
 {
-	TakeLock lock(this);
-    paramArmMode = 0;
-	paramArmComplete = 0;
-	this->api->stopFrameCapture();
-    this->freeImageBuffers();
+	{
+		TakeLock lock(&this->apiLock);
+		this->api->stopFrameCapture();
+		this->freeImageBuffers();
+	}
+	{
+		TakeLock lock(this);
+		paramArmMode = 0;
+		paramArmComplete = 0;
+	}
 }
 
 /**
@@ -2580,13 +2775,18 @@ void Pco::processFrame(NDArray* image)
 			{
                 this->gangConnection->sendImage(image, this->numImagesCounter);
 			}
-			if(!this->gangServer ||
+			if(this->gangServer == NULL ||
                 	!gangServer->imageReceived(this->numImagesCounter, image))
 			{
                 // Gang system did not consume it, pass it on now
                 imageComplete(image);
 			}
 		}
+	}
+	else
+	{
+		TakeLock takeLock(this);
+		paramInvalidFrames = paramInvalidFrames + 1;
 	}
 }
 

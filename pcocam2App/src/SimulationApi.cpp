@@ -1289,7 +1289,7 @@ int SimulationApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
 /*
  * Start the frame acquisition thread
  */
-void SimulationApi::doStartFrameCapture()
+void SimulationApi::doStartFrameCapture(bool useGetImage)
 {
 }
 

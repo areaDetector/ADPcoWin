@@ -51,9 +51,6 @@ public:
     StringParam paramStateRecord;
     IntegerParam paramClearStateRecord;
     IntegerParam paramOutOfNDArrays;
-    IntegerParam paramBufferQueueReadFailures;
-    IntegerParam paramBuffersWithNoData;
-    IntegerParam paramMisplacedBuffers;
     IntegerParam paramMissingFrames;
     IntegerParam paramDriverLibraryErrors;
     IntegerParam paramHwBinX;
@@ -101,6 +98,9 @@ public:
 	IntegerParam paramFrameStatusErrors;
 	IntegerParam paramIsEdge;
 	IntegerParam paramGetImage;
+	IntegerParam paramFrameWaitFaults;
+	IntegerParam paramPollGetFrames;
+	IntegerParam paramInvalidFrames;
 
 // Constants
 public:
@@ -129,7 +129,7 @@ public:
     static const int defaultRoiMinY;
     static const int defaultExposureTime;
     static const int defaultDelayTime;
-    enum {numApiBuffers=8};
+    enum {numQueuedBuffers=2, numApiBuffers=8, getImageBuffer=7};
     static const int edgeXSizeNeedsReducedCamlink;
     static const int edgePixRateNeedsReducedCamlink;
     static const int edgeBaudRate;
@@ -147,7 +147,10 @@ public:
 // API for use by component classes
 public:
     void post(const StateMachine::Event* req);
-    bool frameReceived(int bufferNumber);
+    void frameReceived(int bufferNumber);
+	void getFrames();
+	void pollForFrames();
+	void frameWaitFault();
     void trace(int flags, const char* format, ...);
     asynUser* getAsynUser();
     void registerDllApi(DllApi* api);
@@ -182,6 +185,7 @@ private:
         DllApi::Handle eventHandle;
         bool ready;
     } buffers[Pco::numApiBuffers];
+    int queueHead;
     long lastImageNumber;
     bool lastImageNumberValid;
     epicsMessageQueue receivedImageQueue;
@@ -253,6 +257,8 @@ private:
     GangConnection* gangConnection;
 	epicsMutex apiLock;
 	unsigned long memoryImageCounter;
+	int fifoQueueSize;
+	bool useGetFrames;
 
 public:
     static std::map<std::string, Pco*> thePcos;
@@ -267,6 +273,7 @@ private:
     void doArm() throw(std::bad_alloc, PcoException);
     void doDisarm() throw();
     void nowAcquiring() throw();
+	void clearErrorCounters();
     void startCamera() throw();
     void allocateImageBuffers() throw(std::bad_alloc, PcoException);
     void freeImageBuffers() throw();

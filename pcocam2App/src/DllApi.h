@@ -217,7 +217,7 @@ protected:
 	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode) = 0;
 	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
 		unsigned long seg2, unsigned long seg3, unsigned long seg4) = 0;
-	virtual void doStartFrameCapture() = 0;
+	virtual void doStartFrameCapture(bool useGetImage) = 0;
 	virtual void doStopFrameCapture() = 0;
 
 // API for Pco class
@@ -310,17 +310,15 @@ public:
 	void setNoiseFilterMode(Handle handle, unsigned short mode) throw(PcoException);
 	void setCameraRamSegmentSize(Handle handle, unsigned long seg1, unsigned long seg2,
 		unsigned long seg3, unsigned long seg4) throw(PcoException);
-	void startFrameCapture();
+	void startFrameCapture(bool useGetImage);
 	void stopFrameCapture();
-
-// Error counters
-public:
-	int captureErrors;
+	bool isStopped();
 
 // Members
 protected:
     Pco* pco;
     TraceStream* trace;
+	bool stopped;
 };
 
 #endif /* DLLAPI_H_ */

@@ -32,6 +32,7 @@ PcoApi::PcoApi(Pco* pco, TraceStream* trace)
 : DllApi(pco, trace)
 , thread(*this, "PcoApi", epicsThreadGetStackSize(epicsThreadStackMedium))
 , buffersValid(false)
+, useGetImage(false)
 {
     // Initialise the buffer information
     for(int i=0; i<DllApi::maxNumBuffers; i++)
@@ -39,8 +40,6 @@ PcoApi::PcoApi(Pco* pco, TraceStream* trace)
         this->buffers[i].addedToDll = false;
         this->buffers[i].eventHandle = NULL;
     }
-    this->queueHead = 0;
-    this->queueTail = 0;
     // Create the start/stop events
     this->startEvent = ::CreateEvent(NULL, TRUE, FALSE, "StartEvent");
     this->stopEvent = ::CreateEvent(NULL, TRUE, FALSE, "StopEvent");
@@ -77,45 +76,65 @@ void PcoApi::run()
             bool running = true;
             while(running)
             {
-                // Wait for an image or the stop event
-                HANDLE runEvents[PcoApi::numberOfRunningEvents];
-                runEvents[PcoApi::stopEventIndex] = this->stopEvent;
-                for(int i=0; i<DllApi::maxNumBuffers; i++)
-                {
-					if(this->buffers[i].eventHandle != NULL)
-					{
-						runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[i].eventHandle;
-					}
-                }
-                result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
-                    runEvents, FALSE, INFINITE);
+				if(this->useGetImage)
 				{
-					TakeLock takeLock(&frameLock);
-					if(::WaitForSingleObject(this->stopEvent, 0) == WAIT_OBJECT_0)
+					// Check for stopped
+					if(::WaitForSingleObject(this->stopEvent, 100) == WAIT_OBJECT_0)
 					{
 						// Stop event received
 						::ResetEvent(this->stopEvent);
 						running = false;
 						*trace << "#### Exiting run event loop" << std::endl;
 					}
-					else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
-						result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
+					else
 					{
-						int eventBufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
-						// Search for triggered events from the current head to the buffer number
-						int bufferNumber;
-						bool going = true;
-						do
+						// Try to get a frame
+						this->pco->getFrames();
+					}
+				}
+				else
+				{
+					// Wait for an image or the stop event
+					HANDLE runEvents[PcoApi::numberOfRunningEvents];
+					runEvents[PcoApi::stopEventIndex] = this->stopEvent;
+					for(int i=0; i<DllApi::maxNumBuffers; i++)
+					{
+						if(this->buffers[i].eventHandle != NULL)
 						{
-							bufferNumber = this->queueHead;
-							going = this->pco->frameReceived(bufferNumber);
-							if(going)
-							{
-								::ResetEvent(this->buffers[bufferNumber].eventHandle);
-								this->queueHead = (bufferNumber + 1) % DllApi::maxNumBuffers;
-							}
+							runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[i].eventHandle;
 						}
-						while(eventBufferNumber != bufferNumber && going);
+					}
+					result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
+						runEvents, FALSE, PcoApi::waitTimeoutMs);
+					{
+						// This lock prevents race conditions with the stop event signalling
+						TakeLock takeLock(&frameLock);
+						// What should we do?
+						if(result == WAIT_TIMEOUT)
+						{
+							// Do a poll
+							this->pco->pollForFrames();
+						}
+						else if(::WaitForSingleObject(this->stopEvent, 0) == WAIT_OBJECT_0)
+						{
+							// Stop event received
+							::ResetEvent(this->stopEvent);
+							running = false;
+							*trace << "#### Exiting run event loop" << std::endl;
+						}
+						else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
+							result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
+						{
+							// Handle a buffer ready
+							int eventBufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
+							this->pco->frameReceived(eventBufferNumber);
+						}
+						else
+						{
+							// Faulty exit reason
+							*trace << "#### Unhandled wait result " << result << std::endl;
+							this->pco->frameWaitFault();
+						}
 					}
 				}
             }
@@ -562,10 +581,6 @@ int PcoApi::doGetRecordingState(Handle handle, unsigned short* state)
  */
 int PcoApi::doSetRecordingState(Handle handle, unsigned short state)
 {
-    if(state == DllApi::recorderStateOn)
-    {
-		this->captureErrors = 0;
-    }
     return PCO_SetRecordingState(handle, state);
 }
 
@@ -609,8 +624,6 @@ int PcoApi::doCancelImages(Handle handle)
         ::ResetEvent(this->buffers[i].eventHandle);
         this->buffers[i].addedToDll = false;
     }
-    this->queueHead = 0;
-    this->queueTail = 0;
     return result;
 }
 
@@ -642,7 +655,7 @@ int PcoApi::doAddBufferEx(Handle handle, unsigned long firstImage, unsigned long
 {
     if(this->buffersValid)
     {
-        this->queueTail = bufferNumber;
+		::ResetEvent(this->buffers[bufferNumber].eventHandle);
         return PCO_AddBufferEx(handle, firstImage, lastImage, bufferNumber,
                 xRes, yRes, bitRes);
     }
@@ -831,8 +844,9 @@ int PcoApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
 /*
  * Start the frame acquisition thread
  */
-void PcoApi::doStartFrameCapture()
+void PcoApi::doStartFrameCapture(bool useGetImage)
 {
+	this->useGetImage = useGetImage;
     ::SetEvent(this->startEvent);
 }
 
