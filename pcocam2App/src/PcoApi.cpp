@@ -107,8 +107,6 @@ void PcoApi::run()
 					result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
 						runEvents, FALSE, PcoApi::waitTimeoutMs);
 					{
-						// This lock prevents race conditions with the stop event signalling
-						TakeLock takeLock(&frameLock);
 						// What should we do?
 						if(result == WAIT_TIMEOUT)
 						{
@@ -855,7 +853,6 @@ void PcoApi::doStartFrameCapture(bool useGetImage)
  */
 void PcoApi::doStopFrameCapture()
 {
-	TakeLock takeLock(&frameLock);
     ::SetEvent(this->stopEvent);
 }
 

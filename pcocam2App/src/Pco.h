@@ -313,6 +313,7 @@ private:
     void onADTemperature(TakeLock& takeLock);
     void onReboot(TakeLock& takeLock);
 	void onGetImage(TakeLock& takeLock);
+	void validateAndProcessFrame(NDArray* image);
 	void processFrame(NDArray* image);
 	void readFirstMemoryImage();
 	bool readNextMemoryImage();

@@ -43,7 +43,7 @@ TakeLock::TakeLock(FreeLock& freeLock)
 }
 
 /**
- * Constructor.  Use this to take an arbitary mutext.
+ * Constructor.  Use this to take an arbitary mutex.
  */
 TakeLock::TakeLock(epicsMutex* mutex)
 	: driver(NULL)

@@ -148,7 +148,6 @@ protected:
     Handle startEvent;
     bool buffersValid;
 	Handle handle;
-	epicsMutex frameLock;
 	bool useGetImage;
 
 // Functions

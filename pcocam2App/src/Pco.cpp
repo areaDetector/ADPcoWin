@@ -482,7 +482,10 @@ StateMachine::StateSelector Pco::smRequestArm()
     }
     catch(std::exception& e)
     {
-		this->api->stopFrameCapture();
+		{
+			TakeLock(&this->apiLock);
+			this->api->stopFrameCapture();
+		}
         doDisarm();
         errorTrace << "Failed to arm, " << e.what() << std::endl;
         outputStatusMessage(e.what());
@@ -518,13 +521,19 @@ StateMachine::StateSelector Pco::smArmAndAcquire()
 		}
         outputStatusMessage("");
         result = StateMachine::firstState;
-		paramArmComplete = 1;
+		{
+			TakeLock takeLock(this);
+			paramArmComplete = 1;
+		}
 		this->nowAcquiring();
 		this->startCamera();
     }
     catch(std::exception& e)
     {
-		this->api->stopFrameCapture();
+		{
+			TakeLock(&this->apiLock);
+			this->api->stopFrameCapture();
+		}
         doDisarm();
         errorTrace << "Failed to arm, " << e.what() << std::endl;
         outputStatusMessage(e.what());
@@ -866,7 +875,7 @@ bool Pco::readNextMemoryImage()
 	// Continue processing the image
 	if(image != NULL)
 	{
-		processFrame(image);
+		validateAndProcessFrame(image);
 	}
 	// Update statistics
 	TakeLock takeLock(this);
@@ -1770,14 +1779,20 @@ void Pco::allocateImageBuffers() throw(std::bad_alloc, PcoException)
     catch(std::bad_alloc& e)
     {
         // Recover from memory allocation failure
-		this->api->stopFrameCapture();
+		{
+			TakeLock(&this->apiLock);
+			this->api->stopFrameCapture();
+		}
         this->freeImageBuffers();
         throw e;
     }
     catch(PcoException& e)
     {
         // Recover from PCO camera failure
-		this->api->stopFrameCapture();
+		{
+			TakeLock(&this->apiLock);
+			this->api->stopFrameCapture();
+		}
         this->freeImageBuffers();
         throw e;
     }
@@ -2101,7 +2116,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->api->startFrameCapture(this->useGetFrames);
 
 	// Give the buffers to the camera unless we are using get frame poll mode
-	if(this->useGetFrames)
+	if(!this->useGetFrames)
 	{
 		this->addAvailableBufferAll();
 	}
@@ -2662,7 +2677,7 @@ bool Pco::receiveImages() throw()
 		else
 		{
 			// Not burst mode...
-			processFrame(image);
+			validateAndProcessFrame(image);
 			// Update statistics
 			TakeLock takeLock(this);
 			paramADNumExposuresCounter = this->numExposuresCounter;
@@ -2676,9 +2691,9 @@ bool Pco::receiveImages() throw()
 }
 
 /**
- * Process a frame that has been received into an ND array
+ * Validate and process a frame that has been received into an ND array
  */
-void Pco::processFrame(NDArray* image)
+void Pco::validateAndProcessFrame(NDArray* image)
 {
 	// If there is a binary timestamp in the frame, we can sort
 	// out the invalid frames that some cameras output when 
@@ -2699,94 +2714,109 @@ void Pco::processFrame(NDArray* image)
 		if(imageNumber != this->lastImageNumber+1)
 		{
 			printf("Missing frame, got=%ld, exp=%ld\n", imageNumber, this->lastImageNumber+1);
+			// If we are missing just one frame, duplicate this one
+			if(imageNumber == this->lastImageNumber+2)
+			{
+				printf("One frame missing, duplicating\n");
+				processFrame(image);
+			}
 			TakeLock takeLock(this);
 			paramMissingFrames = paramMissingFrames + 1;
 		}
 		this->lastImageNumber = imageNumber;
-		// Do software ROI, binning and reversal if required
-		if(this->roiRequired)
-		{
-			NDArray* scratch;
-			this->pNDArrayPool->convert(image, &scratch,
-					(NDDataType_t)this->dataType, this->arrayDims);
-			image->release();
-			image = scratch;
-		}
-		// Handle summing of multiple exposures
-		bool nextImageReady = false;
-		if(this->numExposures > 1)
-		{
-			this->numExposuresCounter++;
-			if(this->numExposuresCounter > 1)
-			{
-				switch(image->dataType)
-				{
-				case NDUInt8:
-				case NDInt8:
-					sumArray<epicsUInt8>(image, this->imageSum);
-					break;
-				case NDUInt16:
-				case NDInt16:
-					sumArray<epicsUInt16>(image, this->imageSum);
-					break;
-				case NDUInt32:
-				case NDInt32:
-					sumArray<epicsUInt32>(image, this->imageSum);
-					break;
-				default:
-					break;
-				}
-				// throw away the previous accumulator
-				this->imageSum->release();
-			}
-			// keep the sum of previous images for the next iteration
-			this->imageSum = image;
-			if(this->numExposuresCounter >= this->numExposures)
-			{
-				// we have finished accumulating
-				nextImageReady = true;
-				this->numExposuresCounter = 0;
-			}
-		}
-		else
-		{
-			nextImageReady = true;
-		}
-		if(nextImageReady)
-		{
-			// Attach the image information
-			image->uniqueId = this->arrayCounter;
-			epicsTimeStamp imageTime;
-			if(this->timestampMode == DllApi::timestampModeBinary ||
-					this->timestampMode == DllApi::timestampModeBinaryAndAscii)
-			{
-				this->extractImageTimeStamp(&imageTime,
-						(unsigned short*)image->pData);
-			}
-			else
-			{
-				epicsTimeGetCurrent(&imageTime);
-			}
-			image->timeStamp = imageTime.secPastEpoch +
-					imageTime.nsec / Pco::oneNanosecond;
-			this->getAttributes(image->pAttributeList);
-			// Show the image to the gang system
-			if(this->gangConnection)
-			{
-                this->gangConnection->sendImage(image, this->numImagesCounter);
-			}
-			if(this->gangServer == NULL ||
-                	!gangServer->imageReceived(this->numImagesCounter, image))
-			{
-                // Gang system did not consume it, pass it on now
-                imageComplete(image);
-			}
-		}
+		// Further processing of the frame
+		processFrame(image);
 	}
 	else
 	{
 		TakeLock takeLock(this);
 		paramInvalidFrames = paramInvalidFrames + 1;
+	}
+}
+
+/**
+ * Process a frame that has been received into an ND array
+ */
+void Pco::processFrame(NDArray* image)
+{
+	// Do software ROI, binning and reversal if required
+	if(this->roiRequired)
+	{
+		NDArray* scratch;
+		this->pNDArrayPool->convert(image, &scratch,
+				(NDDataType_t)this->dataType, this->arrayDims);
+		image->release();
+		image = scratch;
+	}
+	// Handle summing of multiple exposures
+	bool nextImageReady = false;
+	if(this->numExposures > 1)
+	{
+		this->numExposuresCounter++;
+		if(this->numExposuresCounter > 1)
+		{
+			switch(image->dataType)
+			{
+			case NDUInt8:
+			case NDInt8:
+				sumArray<epicsUInt8>(image, this->imageSum);
+				break;
+			case NDUInt16:
+			case NDInt16:
+				sumArray<epicsUInt16>(image, this->imageSum);
+				break;
+			case NDUInt32:
+			case NDInt32:
+				sumArray<epicsUInt32>(image, this->imageSum);
+				break;
+			default:
+				break;
+			}
+			// throw away the previous accumulator
+			this->imageSum->release();
+		}
+		// keep the sum of previous images for the next iteration
+		this->imageSum = image;
+		if(this->numExposuresCounter >= this->numExposures)
+		{
+			// we have finished accumulating
+			nextImageReady = true;
+			this->numExposuresCounter = 0;
+		}
+	}
+	else
+	{
+		nextImageReady = true;
+	}
+	if(nextImageReady)
+	{
+		// Attach the image information
+		image->uniqueId = this->arrayCounter;
+		epicsTimeStamp imageTime;
+		if(this->timestampMode == DllApi::timestampModeBinary ||
+				this->timestampMode == DllApi::timestampModeBinaryAndAscii)
+		{
+			this->extractImageTimeStamp(&imageTime,
+					(unsigned short*)image->pData);
+		}
+		else
+		{
+			epicsTimeGetCurrent(&imageTime);
+		}
+		image->timeStamp = imageTime.secPastEpoch +
+				imageTime.nsec / Pco::oneNanosecond;
+		this->getAttributes(image->pAttributeList);
+		// Show the image to the gang system
+		if(this->gangConnection)
+		{
+            this->gangConnection->sendImage(image, this->numImagesCounter);
+		}
+		if(this->gangServer == NULL ||
+                !gangServer->imageReceived(this->numImagesCounter, image))
+		{
+            // Gang system did not consume it, pass it on now
+            imageComplete(image);
+		}
 	}
 }
 
