@@ -159,6 +159,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramFrameWaitFaults(this, "PCO_FRAME_WAIT_FAULTS", 0)
 , paramPollGetFrames(this, "PCO_POLL_GET_FRAMES", 0)
 , paramInvalidFrames(this, "PCO_INVALID_FRAMES", 0)
+, paramBuffersInUse(this, "PCO_BUFFERS_IN_USE", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -1370,6 +1371,7 @@ bool Pco::pollCamera()
 		paramAcqEnable = (int)acqEnable;
 	    paramCamRamUse = ramUsePercent;
 		paramCamRamUseFrames = ramUseFrames;
+		paramBuffersInUse = this->pNDArrayPool->numBuffers() - this->pNDArrayPool->numFree();
     }
     catch(PcoException& e)
     {
@@ -1584,7 +1586,7 @@ void Pco::frameReceived(int bufferNumber)
 		{
 			// Buffer is good for further processing
 			// No error or buffer cancelled.
-			if(statusDrv == 0 || (statusDrv & 0xffff) ==  0x2010)
+			if(statusDrv == 0)
 			{
 				// Copy the image from the buffer into a frame
 				NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
@@ -2102,6 +2104,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 		this->storageMode == DllApi::storageModeFifoBuffer &&
 		this->acquisitionPeriod >= 0.1 &&
 		(this->triggerMode == DllApi::triggerExternal || this->triggerMode == DllApi::triggerExternalOnly);
+	// Let's try without.
+	this->useGetFrames = false;
 
 	// Now Arm the camera, so it is ready to take images, all settings should have been made by now
 	this->api->arm(this->camera);
@@ -2673,6 +2677,7 @@ bool Pco::receiveImages() throw()
 			paramCamRamUseFrames = ramUseFrames;
 			// Done?
 			result = ramUseFrames >= this->numImages*this->numExposures;
+			image->release();
 		}
 		else
 		{
@@ -2718,6 +2723,7 @@ void Pco::validateAndProcessFrame(NDArray* image)
 			if(imageNumber == this->lastImageNumber+2)
 			{
 				printf("One frame missing, duplicating\n");
+				image->reserve();
 				processFrame(image);
 			}
 			TakeLock takeLock(this);
@@ -2731,6 +2737,7 @@ void Pco::validateAndProcessFrame(NDArray* image)
 	{
 		TakeLock takeLock(this);
 		paramInvalidFrames = paramInvalidFrames + 1;
+		image->release();
 	}
 }
 

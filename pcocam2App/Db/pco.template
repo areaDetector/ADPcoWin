@@ -876,3 +876,11 @@ record(longin, "$(P)$(R)INVALID_FRAMES_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# Buffers in use
+record(longin, "$(P)$(R)BUFFERS_IN_USE_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_BUFFERS_IN_USE")
+    field(SCAN, "I/O Intr")
+}
+

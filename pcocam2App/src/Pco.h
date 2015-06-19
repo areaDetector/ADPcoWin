@@ -101,6 +101,7 @@ public:
 	IntegerParam paramFrameWaitFaults;
 	IntegerParam paramPollGetFrames;
 	IntegerParam paramInvalidFrames;
+	IntegerParam paramBuffersInUse;
 
 // Constants
 public:
