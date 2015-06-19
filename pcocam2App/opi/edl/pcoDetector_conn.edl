@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 3279
-y 814
+x 3283
+y 839
 w 397
 h 525
 font "arial-bold-r-12.0"
@@ -1300,5 +1300,44 @@ bgColor index 10
 fill
 font "helvetica-bold-r-10.0"
 fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 320
+y 235
+w 45
+h 15
+controlPv "$(P)$(R)BUFFERS_IN_USE_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 250
+y 235
+w 61
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Buffs in Use"
+}
+autoSize
 endObjectProperties
 
