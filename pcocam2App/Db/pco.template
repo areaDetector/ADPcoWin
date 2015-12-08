@@ -12,6 +12,47 @@
 # All tags starting with gdatag are DLS specific for GDA
 # % gdatag, template, pcocam, $(PORT)_pcocam, $(PORT) pcocam class instance
 
+# Only 1 data type is supported, unsigned 16 bit integers
+record(mbbo, "$(P)$(R)DataType")
+{
+   field(ZRST, "UInt16")
+   field(ZRVL, "3")
+   field(ONST, "")
+   field(ONVL, "")
+   field(TWST, "")
+   field(TWVL, "")
+   field(THST, "")
+   field(THVL, "")
+   field(FRST, "")
+   field(FRVL, "")
+   field(FVST, "")
+   field(FVVL, "")
+   field(SXST, "")
+   field(SXVL, "")
+   field(SVST, "")
+   field(SVVL, "")
+}
+
+record(mbbi, "$(P)$(R)DataType_RBV")
+{
+   field(ZRST, "UInt16")
+   field(ZRVL, "3")
+   field(ONST, "")
+   field(ONVL, "")
+   field(TWST, "")
+   field(TWVL, "")
+   field(THST, "")
+   field(THVL, "")
+   field(FRST, "")
+   field(FRVL, "")
+   field(FVST, "")
+   field(FVVL, "")
+   field(SXST, "")
+   field(SXVL, "")
+   field(SVST, "")
+   field(SVVL, "")
+}
+
 # Overwrite ADBase.template TriggerMode definition strings
 record(mbbo, "$(P)$(R)TriggerMode")
 {
@@ -513,6 +554,14 @@ record(mbbo, "$(P)$(R)ColorMode")
 record(ai, "$(P)$(R)Gain_RBV")
 {
    field(DISA, "1")
+}
+record(bo, "$(P)$(R)ReverseX") 
+{
+  field(DISA, "1")
+}
+record(bo, "$(P)$(R)ReverseY") 
+{
+  field(DISA, "1")
 }
 
 # CCD Cooling parameters
