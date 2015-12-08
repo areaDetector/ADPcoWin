@@ -10,19 +10,19 @@ from iocbuilder.modules.asyn import AsynPort
 class _pcocam2(AutoSubstitution):
     TemplateFile="pco.template"
 
-class pcocam2(_ADBase):
+class pcocam2(AsynPort):
     """Create a PCO camera detector"""
     Dependencies = (ADCore,)
     _SpecificTemplate = _pcocam2
     UniqueName = "PORT"
 
     def __init__(self, PORT, BUFFERS=50, MEMORY=-1, **args):
-        self.__super.__init__(**args)
+        self.__super.__init__(PORT)
         self.__dict__.update(locals())
         makeTemplateInstance(self._SpecificTemplate, locals(), args)
 
     # __init__ arguments
-    ArgInfo = _ADBase.ArgInfo + _SpecificTemplate.ArgInfo + makeArgInfo(__init__,
+    ArgInfo = _SpecificTemplate.ArgInfo + makeArgInfo(__init__,
         PORT = Simple('Port name for the detector', str),
         BUFFERS = Simple('Maximum number of NDArray buffers to be created', int),
         MEMORY  = Simple('Max memory to allocate', int))
