@@ -1,3 +1,0 @@
-# Place any example specific dependencies here
-ADUTIL=$(SUPPORT)/adUtil/1-6
-PCOCAM2=$(WORK)/pcocam2

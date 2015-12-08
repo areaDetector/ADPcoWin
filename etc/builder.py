@@ -2,21 +2,28 @@
 from iocbuilder import Device, AutoSubstitution, Architecture
 from iocbuilder.arginfo import *
 
-from iocbuilder.modules.areaDetector import AreaDetector, _ADBase, _ADBaseTemplate, simDetector
+from iocbuilder.modules.ADCore import ADCore, ADBaseTemplate, includesTemplates, makeTemplateInstance
+from iocbuilder.modules.asyn import AsynPort
+
+@includesTemplates(ADBaseTemplate)
 
 class _pcocam2(AutoSubstitution):
     TemplateFile="pco.template"
-    SubstitutionOverwrites = [_ADBaseTemplate]
 
 class pcocam2(_ADBase):
     """Create a PCO camera detector"""
+    Dependencies = (ADCore,)
     _SpecificTemplate = _pcocam2
-    def __init__(self, BUFFERS=50, MEMORY=-1, **args):
+    UniqueName = "PORT"
+
+    def __init__(self, PORT, BUFFERS=50, MEMORY=-1, **args):
         self.__super.__init__(**args)
         self.__dict__.update(locals())
+        makeTemplateInstance(self._SpecificTemplate, locals(), args)
 
     # __init__ arguments
     ArgInfo = _ADBase.ArgInfo + _SpecificTemplate.ArgInfo + makeArgInfo(__init__,
+        PORT = Simple('Port name for the detector', str),
         BUFFERS = Simple('Maximum number of NDArray buffers to be created', int),
         MEMORY  = Simple('Max memory to allocate', int))
     LibFileList = ['pcocam2']
