@@ -23,6 +23,7 @@
 #include "epicsMutex.h"
 class GangServer;
 class GangConnection;
+class PerformanceMonitor;
 class TakeLock;
 
 class Pco: public ADDriverEx
@@ -50,9 +51,6 @@ public:
     IntegerParam paramBitAlignment;
     StringParam paramStateRecord;
     IntegerParam paramClearStateRecord;
-    IntegerParam paramOutOfNDArrays;
-    IntegerParam paramMissingFrames;
-    IntegerParam paramDriverLibraryErrors;
     IntegerParam paramHwBinX;
     IntegerParam paramHwBinY;
     IntegerParam paramHwRoiX1;
@@ -93,20 +91,16 @@ public:
 	IntegerParam paramCamRamUseFrames;
 	IntegerParam paramArmComplete;
 	IntegerParam paramConnected;
-	IntegerParam paramCaptureErrors;
 	IntegerParam paramBuffersReady;
-	IntegerParam paramFrameStatusErrors;
 	IntegerParam paramIsEdge;
 	IntegerParam paramGetImage;
-	IntegerParam paramFrameWaitFaults;
-	IntegerParam paramPollGetFrames;
-	IntegerParam paramInvalidFrames;
 	IntegerParam paramBuffersInUse;
 
 // Constants
 public:
     static const int traceFlagsDllApi;
     static const int traceFlagsGang;
+    static const int traceFlagsPerformance;
     static const int traceFlagsPcoState;
     static const int requestQueueCapacity;
     static const int numHandles;
@@ -177,6 +171,7 @@ private:
 public:
     TraceStream apiTrace;
     TraceStream gangTrace;
+    TraceStream performanceTrace;
 private:
     TraceStream stateTrace;
     struct
@@ -256,6 +251,7 @@ private:
     bool roiRequired;
     GangServer* gangServer;
     GangConnection* gangConnection;
+    PerformanceMonitor* performanceMonitor;
 	epicsMutex apiLock;
 	unsigned long memoryImageCounter;
 	int fifoQueueSize;
@@ -274,7 +270,6 @@ private:
     void doArm() throw(std::bad_alloc, PcoException);
     void doDisarm() throw();
     void nowAcquiring() throw();
-	void clearErrorCounters();
     void startCamera() throw();
     void allocateImageBuffers() throw(std::bad_alloc, PcoException);
     void freeImageBuffers() throw();

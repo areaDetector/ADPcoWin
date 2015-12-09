@@ -37,7 +37,10 @@ class pcocam2(AsynPort):
         LibFileList += ['SC2_DLG', 'SC2_Cam','PCO_CDLG','Pco_conv' ]
         SysLibFileList += ['windowscodecs', 'Comdlg32', 'Winspool', 'Comctl32', 'nafxcw']
         DbdFileList += ['pcocam2HardwareSupport']
-        MakefileStringList += ['%(ioc_name)s_LDFLAGS_WIN32 += /NOD:nafxcwd.lib /NOD:nafxcw.lib']
+        if epics_host_arch.find('debug') >= 0:
+            MakefileStringList += ['%(ioc_name)s_LDFLAGS_WIN32 += /NOD:nafxcwd.lib /NOD:nafxcw.lib /NOD:libcmt']
+        else:
+            MakefileStringList += ['%(ioc_name)s_LDFLAGS_WIN32 += /NOD:nafxcwd.lib /NOD:nafxcw.lib']
 
     def Initialise(self):
         print 'pcoConfig("%(PORT)s", %(BUFFERS)d, %(MEMORY)d)' % self.__dict__

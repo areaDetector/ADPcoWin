@@ -18,6 +18,7 @@
 #include <iostream>
 #include "GangServer.h"
 #include "GangConnection.h"
+#include "PerformanceMonitor.h"
 #include "TakeLock.h"
 #include "FreeLock.h"
 
@@ -33,6 +34,7 @@
  */
 const int Pco::traceFlagsDllApi = 0x0100;
 const int Pco::traceFlagsGang = 0x0400;
+const int Pco::traceFlagsPerformance = 0x0800;
 const int Pco::traceFlagsPcoState = 0x0200;
 const int Pco::requestQueueCapacity = 10;
 const int Pco::numHandles = 300;
@@ -105,9 +107,6 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramStateRecord(this, "PCO_STATERECORD", "")
 , paramClearStateRecord(this, "PCO_CLEARSTATERECORD", 0, 
 		new AsynParam::Notify<Pco>(this, &Pco::onClearStateRecord))
-, paramOutOfNDArrays(this, "PCO_OUTOFNDARRAYS", 0)
-, paramMissingFrames(this, "PCO_MISSINGFRAMES", 0)
-, paramDriverLibraryErrors(this, "PCO_DRIVERLIBRARYERRORS", 0)
 , paramHwBinX(this, "PCO_HWBINX", 0)
 , paramHwBinY(this, "PCO_HWBINY", 0)
 , paramHwRoiX1(this, "PCO_HWROIX1", 0)
@@ -150,15 +149,10 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramCamRamUseFrames(this, "PCO_CAM_RAM_USE_FRAMES", 0)
 , paramArmComplete(this, "PCO_ARM_COMPLETE", 0)
 , paramConnected(this, "PCO_CONNECTED", 0)
-, paramCaptureErrors(this, "PCO_CAPTURE_ERRORS", 0)
 , paramBuffersReady(this, "PCO_BUFFERS_READY", 0)
-, paramFrameStatusErrors(this, "PCO_FRAME_STATUS_ERRORS", 0)
 , paramIsEdge(this, "PCO_IS_EDGE", 0)
 , paramGetImage(this, "PCO_GET_IMAGE", 0,
 		new AsynParam::Notify<Pco>(this, &Pco::onGetImage))
-, paramFrameWaitFaults(this, "PCO_FRAME_WAIT_FAULTS", 0)
-, paramPollGetFrames(this, "PCO_POLL_GET_FRAMES", 0)
-, paramInvalidFrames(this, "PCO_INVALID_FRAMES", 0)
 , paramBuffersInUse(this, "PCO_BUFFERS_IN_USE", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
@@ -166,10 +160,12 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , errorTrace(getAsynUser(), ASYN_TRACE_ERROR)
 , apiTrace(getAsynUser(), Pco::traceFlagsDllApi)
 , gangTrace(getAsynUser(), Pco::traceFlagsGang)
+, performanceTrace(getAsynUser(), Pco::traceFlagsPerformance)
 , stateTrace(getAsynUser(), Pco::traceFlagsPcoState)
 , receivedImageQueue(1000, sizeof(NDArray*))
 , gangServer(NULL)
 , gangConnection(NULL)
+, performanceMonitor(NULL)
 {
     // Put in global map
     Pco::thePcos[portName] = this;
@@ -183,6 +179,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
     paramADMaxSizeY = 0;
     paramNDArraySize = 0;
 	paramADStatusMessage = "Disconnected";
+	// The performance monitoring system
+	performanceMonitor = new PerformanceMonitor(this, &performanceTrace);
     // We are not connected to a camera
     camera = NULL;
     // Initialise the buffers
@@ -296,6 +294,7 @@ Pco::~Pco()
     }
     delete triggerTimer;
     delete stateMachine;
+    delete performanceMonitor;
 }
 
 /**
@@ -362,6 +361,8 @@ void Pco::outputStatusMessage(const char* text)
  */
 StateMachine::StateSelector Pco::smInitialiseWait()
 {
+	TakeLock takeLock(this);
+	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_REBOOT);
     stateMachine->startTimer(Pco::connectPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
 }
@@ -397,6 +398,7 @@ StateMachine::StateSelector Pco::smConnectToCamera()
         discardImages();
         stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
         outputStatusMessage("");
+        performanceMonitor->count(takeLock, PerformanceMonitor::PERF_CONNECT);
         result = StateMachine::firstState;
     }
     catch(PcoException&)
@@ -1553,7 +1555,7 @@ NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
     {
         // Out of area detector NDArrays
     	TakeLock takeLock(this);
-        paramOutOfNDArrays = paramOutOfNDArrays + 1;
+    	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_OUTOFARRAYS);
     }
     return image;
 }
@@ -1604,7 +1606,7 @@ void Pco::frameReceived(int bufferNumber)
 			{
 				// There was an error associated with the frame
 				TakeLock takeLock(this);
-				paramFrameStatusErrors = paramFrameStatusErrors + 1;
+				performanceMonitor->count(takeLock, PerformanceMonitor::PERF_FRAMESTATUSERROR);
 			}
 			// Give the buffer back to the driver
 			this->api->addBufferEx(this->camera, /*firstImage=*/0,
@@ -1615,7 +1617,7 @@ void Pco::frameReceived(int bufferNumber)
 		{
 			// Buffer has not been given to us
 			TakeLock takeLock(this);
-			paramCaptureErrors = paramCaptureErrors + 1;
+			performanceMonitor->count(takeLock, PerformanceMonitor::PERF_CAPTUREERROR);
 			going = false;
 		}
 		if(going)
@@ -1632,7 +1634,7 @@ void Pco::frameReceived(int bufferNumber)
 void Pco::frameWaitFault()
 {
 	TakeLock takeLock(this);
-	paramFrameWaitFaults = paramFrameWaitFaults + 1;
+	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_WAITFAULT);
 }
 
 /**
@@ -1721,7 +1723,7 @@ void Pco::pollForFrames()
 				catch(PcoException&)
 				{
 					TakeLock takeLock(this);
-					paramDriverLibraryErrors = paramDriverLibraryErrors + 1;
+					performanceMonitor->count(takeLock, PerformanceMonitor::PERF_DRIVERERROR);
 				}
 				// Get an ND array
 				NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
@@ -1736,7 +1738,7 @@ void Pco::pollForFrames()
 				}
 				// Count frames read by the poll
 				TakeLock takeLock(this);
-				paramPollGetFrames = paramPollGetFrames + 1;
+				performanceMonitor->count(takeLock, PerformanceMonitor::PERF_POLLGETFRAME);
 			}
 		}
 		while(validImages > 3 && !anyReady);
@@ -1987,6 +1989,7 @@ void Pco::addAvailableBufferAll() throw(PcoException)
 void Pco::doArm() throw(std::bad_alloc, PcoException)
 {
 	TakeLock takeLock(this);
+	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_ARM);
 	// Camera now busy
 	paramADStatus = ADStatusReadout;
 	try
@@ -2038,7 +2041,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->storageMode = paramStorageMode;
 
 	// Clear error counters
-	this->clearErrorCounters();
+	performanceMonitor->clear(takeLock);
 
 	// Configure the camera (reading back the actual settings)
 	this->api->setSensorFormat(this->camera, 0);
@@ -2384,6 +2387,11 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
 	this->swRoiStartY = 0;
     this->swRoiSizeX = this->hwRoiX2 - this->hwRoiX1;
     this->swRoiSizeY = this->hwRoiY2 - this->hwRoiY1;
+    // No image reversal either
+    this->reverseX = 0;
+    this->reverseY = 0;
+    // And no pixel type translation
+    this->dataType = NDUInt16;
 #endif
 
     // Record the size of the frame coming from the camera
@@ -2534,6 +2542,7 @@ void Pco::cfgAcquisitionTimes() throw(PcoException)
 void Pco::nowAcquiring() throw()
 {
 	TakeLock takeLock(this);
+	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_START);
     // Get info
     this->arrayCounter = paramNDArrayCounter;
     this->numImages = paramADNumImages;
@@ -2553,22 +2562,6 @@ void Pco::nowAcquiring() throw()
     paramNDArraySizeY = this->yCamSize;
     paramADNumImagesCounter = this->numImagesCounter;
     paramADNumExposuresCounter = this->numExposuresCounter;
-}
-
-/**
- * Clear the error counters.
- */
-void Pco::clearErrorCounters()
-{
-	TakeLock takeLock(this);
-    paramOutOfNDArrays = 0;
-    paramMissingFrames = 0;
-    paramDriverLibraryErrors = 0;
-	paramCaptureErrors = 0;
-	paramFrameStatusErrors = 0;
-	paramPollGetFrames = 0;
-	paramFrameWaitFaults = 0;
-	paramInvalidFrames = 0;
 }
 
 /**
@@ -2618,7 +2611,7 @@ void Pco::startCamera() throw()
         catch(PcoException&)
         {
 			TakeLock takeLock(this);
-			paramDriverLibraryErrors = paramDriverLibraryErrors + 1;
+			performanceMonitor->count(takeLock, PerformanceMonitor::PERF_DRIVERERROR);
         }
         // Schedule a retry if it fails
         if(!triggerState)
@@ -2727,7 +2720,7 @@ void Pco::validateAndProcessFrame(NDArray* image)
 				processFrame(image);
 			}
 			TakeLock takeLock(this);
-			paramMissingFrames = paramMissingFrames + 1;
+			performanceMonitor->count(takeLock, PerformanceMonitor::PERF_MISSINGFRAME);
 		}
 		this->lastImageNumber = imageNumber;
 		// Further processing of the frame
@@ -2736,7 +2729,7 @@ void Pco::validateAndProcessFrame(NDArray* image)
 	else
 	{
 		TakeLock takeLock(this);
-		paramInvalidFrames = paramInvalidFrames + 1;
+		performanceMonitor->count(takeLock, PerformanceMonitor::PERF_INVALIDFRAME);
 		image->release();
 	}
 }
@@ -2825,6 +2818,8 @@ void Pco::processFrame(NDArray* image)
             imageComplete(image);
 		}
 	}
+	TakeLock takeLock(this);
+	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_GOODFRAME, /*fault=*/false);
 }
 
 /**
