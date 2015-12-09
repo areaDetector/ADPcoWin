@@ -12,6 +12,8 @@
 # All tags starting with gdatag are DLS specific for GDA
 # % gdatag, template, pcocam, $(PORT)_pcocam, $(PORT) pcocam class instance
 
+include "ADBase.template"
+
 # Only 1 data type is supported, unsigned 16 bit integers
 record(mbbo, "$(P)$(R)DataType")
 {
