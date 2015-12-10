@@ -330,7 +330,6 @@ void Pco::registerDllApi(DllApi* api)
  */
 void Pco::initialiseOnceRunning()
 {
-	std::cout << "####Initialise once running" << std::endl;
     post(requestInitialise);
 }
 
