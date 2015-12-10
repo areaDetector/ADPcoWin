@@ -153,6 +153,7 @@ public:
     void registerGangConnection(GangConnection* gangConnection);
     NDArray* allocArray(int sizeX, int sizeY, NDDataType_t dataType);
     void imageComplete(NDArray* image);
+    void initialiseOnceRunning();
 
 // Member variables
 private:

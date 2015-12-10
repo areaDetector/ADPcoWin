@@ -21,6 +21,7 @@
 #include "PerformanceMonitor.h"
 #include "TakeLock.h"
 #include "FreeLock.h"
+#include "initHooks.h"
 
 // Set this symbol to 1 if you want to be able to set
 // an arbitary ROI and binning that uses the hardware
@@ -76,6 +77,24 @@ const int Pco::statusMessageSize = 256;
 /** The PCO object map
  */
 std::map<std::string, Pco*> Pco::thePcos;
+
+/** EPICS init hook
+ */
+void pcoInitHookFunction(initHookState state)
+{
+	std::map<std::string, Pco*>::iterator pos;
+	switch(state)
+	{
+	case initHookAfterIocRunning:
+		for(pos=Pco::thePcos.begin(); pos!=Pco::thePcos.end(); ++pos)
+		{
+			pos->second->initialiseOnceRunning();
+		}
+		break;
+	default:
+		break;
+	}
+}
 
 /**
  * Constructor
@@ -169,7 +188,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 {
     // Put in global map
     Pco::thePcos[portName] = this;
-
+    // Hook EPICS initialisation
+    initHookRegister(pcoInitHookFunction);
     // Initialise some base class parameters
     paramNDDataType = NDUInt16;
     paramADNumExposures = 1;
@@ -298,12 +318,19 @@ Pco::~Pco()
 }
 
 /**
- * Connects the DLL API to the main PCO class.  This call triggers
- * the initialisation of the camera.
+ * Connects the DLL API to the main PCO class.
  */
 void Pco::registerDllApi(DllApi* api)
 {
     this->api = api;
+}
+
+/**
+ * This function is called by the EPICS init hook once the IOC is running.
+ */
+void Pco::initialiseOnceRunning()
+{
+	std::cout << "####Initialise once running" << std::endl;
     post(requestInitialise);
 }
 

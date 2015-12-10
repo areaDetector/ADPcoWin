@@ -937,7 +937,7 @@ record(seq, "$(P)$(R)PERF:ACC:REBOOT_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:REBOOT_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:REBOOT")
+    field(LNK1, "$(P)$(R)PERF:ACC:REBOOT PP")
 }
 
 # Number of camera connects
@@ -960,7 +960,7 @@ record(seq, "$(P)$(R)PERF:ACC:CONNECT_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:CONNECT_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:CONNECT")
+    field(LNK1, "$(P)$(R)PERF:ACC:CONNECT PP")
 }
 
 # Number of arm attempts
@@ -983,7 +983,7 @@ record(seq, "$(P)$(R)PERF:ACC:ARM_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:ARM_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:ARM")
+    field(LNK1, "$(P)$(R)PERF:ACC:ARM PP")
 }
 
 # Number of camera start attempts
@@ -1006,7 +1006,7 @@ record(seq, "$(P)$(R)PERF:ACC:START_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:START_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:START")
+    field(LNK1, "$(P)$(R)PERF:ACC:START PP")
 }
 
 # Number of good frames captured
@@ -1029,7 +1029,7 @@ record(seq, "$(P)$(R)PERF:ACC:GOODFRAME_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:GOODFRAME_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:GOODFRAME")
+    field(LNK1, "$(P)$(R)PERF:ACC:GOODFRAME PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:GOODFRAME_RBV")
@@ -1059,7 +1059,7 @@ record(seq, "$(P)$(R)PERF:ACC:MISSING_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:MISSING_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:MISSING")
+    field(LNK1, "$(P)$(R)PERF:ACC:MISSING PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:MISSING_RBV") 
@@ -1089,7 +1089,7 @@ record(seq, "$(P)$(R)PERF:ACC:OUTOFARRAYS_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:OUTOFARRAYS_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:OUTOFARRAYS")
+    field(LNK1, "$(P)$(R)PERF:ACC:OUTOFARRAYS PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:OUTOFARRAYS_RBV") 
@@ -1119,7 +1119,7 @@ record(seq, "$(P)$(R)PERF:ACC:INVALID_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:INVALID_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:INVALID")
+    field(LNK1, "$(P)$(R)PERF:ACC:INVALID PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:INVALID_RBV") 
@@ -1149,7 +1149,7 @@ record(seq, "$(P)$(R)PERF:ACC:FRAMESTATUS_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:FRAMESTATUS_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:FRAMESTATUS")
+    field(LNK1, "$(P)$(R)PERF:ACC:FRAMESTATUS PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:FRAMESTATUS_RBV") 
@@ -1179,7 +1179,7 @@ record(seq, "$(P)$(R)PERF:ACC:WAITFAULT_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:WAITFAULT_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:WAITFAULT")
+    field(LNK1, "$(P)$(R)PERF:ACC:WAITFAULT PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:WAITFAULT_RBV") 
@@ -1209,7 +1209,7 @@ record(seq, "$(P)$(R)PERF:ACC:DRIVERERROR_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:DRIVERERROR_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:DRIVERERROR")
+    field(LNK1, "$(P)$(R)PERF:ACC:DRIVERERROR PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:DRIVERERROR_RBV") 
@@ -1239,7 +1239,7 @@ record(seq, "$(P)$(R)PERF:ACC:POLLGETFRAME_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:POLLGETFRAME_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:POLLGETFRAME")
+    field(LNK1, "$(P)$(R)PERF:ACC:POLLGETFRAME PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:POLLGETFRAME_RBV") 
@@ -1269,7 +1269,7 @@ record(seq, "$(P)$(R)PERF:ACC:FAULT_TFR")
 {
     field(SELM, "All")
     field(DOL1, "$(P)$(R)PERF:ACC:FAULT_RBV")
-    field(LNK1, "$(P)$(R)PERF:ACC:FAULT")
+    field(LNK1, "$(P)$(R)PERF:ACC:FAULT PP")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:FAULT_RBV") 
