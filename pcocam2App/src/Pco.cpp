@@ -175,6 +175,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 		new AsynParam::Notify<Pco>(this, &Pco::onGetImage))
 , paramBuffersInUse(this, "PCO_BUFFERS_IN_USE", 0)
 , paramDataFormat(this, "PCO_DATAFORMAT", 0)
+, paramConfirmedStop(this, "PCO_CONFIRMEDSTOP", 0,
+		new AsynParam::Notify<Pco>(this, &Pco::onConfirmedStop))
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -247,12 +249,15 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	requestMakeImages = stateMachine->event("MakeImages");
 	// Transitions
 	stateMachine->transition(stateUninitialised, requestInitialise, new StateMachine::Act<Pco>(this, &Pco::smInitialiseWait), stateUnconnected);
+	stateMachine->transition(stateUninitialised, requestStop, new StateMachine::Act<Pco>(this, &Pco::smAlreadyStopped), stateUninitialised);
 	stateMachine->transition(stateUnconnected, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smConnectToCamera), stateIdle, stateUnconnected);
+	stateMachine->transition(stateUnconnected, requestStop, new StateMachine::Act<Pco>(this, &Pco::smAlreadyStopped), stateUnconnected);
 	stateMachine->transition(stateIdle, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileIdle), stateIdle);
 	stateMachine->transition(stateIdle, requestArm, new StateMachine::Act<Pco>(this, &Pco::smRequestArm), stateArmed, stateIdle);
 	stateMachine->transition(stateIdle, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smArmAndAcquire), stateUnarmedAcquiring, stateIdle);
 	stateMachine->transition(stateIdle, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smDiscardImages), stateIdle);
 	stateMachine->transition(stateIdle, requestReboot, new StateMachine::Act<Pco>(this, &Pco::smRequestReboot), stateUnconnected);
+	stateMachine->transition(stateIdle, requestStop, new StateMachine::Act<Pco>(this, &Pco::smAlreadyStopped), stateIdle);
 	stateMachine->transition(stateArmed, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileAcquiring), stateArmed);
 	stateMachine->transition(stateArmed, requestAcquire, new StateMachine::Act<Pco>(this, &Pco::smAcquire), stateAcquiring);
 	stateMachine->transition(stateArmed, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smFirstImageWhileArmed), stateExternalAcquiring, stateIdle, stateArmed, stateArmed);
@@ -862,6 +867,18 @@ StateMachine::StateSelector Pco::smExternalDrainImage()
 }
 
 /**
+ * A stop is received but we are already stopped.
+ * Returns: firstState: always
+ */
+StateMachine::StateSelector Pco::smAlreadyStopped()
+{
+	// Release the stop confirm busy record
+	TakeLock takeLock(this);
+	paramConfirmedStop = 0;
+	return StateMachine::firstState;
+}
+
+/**
  * Start reading the camera's internal memory
  */
 void Pco::readFirstMemoryImage()
@@ -995,7 +1012,10 @@ StateMachine::StateSelector Pco::smDisarmAndDiscard()
 	acquisitionComplete();
     doDisarm();
     discardImages();
-    return StateMachine::firstState;
+    // Release the stop busy record
+	TakeLock takeLock(this);
+	paramConfirmedStop = 0;
+	return StateMachine::firstState;
 }
 
 /**
@@ -1029,6 +1049,9 @@ StateMachine::StateSelector Pco::smStopAcquisition()
 		discardImages();
         result = StateMachine::secondState;
     }
+    // Release the stop busy record
+	TakeLock takeLock(this);
+	paramConfirmedStop = 0;
     return result;
 }
 
@@ -1041,6 +1064,9 @@ StateMachine::StateSelector Pco::smExternalStopAcquisition()
 	acquisitionComplete();
 	doDisarm();
 	discardImages();
+    // Release the stop busy record
+	TakeLock takeLock(this);
+	paramConfirmedStop = 0;
 	return StateMachine::firstState;
 }
 
@@ -2970,6 +2996,17 @@ void Pco::extractImageTimeStamp(epicsTimeStamp* imageTime,
         
     epicsTimeFromTM (imageTime, &ct, nanoSec );
 }
+
+/**
+ * This stop command is designed for use with a busy record
+ */
+void Pco::onConfirmedStop(TakeLock& takeLock)
+{
+	// Simulate the regular stop command
+	paramADAcquire = 0;
+	this->onAcquire(takeLock);
+}
+
 
 /**
  * Register the gang server object

@@ -96,6 +96,7 @@ public:
 	IntegerParam paramGetImage;
 	IntegerParam paramBuffersInUse;
 	IntegerParam paramDataFormat;
+	IntegerParam paramConfirmedStop;
 
 // Constants
 public:
@@ -314,6 +315,7 @@ private:
     void onADTemperature(TakeLock& takeLock);
     void onReboot(TakeLock& takeLock);
 	void onGetImage(TakeLock& takeLock);
+	void onConfirmedStop(TakeLock& takeLock);
 	void validateAndProcessFrame(NDArray* image);
 	void processFrame(NDArray* image);
 	void readFirstMemoryImage();
@@ -367,6 +369,7 @@ public:
     StateMachine::StateSelector smUnarmedDrainImage();
     StateMachine::StateSelector smExternalDrainImage();
     StateMachine::StateSelector smDrainImage();
+    StateMachine::StateSelector smAlreadyStopped();
 };
 
 #endif

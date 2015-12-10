@@ -932,6 +932,18 @@ record(longin, "$(P)$(R)BUFFERS_IN_USE_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# Confirmed stop command
+# % gdatag, mbbinary, rw, $(PORT)_pcocam, CONFIRMED_STOP, Stop acquisition
+record(busy, "$(P)$(R)CONFIRMED_STOP")
+{
+    field(DESC, "Stop acquisition")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_CONFIRMED_STOP")
+    field(ZNAM, "Ready")
+    field(ONAM, "Stop")
+    field(VAL,  "0")
+}
+
 ############################
 # Performance monitoring PVs
 
