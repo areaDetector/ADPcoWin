@@ -46,6 +46,8 @@ PerformanceMonitor::PerformanceMonitor(Pco* pco, TraceStream* trace)
 	, paramAccFault(pco, "PCO_PERFACC_FAULT", 0)
 	, paramReset(pco, "PCO_PERF_RESET", 0,
 			new AsynParam::Notify<PerformanceMonitor>(this, &PerformanceMonitor::onReset))
+	, paramTestCount(pco, "PCO_PERF_TESTCOUNT", 0,
+			new AsynParam::Notify<PerformanceMonitor>(this, &PerformanceMonitor::onTestCount))
 {
 	// Set up the counter maps
 	this->session[PERF_GOODFRAME] = &this->paramCntGoodFrame;
@@ -127,3 +129,10 @@ void PerformanceMonitor::onReset(TakeLock& takeLock)
 	}
 	paramAccFault = 0;
 }
+
+// Force increment a counter.  Used for testing.
+void PerformanceMonitor::onTestCount(TakeLock& takeLock)
+{
+	count(takeLock, (PerformanceMonitor::Param)(int)paramTestCount);
+}
+

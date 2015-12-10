@@ -1287,3 +1287,10 @@ record(longout, "$(P)$(R)PERF:RESET")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERF_RESET")
 }
 
+# Backdoor increment a counter
+# % archiver 10 Monitor
+record(longout, "$(P)$(R)PERF:TESTCOUNT") 
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERF_TESTCOUNT")
+}

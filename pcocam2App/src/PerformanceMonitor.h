@@ -57,11 +57,13 @@ private:
 	IntegerParam paramAccFault;
 	// Commands
 	IntegerParam paramReset;
+	IntegerParam paramTestCount;
 	// The counter maps
 	std::map<PerformanceMonitor::Param, IntegerParam*> session;
 	std::map<PerformanceMonitor::Param, IntegerParam*> accumulating;
 	// Handlers
     void onReset(TakeLock& takeLock);
+    void onTestCount(TakeLock& takeLock);
 };
 
 #endif /* PerformanceMonitor_H_ */
