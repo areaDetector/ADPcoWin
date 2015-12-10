@@ -110,6 +110,7 @@ public:
     static const double statusPollPeriod;
     static const double armIgnoreImagesPeriod;
     static const double acquisitionStatusPollPeriod;
+    static const double initialisationPeriod;
     static const char* stateNames[];
     static const char* eventNames[];
     static const int bitsPerShortWord;

@@ -39,12 +39,13 @@ const int Pco::traceFlagsPerformance = 0x0800;
 const int Pco::traceFlagsPcoState = 0x0200;
 const int Pco::requestQueueCapacity = 10;
 const int Pco::numHandles = 300;
-const double Pco::reconnectPeriod = 5.0;
+const double Pco::reconnectPeriod = 4.0;
 const double Pco::rebootPeriod = 10.0;
 const double Pco::connectPeriod = 20.0;
 const double Pco::statusPollPeriod = 2.0;
 const double Pco::acquisitionStatusPollPeriod = 5.0;
 const double Pco::armIgnoreImagesPeriod = 0.1;
+const double Pco::initialisationPeriod = 1.0;
 const int Pco::bitsPerShortWord = 16;
 const int Pco::bitsPerNybble = 4;
 const long Pco::nybbleMask = 0x0f;
@@ -330,7 +331,7 @@ void Pco::registerDllApi(DllApi* api)
  */
 void Pco::initialiseOnceRunning()
 {
-    post(requestInitialise);
+    stateMachine->startTimer(Pco::initialisationPeriod, Pco::requestInitialise);
 }
 
 /**
