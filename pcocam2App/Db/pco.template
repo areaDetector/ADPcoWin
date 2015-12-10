@@ -1219,6 +1219,36 @@ record(longin, "$(P)$(R)PERF:CNT:DRIVERERROR_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# Frame event receive but buffer not released to us
+# % autosave 2 VAL
+record(longout, "$(P)$(R)PERF:ACC:CAPTUREERROR") 
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_CAPTUREERROR")
+    field(PINI, "1")
+}
+# % archiver 10 Monitor
+record(longin, "$(P)$(R)PERF:ACC:CAPTUREERROR_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_CAPTUREERROR")
+    field(SCAN, "I/O Intr")
+    field(FLNK, "$(P)$(R)PERF:ACC:CAPTUREERROR_TFR")
+}
+record(seq, "$(P)$(R)PERF:ACC:CAPTUREERROR_TFR")
+{
+    field(SELM, "All")
+    field(DOL1, "$(P)$(R)PERF:ACC:CAPTUREERROR_RBV")
+    field(LNK1, "$(P)$(R)PERF:ACC:CAPTUREERROR PP")
+}
+# % archiver 10 Monitor
+record(longin, "$(P)$(R)PERF:CNT:CAPTUREERROR_RBV") 
+{
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFCNT_CAPTUREERROR")
+    field(SCAN, "I/O Intr")
+}
+
 # Frames acquired through polling after a jam detection
 # % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:POLLGETFRAME") 
