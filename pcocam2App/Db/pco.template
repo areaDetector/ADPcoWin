@@ -918,7 +918,7 @@ record(longin, "$(P)$(R)BUFFERS_IN_USE_RBV")
 # Performance monitoring PVs
 
 # Number of reboots
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:REBOOT")
 {
     field(DTYP, "asynInt32")
@@ -941,7 +941,7 @@ record(seq, "$(P)$(R)PERF:ACC:REBOOT_TFR")
 }
 
 # Number of camera connects
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:CONNECT")
 {
     field(DTYP, "asynInt32")
@@ -964,7 +964,7 @@ record(seq, "$(P)$(R)PERF:ACC:CONNECT_TFR")
 }
 
 # Number of arm attempts
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:ARM")
 {
     field(DTYP, "asynInt32")
@@ -987,7 +987,7 @@ record(seq, "$(P)$(R)PERF:ACC:ARM_TFR")
 }
 
 # Number of camera start attempts
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:START")
 {
     field(DTYP, "asynInt32")
@@ -1010,7 +1010,7 @@ record(seq, "$(P)$(R)PERF:ACC:START_TFR")
 }
 
 # Number of good frames captured
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:GOODFRAME")
 {
     field(DTYP, "asynInt32")
@@ -1040,7 +1040,7 @@ record(longin, "$(P)$(R)PERF:CNT:GOODFRAME_RBV")
 }
 
 # Number of missing frames detected
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:MISSING") 
 {
     field(DTYP, "asynInt32")
@@ -1070,7 +1070,7 @@ record(longin, "$(P)$(R)PERF:CNT:MISSING_RBV")
 }
 
 # Attempts to allocate an NDArray that fail
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:OUTOFARRAYS") 
 {
     field(DTYP, "asynInt32")
@@ -1100,7 +1100,7 @@ record(longin, "$(P)$(R)PERF:CNT:OUTOFARRAYS_RBV")
 }
 
 # Frames detected as invalid by the lack of a timestamp
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:INVALID") 
 {
     field(DTYP, "asynInt32")
@@ -1130,7 +1130,7 @@ record(longin, "$(P)$(R)PERF:CNT:INVALID_RBV")
 }
 
 # Frame status error count
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:FRAMESTATUS") 
 {
     field(DTYP, "asynInt32")
@@ -1160,7 +1160,7 @@ record(longin, "$(P)$(R)PERF:CNT:FRAMESTATUS_RBV")
 }
 
 # Faults during wait for frame event
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:WAITFAULT") 
 {
     field(DTYP, "asynInt32")
@@ -1190,7 +1190,7 @@ record(longin, "$(P)$(R)PERF:CNT:WAITFAULT_RBV")
 }
 
 # PCO driver errors during capture
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:DRIVERERROR") 
 {
     field(DTYP, "asynInt32")
@@ -1220,7 +1220,7 @@ record(longin, "$(P)$(R)PERF:CNT:DRIVERERROR_RBV")
 }
 
 # Frames acquired through polling after a jam detection
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:POLLGETFRAME") 
 {
     field(DTYP, "asynInt32")
@@ -1250,7 +1250,7 @@ record(longin, "$(P)$(R)PERF:CNT:POLLGETFRAME_RBV")
 }
 
 # Overall fault counter
-# % autosave 1 VAL
+# % autosave 2 VAL
 record(longout, "$(P)$(R)PERF:ACC:FAULT") 
 {
     field(DTYP, "asynInt32")
