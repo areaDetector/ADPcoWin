@@ -44,10 +44,10 @@ PerformanceMonitor::PerformanceMonitor(Pco* pco, TraceStream* trace)
 	, paramAccCaptureError(pco, "PCO_PERFACC_CAPTUREERROR", 0)
 	, paramAccPollGetFrame(pco, "PCO_PERFACC_POLLGETFRAME", 0)
 	, paramAccFault(pco, "PCO_PERFACC_FAULT", 0)
-	, paramReset(pco, "PCO_PERF_RESET", 0,
-			new AsynParam::Notify<PerformanceMonitor>(this, &PerformanceMonitor::onReset))
 	, paramTestCount(pco, "PCO_PERF_TESTCOUNT", 0,
 			new AsynParam::Notify<PerformanceMonitor>(this, &PerformanceMonitor::onTestCount))
+	, paramReset(pco, "PCO_PERF_RESET", 0,
+			new AsynParam::Notify<PerformanceMonitor>(this, &PerformanceMonitor::onReset))
 {
 	// Set up the counter maps
 	this->session[PERF_GOODFRAME] = &this->paramCntGoodFrame;

@@ -56,8 +56,8 @@ private:
 	IntegerParam paramAccPollGetFrame;
 	IntegerParam paramAccFault;
 	// Commands
-	IntegerParam paramReset;
 	IntegerParam paramTestCount;
+	IntegerParam paramReset;
 	// The counter maps
 	std::map<PerformanceMonitor::Param, IntegerParam*> session;
 	std::map<PerformanceMonitor::Param, IntegerParam*> accumulating;
