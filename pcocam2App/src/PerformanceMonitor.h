@@ -30,10 +30,6 @@ private:
 	Pco* pco;
 	TraceStream* trace;
 	// Session counters
-	IntegerParam paramCntReboot;
-	IntegerParam paramCntConnect;
-	IntegerParam paramCntArm;
-	IntegerParam paramCntStart;
 	IntegerParam paramCntGoodFrame;
 	IntegerParam paramCntMissingFrame;      // Missing frame detected based on embedded image number
 	IntegerParam paramCntOutOfArrays;       // Failed to allocate an NDArray

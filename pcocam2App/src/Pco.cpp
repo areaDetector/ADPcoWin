@@ -362,7 +362,7 @@ void Pco::outputStatusMessage(const char* text)
 StateMachine::StateSelector Pco::smInitialiseWait()
 {
 	TakeLock takeLock(this);
-	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_REBOOT);
+	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_REBOOT, /*fault=*/false);
     stateMachine->startTimer(Pco::connectPeriod, Pco::requestTimerExpiry);
     return StateMachine::firstState;
 }
@@ -398,7 +398,7 @@ StateMachine::StateSelector Pco::smConnectToCamera()
         discardImages();
         stateMachine->startTimer(Pco::statusPollPeriod, Pco::requestTimerExpiry);
         outputStatusMessage("");
-        performanceMonitor->count(takeLock, PerformanceMonitor::PERF_CONNECT);
+        performanceMonitor->count(takeLock, PerformanceMonitor::PERF_CONNECT, /*fault=*/false);
         result = StateMachine::firstState;
     }
     catch(PcoException&)
@@ -1989,7 +1989,7 @@ void Pco::addAvailableBufferAll() throw(PcoException)
 void Pco::doArm() throw(std::bad_alloc, PcoException)
 {
 	TakeLock takeLock(this);
-	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_ARM);
+	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_ARM, /*fault=*/false);
 	// Camera now busy
 	paramADStatus = ADStatusReadout;
 	try
@@ -2542,7 +2542,7 @@ void Pco::cfgAcquisitionTimes() throw(PcoException)
 void Pco::nowAcquiring() throw()
 {
 	TakeLock takeLock(this);
-	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_START);
+	performanceMonitor->count(takeLock, PerformanceMonitor::PERF_START, /*fault=*/false);
     // Get info
     this->arrayCounter = paramNDArrayCounter;
     this->numImages = paramADNumImages;

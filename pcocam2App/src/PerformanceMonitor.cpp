@@ -20,10 +20,6 @@
 PerformanceMonitor::PerformanceMonitor(Pco* pco, TraceStream* trace)
 	: pco(pco)
 	, trace(trace)
-	, paramCntReboot(pco, "PCO_PERFCNT_REBOOT", 0)
-	, paramCntConnect(pco, "PCO_PERFCNT_CONNECT", 0)
-	, paramCntArm(pco, "PCO_PERFCNT_ARM", 0)
-	, paramCntStart(pco, "PCO_PERFCNT_START", 0)
 	, paramCntGoodFrame(pco, "PCO_PERFCNT_GOODFRAME", 0)
 	, paramCntMissingFrame(pco, "PCO_PERFCNT_MISSINGFRAME", 0)
 	, paramCntOutOfArrays(pco, "PCO_PERFCNT_OUTOFARRAYS", 0)
@@ -52,10 +48,6 @@ PerformanceMonitor::PerformanceMonitor(Pco* pco, TraceStream* trace)
 			new AsynParam::Notify<PerformanceMonitor>(this, &PerformanceMonitor::onReset))
 {
 	// Set up the counter maps
-	this->session[PERF_REBOOT] = &this->paramCntReboot;
-	this->session[PERF_CONNECT] = &this->paramCntConnect;
-	this->session[PERF_ARM] = &this->paramCntArm;
-	this->session[PERF_START] = &this->paramCntStart;
 	this->session[PERF_GOODFRAME] = &this->paramCntGoodFrame;
 	this->session[PERF_MISSINGFRAME] = &this->paramCntMissingFrame;
 	this->session[PERF_OUTOFARRAYS] = &this->paramCntOutOfArrays;

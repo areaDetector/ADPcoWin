@@ -915,7 +915,7 @@ record(longin, "$(P)$(R)BUFFERS_IN_USE_RBV")
 }
 
 ############################
-# Performance monitoring session PVs
+# Performance monitoring PVs
 
 # Number of reboots
 # % archiver 10 Monitor
@@ -924,13 +924,6 @@ record(longin, "$(P)$(R)PERF:ACC:REBOOT_RBV")
 {
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_REBOOT")
-    field(SCAN, "I/O Intr")
-}
-# % archiver 10 Monitor
-record(longin, "$(P)$(R)PERF:CNT:REBOOT_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFCNT_REBOOT")
     field(SCAN, "I/O Intr")
 }
 
@@ -943,13 +936,6 @@ record(longin, "$(P)$(R)PERF:ACC:CONNECT_RBV")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_CONNECT")
     field(SCAN, "I/O Intr")
 }
-# % archiver 10 Monitor
-record(longin, "$(P)$(R)PERF:CNT:CONNECT_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFCNT_CONNECT")
-    field(SCAN, "I/O Intr")
-}
 
 # Number of arm attempts
 # % archiver 10 Monitor
@@ -960,13 +946,6 @@ record(longin, "$(P)$(R)PERF:ACC:ARM_RBV")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_ARM")
     field(SCAN, "I/O Intr")
 }
-# % archiver 10 Monitor
-record(longin, "$(P)$(R)PERF:CNT:ARM_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFCNT_ARM")
-    field(SCAN, "I/O Intr")
-}
 
 # Number of camera start attempts
 # % archiver 10 Monitor
@@ -975,13 +954,6 @@ record(longin, "$(P)$(R)PERF:ACC:START_RBV")
 {
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_START")
-    field(SCAN, "I/O Intr")
-}
-# % archiver 10 Monitor
-record(longin, "$(P)$(R)PERF:CNT:START_RBV")
-{
-    field(DTYP, "asynInt32")
-    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFCNT_START")
     field(SCAN, "I/O Intr")
 }
 
