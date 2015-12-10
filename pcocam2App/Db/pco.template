@@ -925,6 +925,7 @@ record(longin, "$(P)$(R)PERF:ACC:REBOOT_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_REBOOT")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 
 # Number of camera connects
@@ -935,6 +936,7 @@ record(longin, "$(P)$(R)PERF:ACC:CONNECT_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_CONNECT")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 
 # Number of arm attempts
@@ -945,6 +947,7 @@ record(longin, "$(P)$(R)PERF:ACC:ARM_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_ARM")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 
 # Number of camera start attempts
@@ -955,6 +958,7 @@ record(longin, "$(P)$(R)PERF:ACC:START_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_START")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 
 # Number of good frames captured
@@ -965,6 +969,7 @@ record(longin, "$(P)$(R)PERF:ACC:GOODFRAME_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_GOODFRAME")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:GOODFRAME_RBV")
@@ -982,6 +987,7 @@ record(longin, "$(P)$(R)PERF:ACC:MISSING_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_MISSINGFRAME")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:MISSING_RBV") 
@@ -999,6 +1005,7 @@ record(longin, "$(P)$(R)PERF:ACC:OUTOFARRAYS_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_OUTOFARRAYS")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:OUTOFARRAYS_RBV") 
@@ -1016,6 +1023,7 @@ record(longin, "$(P)$(R)PERF:ACC:INVALID_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_INVALIDFRAME")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:INVALID_RBV") 
@@ -1033,6 +1041,7 @@ record(longin, "$(P)$(R)PERF:ACC:FRAMESTATUS_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_FRAMESTATUSERROR")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:FRAMESTATUS_RBV") 
@@ -1050,6 +1059,7 @@ record(longin, "$(P)$(R)PERF:ACC:WAITFAULT_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_WAITFAULT")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:WAITFAULT_RBV") 
@@ -1067,6 +1077,7 @@ record(longin, "$(P)$(R)PERF:ACC:DRIVERERROR_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_DRIVERERROR")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:DRIVERERROR_RBV") 
@@ -1084,6 +1095,7 @@ record(longin, "$(P)$(R)PERF:ACC:POLLGETFRAME_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_POLLGETFRAME")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:POLLGETFRAME_RBV") 
@@ -1101,6 +1113,7 @@ record(longin, "$(P)$(R)PERF:ACC:FAULT_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFACC_FAULT")
     field(SCAN, "I/O Intr")
+    field(PINI, "1")
 }
 # % archiver 10 Monitor
 record(longin, "$(P)$(R)PERF:CNT:FAULT_RBV") 
