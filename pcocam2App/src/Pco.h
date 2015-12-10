@@ -95,6 +95,7 @@ public:
 	IntegerParam paramIsEdge;
 	IntegerParam paramGetImage;
 	IntegerParam paramBuffersInUse;
+	IntegerParam paramDataFormat;
 
 // Constants
 public:
@@ -139,6 +140,7 @@ public:
     enum {recordingStateRetry=10};
     enum {gangModeNone=0, gangModeServer=1, gangModeConnection=2};
 	enum {ADImageBurst=3};
+	enum {dataformatNotEdge=0,dataFormat5x12=1,dataFormat5x12sqrtLut=2,dataFormat5x16=3};
 
 // API for use by component classes
 public:
@@ -229,6 +231,7 @@ private:
 	int storageMode;
     int acquireMode;
     int cameraSetup;
+    int dataFormat;
     int dataType;
     int hwBinX;
     int hwBinY;

@@ -174,6 +174,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramGetImage(this, "PCO_GET_IMAGE", 0,
 		new AsynParam::Notify<Pco>(this, &Pco::onGetImage))
 , paramBuffersInUse(this, "PCO_BUFFERS_IN_USE", 0)
+, paramDataFormat(this, "PCO_DATAFORMAT", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -1900,6 +1901,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
             this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12 |
                 DllApi:: sccmosFormatTopCenterBottomCenter;
             lutIdentifier = DllApi::camlinkLutNone;
+            this->dataFormat = dataFormat5x12;
         }
         else 
         {
@@ -1911,6 +1913,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
                 this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x12L |
                     DllApi::sccmosFormatTopCenterBottomCenter;
                 lutIdentifier = DllApi::camLinkLutSqrt;
+                this->dataFormat = dataFormat5x12sqrtLut;
             } 
             else 
             {
@@ -1918,6 +1921,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
                 this->camTransfer.dataFormat = DllApi::camlinkDataFormat5x16 |
                     DllApi::sccmosFormatTopCenterBottomCenter;
                 lutIdentifier = DllApi::camlinkLutNone;
+                this->dataFormat = dataFormat5x16;
             }
         }
         this->camTransfer.baudRate = Pco::edgeBaudRate;
@@ -1931,6 +1935,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
         this->api->setActiveLookupTable(this->camera, lutIdentifier);
         break;
     default:
+    	this->dataFormat = dataformatNotEdge;
         break;
     }
 }
@@ -2122,6 +2127,7 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	paramYCamSize = this->yCamSize;
 	paramRecorderSubmode = this->recoderSubmode;
 	paramStorageMode = this->storageMode;
+	paramDataFormat = this->dataFormat;
 	// Inform server if we have one
 	if(gangConnection != NULL)
 	{

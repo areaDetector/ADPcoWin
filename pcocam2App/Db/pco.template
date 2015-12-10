@@ -423,6 +423,24 @@ record(mbbi, "$(P)$(R)CAMERA_SETUP_RBV")
     field(SCAN, "I/O Intr")
 }
 
+# % gdatag, mbbinary, ro, $(PORT)_pcocam, CAMERA_SETUP_RBV, Readback for camera shutter setup
+# % archiver 10 Monitor
+record(mbbi, "$(P)$(R)DATAFORMAT_RBV") 
+{
+    field(DESC, "Data format")
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_DATAFORMAT")
+    field(ZRST, "Not Edge")
+    field(ONST, "5x12")
+    field(TWST, "5x12sqrtLUT")
+    field(THST, "5x16")
+    field(ZRVL, "0")
+    field(ONVL, "1")
+    field(TWVL, "2")
+    field(THVL, "3")
+    field(SCAN, "I/O Intr")
+}
+
 # % gdatag, mbbinary, rw, $(PORT)_pcocam, BIT_ALIGNMENT, Set camera bit alignment
 # % archiver 10 Monitor
 record(mbbo, "$(P)$(R)BIT_ALIGNMENT") 
