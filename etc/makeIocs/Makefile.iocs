@@ -4,6 +4,7 @@
 #IOCS += example
 IOCS += exampleCamera
 IOCS += exampleProcessing
+IOCS += exampleStandalone
 
 # These are the dirs that each IOC lives in
 IOC_DIRS := $(patsubst %, $(TOP)/iocs/%, $(IOCS))
