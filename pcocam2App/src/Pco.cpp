@@ -1626,60 +1626,72 @@ void Pco::frameReceived(int bufferNumber)
 //      We need to get the image out of the DLL buffer as soon as possible
 //      and return the buffer to the DLL.  Otherwise, the edge at high
 //      rates loses frames.
-	// We need to grab the API for the whole of this function
-	TakeLock takeLock(&this->apiLock);
-	// Try receiving from the current head to the given buffer number
-	int tryBuffer;
-	bool going = true;
-	do
+	// To avoid deadlocks, we mustn't take the parameter lock at the same time
+	// as the api lock.  So we count the errors locally and then pass them
+	// to the performance monitor at the end.
+	int frameStatusError = 0;
+	int captureError = 0;
 	{
-		tryBuffer = this->queueHead;
-		// Get the buffer status
-		unsigned long statusDll;
-		unsigned long statusDrv;
-		this->api->getBufferStatus(this->camera, tryBuffer, &statusDll, &statusDrv);
-		if((statusDll & DllApi::statusDllEventSet) != 0)
+		// We need to grab the API for the whole of this part
+		TakeLock takeLock(&this->apiLock);
+		// Try receiving from the current head to the given buffer number
+		int tryBuffer;
+		bool going = true;
+		do
 		{
-			// Buffer is good for further processing
-			// No error or buffer cancelled.
-			if(statusDrv == 0)
+			tryBuffer = this->queueHead;
+			// Get the buffer status
+			unsigned long statusDll;
+			unsigned long statusDrv;
+			this->api->getBufferStatus(this->camera, tryBuffer, &statusDll, &statusDrv);
+			if((statusDll & DllApi::statusDllEventSet) != 0)
 			{
-				// Copy the image from the buffer into a frame
-				NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
-				if(image != NULL)
+				// Buffer is good for further processing
+				// No error or buffer cancelled.
+				if(statusDrv == 0)
 				{
-					// Copy the image into an NDArray
-					::memcpy(image->pData, this->buffers[tryBuffer].buffer,
-							this->xCamSize*this->yCamSize*sizeof(unsigned short));
-					// And pass it to the state machine
-					this->receivedImageQueue.send(&image, sizeof(NDArray*));
-					this->post(Pco::requestImageReceived);
+					// Copy the image from the buffer into a frame
+					NDArray* image = allocArray(this->xCamSize, this->yCamSize, NDUInt16);
+					if(image != NULL)
+					{
+						// Copy the image into an NDArray
+						::memcpy(image->pData, this->buffers[tryBuffer].buffer,
+								this->xCamSize*this->yCamSize*sizeof(unsigned short));
+						// And pass it to the state machine
+						this->receivedImageQueue.send(&image, sizeof(NDArray*));
+						this->post(Pco::requestImageReceived);
+					}
 				}
+				else
+				{
+					// There was an error associated with the frame
+					frameStatusError++;
+				}
+				// Give the buffer back to the driver
+				this->api->addBufferEx(this->camera, /*firstImage=*/0,
+					/*lastImage=*/0, tryBuffer,
+					this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
 			}
 			else
 			{
-				// There was an error associated with the frame
-				TakeLock takeLock(this);
-				performanceMonitor->count(takeLock, PerformanceMonitor::PERF_FRAMESTATUSERROR);
+				// Buffer has not been given to us
+				captureError++;
+				going = false;
 			}
-			// Give the buffer back to the driver
-			this->api->addBufferEx(this->camera, /*firstImage=*/0,
-				/*lastImage=*/0, tryBuffer,
-				this->xCamSize, this->yCamSize, this->camDescription.dynResolution);
+			if(going)
+			{
+				this->queueHead = (tryBuffer + 1) % this->fifoQueueSize;
+			}
 		}
-		else
-		{
-			// Buffer has not been given to us
-			TakeLock takeLock(this);
-			performanceMonitor->count(takeLock, PerformanceMonitor::PERF_CAPTUREERROR);
-			going = false;
-		}
-		if(going)
-		{
-			this->queueHead = (tryBuffer + 1) % this->fifoQueueSize;
-		}
+		while(tryBuffer != bufferNumber && going);
 	}
-	while(tryBuffer != bufferNumber && going);
+	// Now update the performance monitor
+	if(frameStatusError > 0 || captureError > 0)
+	{
+		TakeLock takeLock(this);
+		performanceMonitor->count(takeLock, PerformanceMonitor::PERF_FRAMESTATUSERROR, true, frameStatusError);
+		performanceMonitor->count(takeLock, PerformanceMonitor::PERF_CAPTUREERROR, true, captureError);
+	}
 }
 
 /**

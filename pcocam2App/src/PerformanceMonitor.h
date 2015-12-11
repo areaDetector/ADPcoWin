@@ -24,7 +24,7 @@ public:
 		PERF_CAPTUREERROR, PERF_POLLGETFRAME};
 	PerformanceMonitor(Pco* pco, TraceStream* trace);
 	virtual ~PerformanceMonitor();
-	void count(TakeLock& takeLock, PerformanceMonitor::Param param, bool fault=true);
+	void count(TakeLock& takeLock, PerformanceMonitor::Param param, bool fault=true, int by=1);
 	void clear(TakeLock& takeLock);
 private:
 	Pco* pco;

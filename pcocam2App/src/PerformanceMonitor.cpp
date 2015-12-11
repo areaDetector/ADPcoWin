@@ -80,26 +80,26 @@ PerformanceMonitor::~PerformanceMonitor()
 }
 
 // Increment a counter
-void PerformanceMonitor::count(TakeLock& takeLock, PerformanceMonitor::Param param, bool fault)
+void PerformanceMonitor::count(TakeLock& takeLock, PerformanceMonitor::Param param, bool fault, int by)
 {
 	std::map<PerformanceMonitor::Param, IntegerParam*>::iterator pos;
 	// Advance the session counter
 	pos = this->session.find(param);
 	if(pos != this->session.end())
 	{
-		*(pos->second) = *(pos->second) + 1;
+		*(pos->second) = *(pos->second) + by;
 	}
 	// Advance the accumulating counter
 	pos = this->accumulating.find(param);
 	if(pos != this->accumulating.end())
 	{
-		*(pos->second) = *(pos->second) + 1;
+		*(pos->second) = *(pos->second) + by;
 	}
 	// Advance the overall fault counters
 	if(fault)
 	{
-		paramCntFault = paramCntFault + 1;
-		paramAccFault = paramAccFault + 1;
+		paramCntFault = paramCntFault + by;
+		paramAccFault = paramAccFault + by;
 	}
 }
 
