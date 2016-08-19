@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 592
-y 537
+x 602
+y 545
 w 397
 h 525
 font "arial-bold-r-12.0"
@@ -1186,6 +1186,65 @@ endObjectProperties
 endGroup
 
 visPv "$(P):RSYNC:DFTOTAL"
+visMin "1"
+visMax "999999999"
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 10
+y 280
+w 110
+h 15
+
+beginGroup
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 10
+y 280
+w 22
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Free"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 70
+y 280
+w 50
+h 15
+controlPv "$(P):RSYNC:DFFREE"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+endGroup
+
+visPv "$(P):RSYNC:DFFREE"
 visMin "1"
 visMax "999999999"
 endObjectProperties
