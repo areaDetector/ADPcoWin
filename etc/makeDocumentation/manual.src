@@ -55,10 +55,10 @@ The ROI feature has not been tested with the PCO4000. </li>
 \section user_sec User Manual
 This section contains instructions for the end user
 
-\section build_sec Build Instructions 
-- \subpage build_instructions_exampleCamera
+\section build_sec Example IOC Build Instructions 
+The page \subpage build_instructions_exampleStandalone contains instructions for building a minimal IOC using this support module. 
 
-IOCs build using these build instructions are available in iocs/
+IOCs built using these build instructions are provided in iocs/
 **/
 
 /* Build instructions page will be generated from the xml file given to dls-xml-iocbuilder.py --doc */
