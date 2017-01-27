@@ -2382,8 +2382,8 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
         this->swBinY = Pco::defaultHorzBin;
     }
     this->api->setBinning(this->camera, this->hwBinX, this->hwBinY);
-    this->xCamSize = this->camSizes.xResActual / this->hwBinX;
-    this->yCamSize = this->camSizes.yResActual / this->hwBinY;
+    this->xCamSize = this->camSizes.xResMaximum / this->hwBinX;
+    this->yCamSize = this->camSizes.yResMaximum / this->hwBinY;
 
     // Make requested ROI valid
     this->reqRoiStartX = std::max(this->reqRoiStartX, 0);
