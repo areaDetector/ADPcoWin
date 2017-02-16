@@ -177,6 +177,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramDataFormat(this, "PCO_DATAFORMAT", 0)
 , paramConfirmedStop(this, "PCO_CONFIRMEDSTOP", 0,
 		new AsynParam::Notify<Pco>(this, &Pco::onConfirmedStop))
+, paramApplyBinningAndRoi(this, "PCO_APPLY_BIN_ROI", 0,
+		new AsynParam::Notify<Pco>(this, &Pco::onApplyBinningAndRoi))
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -247,6 +249,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	requestTrigger = stateMachine->event("Trigger");
 	requestReboot = stateMachine->event("Reboot");
 	requestMakeImages = stateMachine->event("MakeImages");
+	requestApplyBinningAndRoi = stateMachine->event("ApplyBinningAndRoi");
 	// Transitions
 	stateMachine->transition(stateUninitialised, requestInitialise, new StateMachine::Act<Pco>(this, &Pco::smInitialiseWait), stateUnconnected);
 	stateMachine->transition(stateUninitialised, requestStop, new StateMachine::Act<Pco>(this, &Pco::smAlreadyStopped), stateUninitialised);
@@ -288,6 +291,7 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 	stateMachine->transition(stateUnarmedDraining, requestImageReceived, new StateMachine::Act<Pco>(this, &Pco::smUnarmedDrainImage), stateUnarmedDraining, stateIdle);
 	stateMachine->transition(stateUnarmedDraining, requestTimerExpiry, new StateMachine::Act<Pco>(this, &Pco::smPollWhileDraining), stateUnarmedDraining);
 	stateMachine->transition(stateUnarmedDraining, requestStop, new StateMachine::Act<Pco>(this, &Pco::smExternalStopAcquisition), stateIdle);
+	stateMachine->transition(stateIdle, requestApplyBinningAndRoi, new StateMachine::Act<Pco>(this, &Pco::smApplyBinningAndRoi), stateIdle);
 	// State machine starting state
 	stateMachine->initialState(stateUninitialised);
 	// A timer for the trigger
@@ -875,6 +879,18 @@ StateMachine::StateSelector Pco::smAlreadyStopped()
 	// Release the stop confirm busy record
 	TakeLock takeLock(this);
 	paramConfirmedStop = 0;
+	return StateMachine::firstState;
+}
+
+/**
+ * Validate and set the ROI and binning while the camera is idle
+ * Returns: firstState: always
+ */
+StateMachine::StateSelector Pco::smApplyBinningAndRoi()
+{
+	// Apply the binning and ROI settings
+	this->cfgBinningAndRoi();
+
 	return StateMachine::firstState;
 }
 
@@ -3017,6 +3033,14 @@ void Pco::onConfirmedStop(TakeLock& takeLock)
 	// Simulate the regular stop command
 	paramADAcquire = 0;
 	this->onAcquire(takeLock);
+}
+
+/**
+ * Queue a request to apply the requested binning and ROI settings
+ */
+void Pco::onApplyBinningAndRoi(TakeLock& takeLock)
+{
+	this->post(Pco::requestApplyBinningAndRoi);
 }
 
 

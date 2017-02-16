@@ -943,6 +943,12 @@ record(busy, "$(P)$(R)CONFIRMED_STOP")
     field(ONAM, "Stop")
     field(VAL,  "0")
 }
+# Apply requested binning and ROI settings
+record(longout, "$(P)$(R)APPLY_BIN_ROI")
+{
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_APPLY_BIN_ROI)
+}
 
 ############################
 # Performance monitoring PVs

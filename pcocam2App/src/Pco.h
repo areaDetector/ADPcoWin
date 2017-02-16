@@ -97,6 +97,7 @@ public:
 	IntegerParam paramBuffersInUse;
 	IntegerParam paramDataFormat;
 	IntegerParam paramConfirmedStop;
+	IntegerParam paramApplyBinningAndRoi;
 
 // Constants
 public:
@@ -316,10 +317,12 @@ private:
     void onReboot(TakeLock& takeLock);
 	void onGetImage(TakeLock& takeLock);
 	void onConfirmedStop(TakeLock& takeLock);
+	void onApplyBinningAndRoi(TakeLock& takeLock);
 	void validateAndProcessFrame(NDArray* image);
 	void processFrame(NDArray* image);
 	void readFirstMemoryImage();
 	bool readNextMemoryImage();
+
 
 public:
     // States
@@ -344,6 +347,7 @@ public:
 	const StateMachine::Event* requestTrigger;
 	const StateMachine::Event* requestReboot;
 	const StateMachine::Event* requestMakeImages;
+	const StateMachine::Event* requestApplyBinningAndRoi;
 
 public:
     StateMachine::StateSelector smInitialiseWait();
@@ -370,6 +374,7 @@ public:
     StateMachine::StateSelector smExternalDrainImage();
     StateMachine::StateSelector smDrainImage();
     StateMachine::StateSelector smAlreadyStopped();
+    StateMachine::StateSelector smApplyBinningAndRoi();
 };
 
 #endif
