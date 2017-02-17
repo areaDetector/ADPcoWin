@@ -59,6 +59,7 @@ public:
     IntegerParam paramHwRoiY2;
     IntegerParam paramXCamSize;
     IntegerParam paramYCamSize;
+    IntegerParam paramApplyBinningAndRoi;
     IntegerParam paramRoiPercentX;
     IntegerParam paramRoiPercentY;
     IntegerParam paramFriendlyRoiSetting;
@@ -100,7 +101,6 @@ public:
 	IntegerParam paramBuffersInUse;
 	IntegerParam paramDataFormat;
 	IntegerParam paramConfirmedStop;
-	IntegerParam paramApplyBinningAndRoi;
 
 // Constants
 public:

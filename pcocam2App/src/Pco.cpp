@@ -179,11 +179,11 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 		new AsynParam::Notify<Pco>(this, &Pco::onConfirmedStop))
 , paramApplyBinningAndRoi(this, "PCO_APPLY_BIN_ROI", 0,
 		new AsynParam::Notify<Pco>(this, &Pco::onApplyBinningAndRoi))
-, paramFriendlyRoiSetting(this, "POC_ROI_FRIENDLY", 0)
-, paramRoiPercentX(this, "PCO_ROI_PCX", 100,
+, paramRoiPercentX(this, "PCO_ROIPCX", 100,
 		new AsynParam::Notify<Pco>(this, &Pco::onRequestPercentageRoi))
-, paramRoiPercentY(this, "POC_ROI_PCY", 100,
+, paramRoiPercentY(this, "PCO_ROIPCY", 100,
 		new AsynParam::Notify<Pco>(this, &Pco::onRequestPercentageRoi))
+, paramFriendlyRoiSetting(this, "PCO_ROI_FRIENDLY", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -2113,6 +2113,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->reqRoiSizeY = paramADSizeY;
 	this->reqBinX = paramADBinX;
 	this->reqBinY = paramADBinY;
+    this->reqRoiPercentX = paramRoiPercentX;
+    this->reqRoiPercentY = paramRoiPercentY;
 	this->adcMode = paramAdcMode;
 	this->bitAlignmentMode = paramBitAlignment;
 	this->acquireMode = paramAcquireMode;
@@ -2366,6 +2368,22 @@ void Pco::cfgTriggerMode() throw(PcoException)
  */
 void Pco::cfgBinningAndRoi(bool updateParams) throw(PcoException)
 {
+    if (updateParams == true)
+    {
+        // If we're setting params at teh end,
+        // infer that we need to get parameter information first
+        this->xMaxSize = paramADMaxSizeX;
+        this->yMaxSize = paramADMaxSizeY;
+        this->reqRoiStartX = paramADMinX;
+        this->reqRoiStartY = paramADMinY;
+        this->reqRoiSizeX = paramADSizeX;
+        this->reqRoiSizeY = paramADSizeY;
+        this->reqBinX = paramADBinX;
+        this->reqBinY = paramADBinY;
+        this->reqRoiPercentX = paramRoiPercentX;
+        this->reqRoiPercentY = paramRoiPercentY;
+    }
+    
     // Work out the software and hardware binning
     if(this->availBinX.find(this->reqBinX) == this->availBinX.end())
     {
