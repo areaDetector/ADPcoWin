@@ -975,7 +975,7 @@ record(longout, "$(P)$(R)ROI_FRIENDLY")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROI_FRIENDLY)
 }
 ## Show that we will use the percentage
-record(longin, "$(P)$(R)ROI_FRIENDLY")
+record(longin, "$(P)$(R)ROI_FRIENDLY_RBV")
 {
     field(DTYP, "asynInt32")
     field(DESC, "ROI control from %?")
