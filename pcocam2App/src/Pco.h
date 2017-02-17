@@ -59,6 +59,9 @@ public:
     IntegerParam paramHwRoiY2;
     IntegerParam paramXCamSize;
     IntegerParam paramYCamSize;
+    IntegerParam paramRoiPercentX;
+    IntegerParam paramRoiPercentY;
+    IntegerParam paramFriendlyRoiSetting;
     IntegerParam paramCamlinkClock;
     IntegerParam paramMinCoolingSetpoint;
     IntegerParam paramMaxCoolingSetpoint;
@@ -253,6 +256,9 @@ private:
     int reqRoiStartY;
     int reqRoiSizeX;
     int reqRoiSizeY;
+    int reqRoiPercentX;
+    int reqRoiPercentY;
+    //int friendlyRoiSetting;
     NDArray* imageSum;
     NDDimension_t arrayDims[numDimensions];
     bool roiRequired;
@@ -294,7 +300,7 @@ private:
     void checkMemoryBuffer(int& percentUsed, int& numFrames) throw(PcoException);
     void setValidBinning(std::set<int>& valid, int max, int step) throw();
 	void cfgMemoryMode() throw(PcoException);
-    void cfgBinningAndRoi() throw(PcoException);
+    void cfgBinningAndRoi(bool updateParams = false) throw(PcoException);
     void cfgTriggerMode() throw(PcoException);
     void cfgTimestampMode() throw(PcoException);
     void cfgAcquireMode() throw(PcoException);
@@ -318,6 +324,7 @@ private:
 	void onGetImage(TakeLock& takeLock);
 	void onConfirmedStop(TakeLock& takeLock);
 	void onApplyBinningAndRoi(TakeLock& takeLock);
+	void onRequestPercentageRoi(TakeLock& takeLock);
 	void validateAndProcessFrame(NDArray* image);
 	void processFrame(NDArray* image);
 	void readFirstMemoryImage();

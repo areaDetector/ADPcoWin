@@ -179,6 +179,11 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 		new AsynParam::Notify<Pco>(this, &Pco::onConfirmedStop))
 , paramApplyBinningAndRoi(this, "PCO_APPLY_BIN_ROI", 0,
 		new AsynParam::Notify<Pco>(this, &Pco::onApplyBinningAndRoi))
+, paramFriendlyRoiSetting(this, "POC_ROI_FRIENDLY", 0)
+, paramRoiPercentX(this, "PCO_ROI_PCX", 100,
+		new AsynParam::Notify<Pco>(this, &Pco::onRequestPercentageRoi))
+, paramRoiPercentY(this, "POC_ROI_PCY", 100,
+		new AsynParam::Notify<Pco>(this, &Pco::onRequestPercentageRoi))
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -889,7 +894,9 @@ StateMachine::StateSelector Pco::smAlreadyStopped()
 StateMachine::StateSelector Pco::smApplyBinningAndRoi()
 {
 	// Apply the binning and ROI settings
-	this->cfgBinningAndRoi();
+	bool andUpdateParameters = true;
+
+	this->cfgBinningAndRoi( andUpdateParameters );
 
 	return StateMachine::firstState;
 }
@@ -2355,8 +2362,9 @@ void Pco::cfgTriggerMode() throw(PcoException)
 
 /**
  * Configure the binning and region of interest.
+ * @param updateParams If true, update values of parameters for ROI and binning here. Otherwise leave it up to the caller. Default false
  */
-void Pco::cfgBinningAndRoi() throw(PcoException)
+void Pco::cfgBinningAndRoi(bool updateParams) throw(PcoException)
 {
     // Work out the software and hardware binning
     if(this->availBinX.find(this->reqBinX) == this->availBinX.end())
@@ -2400,6 +2408,28 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
     this->api->setBinning(this->camera, this->hwBinX, this->hwBinY);
     this->xCamSize = this->camSizes.xResMaximum / this->hwBinX;
     this->yCamSize = this->camSizes.yResMaximum / this->hwBinY;
+
+    // Friendly ROI setting from a percentage
+    if (this->paramFriendlyRoiSetting == 1)
+    {
+    	// Reset this flag
+    	this->paramFriendlyRoiSetting = 0;
+
+    	// Make requested percentages valid
+    	// so we definitely have something between 5 and 100 % in X and Y
+    	this->reqRoiPercentX = std::max(this->reqRoiPercentX, 5);
+    	this->reqRoiPercentX = std::min(this->reqRoiPercentX, 100);
+    	this->reqRoiPercentY = std::max(this->reqRoiPercentY, 5);
+    	this->reqRoiPercentY = std::min(this->reqRoiPercentY, 100);
+
+    	// Deduce region size from percentage
+    	this->reqRoiSizeX = (this->xCamSize * this->reqRoiPercentX) / 100.0;
+    	this->reqRoiSizeY = (this->yCamSize * this->reqRoiPercentY) / 100.0;
+
+    	// Deduce starting coordinates by making region symmetrical
+    	this->reqRoiStartX = (this->xCamSize - this->reqRoiSizeX) / 2;
+    	this->reqRoiStartY = (this->yCamSize - this->reqRoiSizeY) / 2;
+    }
 
     // Make requested ROI valid
     this->reqRoiStartX = std::max(this->reqRoiStartX, 0);
@@ -2531,6 +2561,26 @@ void Pco::cfgBinningAndRoi() throw(PcoException)
 		{
 			throw PcoException("Too many images for burst buffer", -1);
 		}
+	}
+
+	// Should we update the driver parameters here? Configured by argument
+	// otherwise the caller might want to do it themselves
+	if (updateParams)
+	{
+		paramADMinX = this->reqRoiStartX;
+		paramADMinY = this->reqRoiStartY;
+		paramADSizeX = this->reqRoiSizeX;
+		paramADSizeY = this->reqRoiSizeY;
+		paramADBinX = this->reqBinX;
+		paramADBinY = this->reqBinY;
+		paramHwBinX = this->hwBinX;
+		paramHwBinY = this->hwBinY;
+		paramHwRoiX1 = this->hwRoiX1;
+		paramHwRoiY1 = this->hwRoiY1;
+		paramHwRoiX2 = this->hwRoiX2;
+		paramHwRoiY2 = this->hwRoiY2;
+		paramXCamSize = this->xCamSize;
+		paramYCamSize = this->yCamSize;
 	}
 }
 
@@ -3043,6 +3093,14 @@ void Pco::onApplyBinningAndRoi(TakeLock& takeLock)
 	this->post(Pco::requestApplyBinningAndRoi);
 }
 
+/**
+ * Raise a flag that friendly ROI setting should be used
+ * e.g. after setting a percentage ROI
+ */
+void Pco::onRequestPercentageRoi(TakeLock& takeLock)
+{
+	this->paramFriendlyRoiSetting = 1;
+}
 
 /**
  * Register the gang server object

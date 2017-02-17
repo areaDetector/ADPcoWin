@@ -943,11 +943,43 @@ record(busy, "$(P)$(R)CONFIRMED_STOP")
     field(ONAM, "Stop")
     field(VAL,  "0")
 }
-# Apply requested binning and ROI settings
+
+## Apply requested binning and ROI settings
+## n.b. they also get applied 
 record(longout, "$(P)$(R)APPLY_BIN_ROI")
 {
     field(DTYP, "asynInt32")
+    field(DESC, "Apply binning+ROI")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_APPLY_BIN_ROI)
+}
+
+## Symmetrical ROI request in percent, X
+record(longout, "$(P)$(R)ROIPCX")
+{
+    field(DTYP, "asynInt32")
+    field(DES, "ROI X demand %")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROIPCX)
+}
+## Symmetrical ROI request in percent, Y
+record(longout, "$(P)$(R)ROIPCX")
+{
+    field(DTYP, "asynInt32")
+    field(DES, "ROI Y demand %")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROIPCY)
+}
+## If true ROI will be set from percentage.
+record(longout, "$(P)$(R)ROI_FRIENDLY")
+{
+    field(DTYP, "asynInt32")
+    field(DESC, "ROI control from %?")
+    field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROI_FRIENDLY)
+}
+## Show that we will use the percentage
+record(longin, "$(P)$(R)ROI_FRIENDLY")
+{
+    field(DTYP, "asynInt32")
+    field(DESC, "ROI control from %?")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROI_FRIENDLY)
 }
 
 ############################
