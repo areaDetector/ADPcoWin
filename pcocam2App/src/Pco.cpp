@@ -3150,6 +3150,7 @@ void Pco::onRequestPercentageRoi(TakeLock& takeLock)
 void Pco::onAdcMode(TakeLock& takeLock)
 {
 	// Deduce camera ROI symmetry requirements
+	this->adcMode = paramAdcMode;
 	this->paramRoiSymmetryX = roiSymmetryRequiredX();
 	this->paramRoiSymmetryY = roiSymmetryRequiredY();
 }
