@@ -959,6 +959,7 @@ record(longout, "$(P)$(R)ROIPCX")
     field(DTYP, "asynInt32")
     field(DES, "ROI X demand %")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROIPCX")
+    field(EGU, "%")
 }
 ## Symmetrical ROI request in percent, Y
 record(longout, "$(P)$(R)ROIPCY")
@@ -966,6 +967,7 @@ record(longout, "$(P)$(R)ROIPCY")
     field(DTYP, "asynInt32")
     field(DES, "ROI Y demand %")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROIPCY")
+    field(EGU, "%")
 }
 ## If true ROI will be set from percentage.
 record(longout, "$(P)$(R)ROI_FRIENDLY")
@@ -981,6 +983,26 @@ record(longin, "$(P)$(R)ROI_FRIENDLY_RBV")
     field(DESC, "ROI control from %?")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROI_FRIENDLY")
     field(SCAN, "I/O Intr")
+}
+## Read back ROI horizontal symmetry requirement
+record(bi, "$(P)$(R)ROI_SYMMETRYX_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(DESC, "ROI symmetry X req?")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROI_SYMMETRY_X")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Not required")
+    field(ONAM, "Required")
+}
+## Read back ROI vertical symmetry requirement
+record(bi, "$(P)$(R)ROI_SYMMETRYY_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(DESC, "ROI symmetry Y req?")
+    field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROI_SYMMETRY_Y")
+    field(SCAN, "I/O Intr")
+    field(ZNAM, "Not required")
+    field(ONAM, "Required")
 }
 
 ############################

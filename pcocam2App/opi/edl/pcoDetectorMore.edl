@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 309
-y 363
+x 314
+y 389
 w 796
 h 764
 font "arial-bold-r-12.0"
@@ -49,7 +49,7 @@ release 0
 x 5
 y 55
 w 380
-h 665
+h 700
 lineColor index 14
 fillColor index 3
 endObjectProperties
@@ -924,8 +924,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 195
-y 545
+x 200
+y 575
 w 45
 h 15
 controlPv "$(P)$(R)HWBINX_RBV"
@@ -943,8 +943,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 195
-y 565
+x 200
+y 595
 w 45
 h 15
 controlPv "$(P)$(R)HWBINY_RBV"
@@ -962,8 +962,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 320
-y 545
+x 325
+y 575
 w 45
 h 15
 controlPv "$(P)$(R)HWROIX1_RBV"
@@ -981,8 +981,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 320
-y 565
+x 325
+y 595
 w 45
 h 15
 controlPv "$(P)$(R)HWROIY1_RBV"
@@ -1000,8 +1000,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 320
-y 585
+x 325
+y 615
 w 45
 h 15
 controlPv "$(P)$(R)HWROIX2_RBV"
@@ -1019,8 +1019,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 320
-y 605
+x 325
+y 635
 w 45
 h 15
 controlPv "$(P)$(R)HWROIY2_RBV"
@@ -1038,8 +1038,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 130
-y 545
+x 135
+y 575
 w 52
 h 12
 font "helvetica-bold-r-10.0"
@@ -1058,8 +1058,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 130
-y 565
+x 135
+y 595
 w 53
 h 12
 font "helvetica-bold-r-10.0"
@@ -1078,8 +1078,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 255
-y 545
+x 260
+y 575
 w 58
 h 12
 font "helvetica-bold-r-10.0"
@@ -1098,8 +1098,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 255
-y 565
+x 260
+y 595
 w 59
 h 12
 font "helvetica-bold-r-10.0"
@@ -1118,8 +1118,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 255
-y 585
+x 260
+y 615
 w 58
 h 12
 font "helvetica-bold-r-10.0"
@@ -1138,8 +1138,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 255
-y 605
+x 260
+y 635
 w 59
 h 12
 font "helvetica-bold-r-10.0"
@@ -1261,8 +1261,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 10
-y 565
+x 15
+y 595
 w 50
 h 12
 font "helvetica-bold-r-10.0"
@@ -1281,8 +1281,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 10
-y 585
+x 15
+y 615
 w 42
 h 12
 font "helvetica-bold-r-10.0"
@@ -1301,8 +1301,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 10
-y 605
+x 15
+y 635
 w 55
 h 12
 font "helvetica-bold-r-10.0"
@@ -1321,8 +1321,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 65
-y 565
+x 70
+y 595
 w 55
 h 15
 controlPv "$(P)$(R)CAM_RAM_RBV"
@@ -1340,8 +1340,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 65
-y 585
+x 70
+y 615
 w 55
 h 15
 controlPv "$(P)$(R)EXP_TRIGGER_RBV"
@@ -1359,8 +1359,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 65
-y 605
+x 70
+y 635
 w 55
 h 15
 controlPv "$(P)$(R)ACQ_ENABLE_RBV"
@@ -1378,8 +1378,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 10
-y 545
+x 15
+y 575
 w 51
 h 12
 font "helvetica-bold-r-10.0"
@@ -1398,8 +1398,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 65
-y 545
+x 70
+y 575
 w 55
 h 15
 controlPv "$(P)$(R)CAM_BUSY_RBV"
@@ -1417,8 +1417,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 10
-y 635
+x 15
+y 665
 w 55
 h 12
 font "helvetica-bold-r-10.0"
@@ -1437,8 +1437,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 10
-y 655
+x 15
+y 685
 w 64
 h 12
 font "helvetica-bold-r-10.0"
@@ -1457,8 +1457,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 10
-y 675
+x 15
+y 705
 w 63
 h 12
 font "helvetica-bold-r-10.0"
@@ -1477,8 +1477,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 80
-y 635
+x 85
+y 665
 w 95
 h 15
 controlPv "$(P)$(R)SERIAL_NUMBER_RBV"
@@ -1495,8 +1495,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 80
-y 655
+x 85
+y 685
 w 95
 h 15
 controlPv "$(P)$(R)HARDWARE_VERSION_RBV"
@@ -1513,8 +1513,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 80
-y 675
+x 85
+y 705
 w 95
 h 15
 controlPv "$(P)$(R)FIRMWARE_VERSION_RBV"
@@ -1531,8 +1531,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 205
-y 655
+x 210
+y 685
 w 160
 h 15
 controlPv "$(P)$(R)BUFFERS_READY_RBV"
@@ -1548,8 +1548,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 205
-y 635
+x 210
+y 665
 w 68
 h 12
 font "helvetica-bold-r-10.0"
@@ -1568,8 +1568,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 240
-y 690
+x 245
+y 720
 w 125
 h 25
 fgColor index 25
@@ -1585,18 +1585,161 @@ offLabel "Confirmed Stop"
 font "helvetica-bold-r-12.0"
 endObjectProperties
 
-# (Group)
-object activeGroupClass
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 260
+y 490
+w 60
+h 20
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Y"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 195
+y 490
+w 60
+h 20
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "X"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 15
+y 510
+w 175
+h 20
+font "helvetica-bold-r-12.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Set ROI in %, symmetrical"
+}
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 195
+y 510
+w 60
+h 20
+controlPv "$(P)$(R)ROIPCX"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-12.0"
+endObjectProperties
+
+# (Textentry)
+object TextentryClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 260
+y 510
+w 60
+h 20
+controlPv "$(P)$(R)ROIPCY"
+fgColor index 25
+fgAlarm
+bgColor index 3
+fill
+font "arial-bold-r-12.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 325
+y 490
+w 60
+h 20
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Pending"
+}
+endObjectProperties
+
+# (Byte)
+object ByteClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 80
-y 360
-w 265
-h 85
+x 345
+y 510
+w 15
+h 15
+controlPv "$(P)$(R)ROI_FRIENDLY_RBV"
+lineColor index 14
+onColor index 35
+offColor index 39
+numBits 1
+endObjectProperties
 
-beginGroup
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 45
+y 535
+w 265
+h 25
+fgColor index 25
+onColor index 3
+offColor index 3
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(P)$(R)APPLY_BIN_ROI"
+releaseValue "1"
+onLabel "Validate and set ROI"
+offLabel "Validate and set ROI"
+3d
+font "helvetica-bold-r-12.0"
+endObjectProperties
 
 # (Static Text)
 object activeXTextClass
@@ -1605,7 +1748,7 @@ major 4
 minor 1
 release 1
 x 175
-y 360
+y 375
 w 51
 h 12
 font "helvetica-bold-r-10.0"
@@ -1625,7 +1768,7 @@ major 4
 minor 1
 release 1
 x 275
-y 360
+y 375
 w 39
 h 12
 font "helvetica-bold-r-10.0"
@@ -1645,7 +1788,7 @@ major 10
 minor 0
 release 0
 x 255
-y 375
+y 390
 w 90
 h 20
 controlPv "$(P)$(R)MAXBINVERT_RBV"
@@ -1664,7 +1807,7 @@ major 10
 minor 0
 release 0
 x 160
-y 375
+y 390
 w 90
 h 20
 controlPv "$(P)$(R)MAXBINHORZ_RBV"
@@ -1683,7 +1826,7 @@ major 10
 minor 0
 release 0
 x 160
-y 400
+y 415
 w 90
 h 20
 controlPv "$(P)$(R)BINHORZSTEPPING_RBV"
@@ -1703,7 +1846,7 @@ major 10
 minor 0
 release 0
 x 255
-y 400
+y 415
 w 90
 h 20
 controlPv "$(P)$(R)BINVERTSTEPPING_RBV"
@@ -1723,7 +1866,7 @@ major 10
 minor 0
 release 0
 x 255
-y 425
+y 440
 w 90
 h 20
 controlPv "$(P)$(R)ROIVERTSTEPS_RBV"
@@ -1742,7 +1885,7 @@ major 10
 minor 0
 release 0
 x 160
-y 425
+y 440
 w 90
 h 20
 controlPv "$(P)$(R)ROIHORZSTEPS_RBV"
@@ -1761,7 +1904,7 @@ major 4
 minor 1
 release 1
 x 80
-y 430
+y 445
 w 69
 h 12
 font "helvetica-bold-r-10.0"
@@ -1780,8 +1923,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 80
-y 405
+x 85
+y 420
 w 62
 h 12
 font "helvetica-bold-r-10.0"
@@ -1800,8 +1943,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 80
-y 380
+x 85
+y 395
 w 63
 h 12
 font "helvetica-bold-r-10.0"
@@ -1814,104 +1957,42 @@ value {
 autoSize
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 255
-y 460
-w 60
-h 20
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "Y"
-}
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 190
-y 460
-w 60
-h 20
-font "helvetica-bold-r-12.0"
-fontAlign "center"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "X"
-}
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 10
-y 480
-w 175
-h 20
-font "helvetica-bold-r-12.0"
-fontAlign "right"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "Set ROI in %, symmetrical"
-}
-endObjectProperties
-
-# (Textentry)
-object TextentryClass
-beginObjectProperties
-major 10
-minor 0
-release 0
-x 190
-y 480
-w 60
-h 20
-controlPv "$(P)$(R)ROIPCX"
-fgColor index 25
-fgAlarm
-bgColor index 3
-fill
-font "arial-bold-r-12.0"
-endObjectProperties
-
-# (Textentry)
-object TextentryClass
+# (Textupdate)
+object TextupdateClass
 beginObjectProperties
 major 10
 minor 0
 release 0
 x 255
-y 480
-w 60
+y 465
+w 90
 h 20
-controlPv "$(P)$(R)ROIPCY"
-fgColor index 25
+controlPv "$(P)$(R)ROISYMMETRYY_RBV"
+fgColor index 16
 fgAlarm
-bgColor index 3
+bgColor index 10
 fill
-font "arial-bold-r-12.0"
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 160
+y 465
+w 90
+h 20
+controlPv "$(P)$(R)ROI_SYMMETRYX_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
 endObjectProperties
 
 # (Static Text)
@@ -1920,57 +2001,37 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 320
-y 460
-w 60
-h 20
-font "helvetica-bold-r-12.0"
-fontAlign "center"
+x 25
+y 470
+w 125
+h 12
+font "helvetica-bold-r-10.0"
 fgColor index 14
 bgColor index 3
 useDisplayBg
 value {
-  "Pending"
+  "ROI Symmetry Required?"
 }
+autoSize
 endObjectProperties
 
-# (Byte)
-object ByteClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 340
-y 480
-w 15
-h 15
-controlPv "$(P)$(R)ROI_FRIENDLY_RBV"
-lineColor index 14
-onColor index 35
-offColor index 39
-numBits 1
-endObjectProperties
-
-# (Message Button)
-object activeMessageButtonClass
+# (Static Text)
+object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 40
-y 505
-w 265
-h 25
-fgColor index 25
-onColor index 3
-offColor index 3
-topShadowColor index 1
-botShadowColor index 11
-controlPv "$(P)$(R)APPLY_BIN_ROI"
-releaseValue "1"
-onLabel "Validate and set ROI"
-offLabel "Validate and set ROI"
-3d
-font "helvetica-bold-r-12.0"
+release 1
+x 15
+y 355
+w 148
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Binning and ROI requirements"
+}
+autoSize
 endObjectProperties
 

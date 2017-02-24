@@ -110,7 +110,8 @@ void pcoInitHookFunction(initHookState state)
 Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 : ADDriverEx(portName, 1, maxBuffers, maxMemory)
 , paramPixRate(this, "PCO_PIX_RATE", 0)
-, paramAdcMode(this, "PCO_ADC_MODE", DllApi::adcModeDual)
+, paramAdcMode(this, "PCO_ADC_MODE", DllApi::adcModeDual,
+		new AsynParam::Notify<Pco>(this, &Pco::onAdcMode))
 , paramCamRamUse(this, "PCO_CAM_RAM_USE", 0)
 , paramElectronicsTemp(this, "PCO_ELECTRONICS_TEMP", 0.0)
 , paramPowerTemp(this, "PCO_POWER_TEMP", 0.0)
@@ -184,6 +185,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramRoiPercentY(this, "PCO_ROIPCY", 100,
 		new AsynParam::Notify<Pco>(this, &Pco::onRequestPercentageRoi))
 , paramFriendlyRoiSetting(this, "PCO_ROI_FRIENDLY", 0)
+, paramRoiSymmetryX(this, "PCO_ROI_SYMMETRY_X", 0)
+, paramRoiSymmetryY(this, "PCO_ROI_SYMMETRY_Y", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -888,6 +891,29 @@ StateMachine::StateSelector Pco::smAlreadyStopped()
 }
 
 /**
+ * Return true if the camera requires that a region of
+ * interest be symmetrical in the horizontal direction
+ */
+bool Pco::roiSymmetryRequiredX() {
+	return (this->adcMode == DllApi::adcModeDual ||
+			this->camType.camType == DllApi::cameraTypeDimaxStd ||
+			this->camType.camType == DllApi::cameraTypeDimaxTv ||
+			this->camType.camType == DllApi::cameraTypeDimaxAutomotive);
+}
+
+/**
+ * Return true if the camera requires that a region of
+ * interest be symmetrical in the vertical direction
+ */
+bool Pco::roiSymmetryRequiredY() {
+	return (this->camType.camType == DllApi::cameraTypeEdge ||
+			this->camType.camType == DllApi::cameraTypeEdgeGl ||
+			this->camType.camType == DllApi::cameraTypeDimaxStd ||
+			this->camType.camType == DllApi::cameraTypeDimaxTv ||
+			this->camType.camType == DllApi::cameraTypeDimaxAutomotive);
+}
+
+/**
  * Validate and set the ROI and binning while the camera is idle
  * Returns: firstState: always
  */
@@ -1155,6 +1181,10 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 			camDescription.binHorzStepping);
 	setValidBinning(availBinY, camDescription.maxBinVert,
 			camDescription.binVertStepping);
+
+	// Deduce camera ROI symmetry requirements
+	this->paramRoiSymmetryX = roiSymmetryRequiredX();
+	this->paramRoiSymmetryY = roiSymmetryRequiredY();
 
 	// Get more camera information
 	this->api->getTransferParameters(this->camera, &this->camTransfer);
@@ -2466,10 +2496,7 @@ void Pco::cfgBinningAndRoi(bool updateParams) throw(PcoException)
     this->hwRoiY2 = this->reqRoiStartY+this->reqRoiSizeY;
 
     // Enforce horizontal symmetry requirements
-    if(this->adcMode == DllApi::adcModeDual ||
-		this->camType.camType == DllApi::cameraTypeDimaxStd ||
-		this->camType.camType == DllApi::cameraTypeDimaxTv ||
-		this->camType.camType == DllApi::cameraTypeDimaxAutomotive)
+    if(this->roiSymmetryRequiredX())
     {
         if(this->hwRoiX1 <= this->xCamSize-this->hwRoiX2)
         {
@@ -2482,11 +2509,7 @@ void Pco::cfgBinningAndRoi(bool updateParams) throw(PcoException)
     }
 
     // Enforce vertical symmetry requirements
-	if(this->camType.camType == DllApi::cameraTypeEdge ||
-		this->camType.camType == DllApi::cameraTypeEdgeGl ||
-		this->camType.camType == DllApi::cameraTypeDimaxStd ||
-		this->camType.camType == DllApi::cameraTypeDimaxTv ||
-		this->camType.camType == DllApi::cameraTypeDimaxAutomotive)
+	if(this->roiSymmetryRequiredY())
     {
         if(this->hwRoiY1 <= this->yCamSize-this->hwRoiY2)
         {
@@ -3118,6 +3141,17 @@ void Pco::onApplyBinningAndRoi(TakeLock& takeLock)
 void Pco::onRequestPercentageRoi(TakeLock& takeLock)
 {
 	this->paramFriendlyRoiSetting = 1;
+}
+
+/**
+ * We need to be notified when ADC mode is changed
+ * to update the readback of ROI symmetry requirement
+ */
+void Pco::onAdcMode(TakeLock& takeLock)
+{
+	// Deduce camera ROI symmetry requirements
+	this->paramRoiSymmetryX = roiSymmetryRequiredX();
+	this->paramRoiSymmetryY = roiSymmetryRequiredY();
 }
 
 /**

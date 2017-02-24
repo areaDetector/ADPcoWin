@@ -101,6 +101,8 @@ public:
 	IntegerParam paramBuffersInUse;
 	IntegerParam paramDataFormat;
 	IntegerParam paramConfirmedStop;
+	IntegerParam paramRoiSymmetryX;
+	IntegerParam paramRoiSymmetryY;
 
 // Constants
 public:
@@ -325,10 +327,13 @@ private:
 	void onConfirmedStop(TakeLock& takeLock);
 	void onApplyBinningAndRoi(TakeLock& takeLock);
 	void onRequestPercentageRoi(TakeLock& takeLock);
+	void onAdcMode(TakeLock& takeLock);
 	void validateAndProcessFrame(NDArray* image);
 	void processFrame(NDArray* image);
 	void readFirstMemoryImage();
 	bool readNextMemoryImage();
+	bool roiSymmetryRequiredX();
+	bool roiSymmetryRequiredY();
 
 
 public:
