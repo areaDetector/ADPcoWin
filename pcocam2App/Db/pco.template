@@ -1398,6 +1398,8 @@ record(longin, "$(P)$(R)PERF:CNT:FAULT_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFCNT_FAULT")
     field(SCAN, "I/O Intr")
+    field(HI, "1")
+    field(HIHI, "10")
 }
 
 # Reset the accumulated performance information
