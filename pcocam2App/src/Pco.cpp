@@ -2226,6 +2226,10 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	{
 		gangConnection->sendMemberConfig(takeLock);
 	}
+	
+    // Since ADC mode might have been changed above,
+    // Update ROI symmetry requirement display
+    onAdcMode(takeLock);
 
 	// Should we use the special PCO4000 poll mode to avoid the wierdo FIFO
 	// jamming up problem?

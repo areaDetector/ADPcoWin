@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 314
-y 389
+x 597
+y 319
 w 796
 h 764
 font "arial-bold-r-12.0"
@@ -1591,9 +1591,9 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 260
+x 285
 y 490
-w 60
+w 90
 h 20
 font "helvetica-bold-r-12.0"
 fontAlign "center"
@@ -1611,9 +1611,9 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 195
+x 190
 y 490
-w 60
+w 90
 h 20
 font "helvetica-bold-r-12.0"
 fontAlign "center"
@@ -1631,7 +1631,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
+x 5
 y 510
 w 175
 h 20
@@ -1641,7 +1641,7 @@ fgColor index 14
 bgColor index 3
 useDisplayBg
 value {
-  "Set ROI in %, symmetrical"
+  "Set a symmetrical ROI in %"
 }
 endObjectProperties
 
@@ -1651,9 +1651,9 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 195
+x 190
 y 510
-w 60
+w 90
 h 20
 controlPv "$(P)$(R)ROIPCX"
 fgColor index 25
@@ -1669,9 +1669,9 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 260
+x 285
 y 510
-w 60
+w 90
 h 20
 controlPv "$(P)$(R)ROIPCY"
 fgColor index 25
@@ -1687,9 +1687,9 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 325
-y 490
-w 60
+x 40
+y 540
+w 110
 h 20
 font "helvetica-bold-r-12.0"
 fontAlign "center"
@@ -1697,7 +1697,7 @@ fgColor index 14
 bgColor index 3
 useDisplayBg
 value {
-  "Pending"
+  "Pending changes?"
 }
 endObjectProperties
 
@@ -1707,8 +1707,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 345
-y 510
+x 165
+y 540
 w 15
 h 15
 controlPv "$(P)$(R)ROI_FRIENDLY_RBV"
@@ -1724,9 +1724,9 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 45
+x 190
 y 535
-w 265
+w 180
 h 25
 fgColor index 25
 onColor index 3
@@ -1747,7 +1747,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 175
+x 205
 y 375
 w 51
 h 12
@@ -1767,7 +1767,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 275
+x 305
 y 375
 w 39
 h 12
@@ -1787,7 +1787,7 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 255
+x 285
 y 390
 w 90
 h 20
@@ -1806,7 +1806,7 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 160
+x 190
 y 390
 w 90
 h 20
@@ -1825,7 +1825,7 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 160
+x 190
 y 415
 w 90
 h 20
@@ -1845,7 +1845,7 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 255
+x 285
 y 415
 w 90
 h 20
@@ -1865,7 +1865,7 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 255
+x 285
 y 440
 w 90
 h 20
@@ -1884,7 +1884,7 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 160
+x 190
 y 440
 w 90
 h 20
@@ -1903,7 +1903,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 80
+x 110
 y 445
 w 69
 h 12
@@ -1923,7 +1923,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 85
+x 115
 y 420
 w 62
 h 12
@@ -1943,7 +1943,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 85
+x 115
 y 395
 w 63
 h 12
@@ -1963,11 +1963,11 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 255
+x 285
 y 465
 w 90
 h 20
-controlPv "$(P)$(R)ROISYMMETRYY_RBV"
+controlPv "$(P)$(R)ROI_SYMMETRYY_RBV"
 fgColor index 16
 fgAlarm
 bgColor index 10
@@ -1982,7 +1982,7 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 160
+x 190
 y 465
 w 90
 h 20
@@ -2001,7 +2001,7 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 25
+x 55
 y 470
 w 125
 h 12
