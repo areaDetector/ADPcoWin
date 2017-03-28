@@ -1,8 +1,8 @@
 
 # Macros:
-#% macro, P, Device Prefix
-#% macro, R, Device Suffix
-#% macro, PORT, Asyn Port name
+#% macro, P, Device Prefix (same as detector driver)
+#% macro, R, Device Suffix (same as detector driver)
+#% macro, PORT, The asyn port name of the detector driver
 #% macro, TIMEOUT, Timeout
 #% macro, ADDR, Asyn Port address
 
