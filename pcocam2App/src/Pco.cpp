@@ -2458,10 +2458,12 @@ void Pco::cfgBinningAndRoi(bool updateParams) throw(PcoException)
         this->swBinY = Pco::defaultHorzBin;
     }
     this->api->setBinning(this->camera, this->hwBinX, this->hwBinY);
+    
+    // xCamSize and yCamSize determined from full sensor size / binning
     this->xCamSize = this->xMaxSize / this->hwBinX;
     this->yCamSize = this->yMaxSize / this->hwBinY;
 
-    this->errorTrace << "At beginning of cfgBinningAndRoi: xCamSize = " << this->xCamSize << ", yCamSize = " << this->yCamSize << std::endl;
+    // this->errorTrace << "At beginning of cfgBinningAndRoi: xCamSize = " << this->xCamSize << ", yCamSize = " << this->yCamSize;
 
     // Friendly ROI setting from a percentage
     if (this->paramFriendlyRoiSetting == 1)
@@ -2572,10 +2574,12 @@ void Pco::cfgBinningAndRoi(bool updateParams) throw(PcoException)
     // in the hardware
     this->hwRoiX1 += 1;
     this->hwRoiY1 += 1;
+    
+    // Set the hardware ROI and catch if an exceptions comes back
     try{
     	// temporary debug
-    	this->errorTrace << "Set ROI to ( X1: " << (unsigned short)this->hwRoiX1 << ", Y1: " << (unsigned short)this->hwRoiY1 << ", X2: "
-    					<< (unsigned short)this->hwRoiX2 << ", Y2: " << (unsigned short)this->hwRoiY2;
+    	/*this->errorTrace << "Set ROI to ( X1: " << (unsigned short)this->hwRoiX1 << ", Y1: " << (unsigned short)this->hwRoiY1 << ", X2: "
+    					<< (unsigned short)this->hwRoiX2 << ", Y2: " << (unsigned short)this->hwRoiY2;*/
 		this->api->setRoi(this->camera,
 				(unsigned short)this->hwRoiX1, (unsigned short)this->hwRoiY1,
 				(unsigned short)this->hwRoiX2, (unsigned short)this->hwRoiY2);
