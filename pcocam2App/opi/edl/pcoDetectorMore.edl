@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 597
-y 319
+x 524
+y 56
 w 796
-h 764
+h 897
 font "arial-bold-r-12.0"
 ctlFont "arial-bold-r-12.0"
 btnFont "arial-bold-r-12.0"
@@ -32,6 +32,20 @@ beginObjectProperties
 major 4
 minor 0
 release 0
+x 5
+y 545
+w 380
+h 340
+lineColor index 14
+fillColor index 3
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
 x 395
 y 580
 w 380
@@ -49,7 +63,7 @@ release 0
 x 5
 y 55
 w 380
-h 700
+h 485
 lineColor index 14
 fillColor index 3
 endObjectProperties
@@ -924,8 +938,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 200
-y 575
+x 205
+y 360
 w 45
 h 15
 controlPv "$(P)$(R)HWBINX_RBV"
@@ -943,8 +957,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 200
-y 595
+x 205
+y 380
 w 45
 h 15
 controlPv "$(P)$(R)HWBINY_RBV"
@@ -962,8 +976,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 325
-y 575
+x 330
+y 360
 w 45
 h 15
 controlPv "$(P)$(R)HWROIX1_RBV"
@@ -981,8 +995,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 325
-y 595
+x 330
+y 380
 w 45
 h 15
 controlPv "$(P)$(R)HWROIY1_RBV"
@@ -1000,8 +1014,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 325
-y 615
+x 330
+y 400
 w 45
 h 15
 controlPv "$(P)$(R)HWROIX2_RBV"
@@ -1019,8 +1033,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 325
-y 635
+x 330
+y 420
 w 45
 h 15
 controlPv "$(P)$(R)HWROIY2_RBV"
@@ -1038,8 +1052,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 135
-y 575
+x 140
+y 360
 w 52
 h 12
 font "helvetica-bold-r-10.0"
@@ -1058,8 +1072,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 135
-y 595
+x 140
+y 380
 w 53
 h 12
 font "helvetica-bold-r-10.0"
@@ -1078,8 +1092,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 260
-y 575
+x 265
+y 360
 w 58
 h 12
 font "helvetica-bold-r-10.0"
@@ -1098,8 +1112,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 260
-y 595
+x 265
+y 380
 w 59
 h 12
 font "helvetica-bold-r-10.0"
@@ -1118,8 +1132,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 260
-y 615
+x 265
+y 400
 w 58
 h 12
 font "helvetica-bold-r-10.0"
@@ -1138,8 +1152,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 260
-y 635
+x 265
+y 420
 w 59
 h 12
 font "helvetica-bold-r-10.0"
@@ -1261,8 +1275,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 595
+x 20
+y 380
 w 50
 h 12
 font "helvetica-bold-r-10.0"
@@ -1281,8 +1295,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 615
+x 20
+y 400
 w 42
 h 12
 font "helvetica-bold-r-10.0"
@@ -1301,8 +1315,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 635
+x 20
+y 420
 w 55
 h 12
 font "helvetica-bold-r-10.0"
@@ -1321,8 +1335,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 70
-y 595
+x 75
+y 380
 w 55
 h 15
 controlPv "$(P)$(R)CAM_RAM_RBV"
@@ -1340,8 +1354,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 70
-y 615
+x 75
+y 400
 w 55
 h 15
 controlPv "$(P)$(R)EXP_TRIGGER_RBV"
@@ -1359,8 +1373,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 70
-y 635
+x 75
+y 420
 w 55
 h 15
 controlPv "$(P)$(R)ACQ_ENABLE_RBV"
@@ -1378,8 +1392,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 575
+x 20
+y 360
 w 51
 h 12
 font "helvetica-bold-r-10.0"
@@ -1398,8 +1412,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 70
-y 575
+x 75
+y 360
 w 55
 h 15
 controlPv "$(P)$(R)CAM_BUSY_RBV"
@@ -1417,8 +1431,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 665
+x 20
+y 450
 w 55
 h 12
 font "helvetica-bold-r-10.0"
@@ -1437,8 +1451,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 685
+x 20
+y 470
 w 64
 h 12
 font "helvetica-bold-r-10.0"
@@ -1457,8 +1471,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 705
+x 20
+y 490
 w 63
 h 12
 font "helvetica-bold-r-10.0"
@@ -1477,8 +1491,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 85
-y 665
+x 90
+y 450
 w 95
 h 15
 controlPv "$(P)$(R)SERIAL_NUMBER_RBV"
@@ -1495,8 +1509,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 85
-y 685
+x 90
+y 470
 w 95
 h 15
 controlPv "$(P)$(R)HARDWARE_VERSION_RBV"
@@ -1513,8 +1527,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 85
-y 705
+x 90
+y 490
 w 95
 h 15
 controlPv "$(P)$(R)FIRMWARE_VERSION_RBV"
@@ -1531,8 +1545,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 210
-y 685
+x 215
+y 470
 w 160
 h 15
 controlPv "$(P)$(R)BUFFERS_READY_RBV"
@@ -1548,8 +1562,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 210
-y 665
+x 215
+y 450
 w 68
 h 12
 font "helvetica-bold-r-10.0"
@@ -1568,8 +1582,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 245
-y 720
+x 250
+y 505
 w 125
 h 25
 fgColor index 25
@@ -1591,8 +1605,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 285
-y 490
+x 280
+y 700
 w 90
 h 20
 font "helvetica-bold-r-12.0"
@@ -1611,8 +1625,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 190
-y 490
+x 185
+y 700
 w 90
 h 20
 font "helvetica-bold-r-12.0"
@@ -1631,8 +1645,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 5
-y 510
+x 0
+y 720
 w 175
 h 20
 font "helvetica-bold-r-12.0"
@@ -1651,8 +1665,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 190
-y 510
+x 185
+y 720
 w 90
 h 20
 controlPv "$(P)$(R)ROIPCX"
@@ -1669,8 +1683,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 285
-y 510
+x 280
+y 720
 w 90
 h 20
 controlPv "$(P)$(R)ROIPCY"
@@ -1687,8 +1701,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 40
-y 540
+x 35
+y 750
 w 110
 h 20
 font "helvetica-bold-r-12.0"
@@ -1707,8 +1721,8 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 165
-y 540
+x 160
+y 750
 w 15
 h 15
 controlPv "$(P)$(R)ROI_FRIENDLY_RBV"
@@ -1724,8 +1738,8 @@ beginObjectProperties
 major 4
 minor 1
 release 0
-x 190
-y 535
+x 185
+y 745
 w 180
 h 25
 fgColor index 25
@@ -1747,8 +1761,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 205
-y 375
+x 200
+y 585
 w 51
 h 12
 font "helvetica-bold-r-10.0"
@@ -1767,8 +1781,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 305
-y 375
+x 300
+y 585
 w 39
 h 12
 font "helvetica-bold-r-10.0"
@@ -1787,8 +1801,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 285
-y 390
+x 280
+y 600
 w 90
 h 20
 controlPv "$(P)$(R)MAXBINVERT_RBV"
@@ -1796,7 +1810,7 @@ fgColor index 16
 fgAlarm
 bgColor index 10
 fill
-font "helvetica-bold-r-10.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 endObjectProperties
 
@@ -1806,8 +1820,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 190
-y 390
+x 185
+y 600
 w 90
 h 20
 controlPv "$(P)$(R)MAXBINHORZ_RBV"
@@ -1815,7 +1829,7 @@ fgColor index 16
 fgAlarm
 bgColor index 10
 fill
-font "helvetica-bold-r-10.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 endObjectProperties
 
@@ -1825,8 +1839,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 190
-y 415
+x 185
+y 625
 w 90
 h 20
 controlPv "$(P)$(R)BINHORZSTEPPING_RBV"
@@ -1835,7 +1849,7 @@ fgColor index 16
 fgAlarm
 bgColor index 10
 fill
-font "helvetica-bold-r-10.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 endObjectProperties
 
@@ -1845,8 +1859,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 285
-y 415
+x 280
+y 625
 w 90
 h 20
 controlPv "$(P)$(R)BINVERTSTEPPING_RBV"
@@ -1855,7 +1869,7 @@ fgColor index 16
 fgAlarm
 bgColor index 10
 fill
-font "helvetica-bold-r-10.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 endObjectProperties
 
@@ -1865,8 +1879,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 285
-y 440
+x 280
+y 650
 w 90
 h 20
 controlPv "$(P)$(R)ROIVERTSTEPS_RBV"
@@ -1874,7 +1888,7 @@ fgColor index 16
 fgAlarm
 bgColor index 10
 fill
-font "helvetica-bold-r-10.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 endObjectProperties
 
@@ -1884,8 +1898,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 190
-y 440
+x 185
+y 650
 w 90
 h 20
 controlPv "$(P)$(R)ROIHORZSTEPS_RBV"
@@ -1893,7 +1907,7 @@ fgColor index 16
 fgAlarm
 bgColor index 10
 fill
-font "helvetica-bold-r-10.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 endObjectProperties
 
@@ -1903,8 +1917,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 110
-y 445
+x 105
+y 655
 w 69
 h 12
 font "helvetica-bold-r-10.0"
@@ -1923,8 +1937,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 115
-y 420
+x 110
+y 630
 w 62
 h 12
 font "helvetica-bold-r-10.0"
@@ -1943,8 +1957,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 115
-y 395
+x 110
+y 605
 w 63
 h 12
 font "helvetica-bold-r-10.0"
@@ -1963,8 +1977,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 285
-y 465
+x 280
+y 675
 w 90
 h 20
 controlPv "$(P)$(R)ROI_SYMMETRYY_RBV"
@@ -1972,7 +1986,7 @@ fgColor index 16
 fgAlarm
 bgColor index 10
 fill
-font "helvetica-bold-r-10.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 endObjectProperties
 
@@ -1982,8 +1996,8 @@ beginObjectProperties
 major 10
 minor 0
 release 0
-x 190
-y 465
+x 185
+y 675
 w 90
 h 20
 controlPv "$(P)$(R)ROI_SYMMETRYX_RBV"
@@ -1991,7 +2005,7 @@ fgColor index 16
 fgAlarm
 bgColor index 10
 fill
-font "helvetica-bold-r-10.0"
+font "helvetica-bold-r-14.0"
 fontAlign "center"
 endObjectProperties
 
@@ -2001,8 +2015,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 55
-y 470
+x 50
+y 680
 w 125
 h 12
 font "helvetica-bold-r-10.0"
@@ -2021,8 +2035,8 @@ beginObjectProperties
 major 4
 minor 1
 release 1
-x 15
-y 355
+x 30
+y 560
 w 148
 h 12
 font "helvetica-bold-r-10.0"
@@ -2031,6 +2045,162 @@ bgColor index 3
 useDisplayBg
 value {
   "Binning and ROI requirements"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 5
+y 540
+w 182
+h 13
+font "arial-medium-r-12.0"
+fgColor index 14
+bgColor index 5
+value {
+  "  Binning and Region of Interest  "
+}
+autoSize
+border
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 280
+y 840
+w 90
+h 20
+controlPv "$(P)$(R)SizeY_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 280
+y 815
+w 90
+h 20
+controlPv "$(P)$(R)MinY_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 185
+y 840
+w 90
+h 20
+controlPv "$(P)$(R)SizeX_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 185
+y 815
+w 90
+h 20
+controlPv "$(P)$(R)MinX_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 110
+y 845
+w 55
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Region end"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 105
+y 820
+w 61
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Region start"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 65
+y 790
+w 105
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Values set in camera"
 }
 autoSize
 endObjectProperties
