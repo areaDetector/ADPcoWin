@@ -957,7 +957,7 @@ record(longout, "$(P)$(R)APPLY_BIN_ROI")
 record(longout, "$(P)$(R)ROIPCX")
 {
     field(DTYP, "asynInt32")
-    field(DES, "ROI X demand %")
+    field(DESC, "ROI X demand %")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROIPCX")
     field(EGU, "%")
 }
@@ -965,7 +965,7 @@ record(longout, "$(P)$(R)ROIPCX")
 record(longout, "$(P)$(R)ROIPCY")
 {
     field(DTYP, "asynInt32")
-    field(DES, "ROI Y demand %")
+    field(DESC, "ROI Y demand %")
     field(OUT, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_ROIPCY")
     field(EGU, "%")
 }
@@ -1398,8 +1398,10 @@ record(longin, "$(P)$(R)PERF:CNT:FAULT_RBV")
     field(DTYP, "asynInt32")
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_PERFCNT_FAULT")
     field(SCAN, "I/O Intr")
-    field(HI, "1")
+    field(HIGH, "1")
     field(HIHI, "10")
+    field(HSV, "MINOR")
+    field(HHSV, "MAJOR")
 }
 
 # Reset the accumulated performance information
