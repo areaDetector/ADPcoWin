@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 524
-y 56
+x 529
+y 82
 w 796
 h 897
 font "arial-bold-r-12.0"
@@ -2153,14 +2153,15 @@ minor 1
 release 1
 x 110
 y 845
-w 55
+w 58
 h 12
 font "helvetica-bold-r-10.0"
+fontAlign "right"
 fgColor index 14
 bgColor index 3
 useDisplayBg
 value {
-  "Region end"
+  "Region size"
 }
 autoSize
 endObjectProperties
