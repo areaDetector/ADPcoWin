@@ -12,6 +12,15 @@
 # All tags starting with gdatag are DLS specific for GDA
 # % gdatag, template, pcocam, $(PORT)_pcocam, $(PORT) pcocam class instance
 
+## Dummy records for Diamond archiver
+## CCD Temperature is defined in ADBase.template
+# % archiver 10 monitor
+record(ai, "$(P)$(R)Temperature_RBV")
+{
+    info("archiver", "10 Monitor")
+}
+## End dummy records for Diamond archiver
+
 include "ADBase.template"
 
 # Only 1 data type is supported, unsigned 16 bit integers
