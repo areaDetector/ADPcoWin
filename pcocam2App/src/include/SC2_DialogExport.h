@@ -59,7 +59,9 @@
 extern "C" {            //  Assume C declarations for C++
 #endif  //C++
 // Init flags
-#define SC2_SDK_DEF_DLG_PASSIV  0x00000001
+#define SC2_SDK_DEF_DLG_PASSIV                   0x00000001 // Dialog does not call set commands in sc2_cam.dll
+#define SC2_SDK_DEF_DLG_NO_ADAPT_MEM             0x00000002 // Keeps memory size for segment 4 (preview segment) 
+#define SC2_SDK_DEF_DLG_CAN_HANDLE_RECORDER_MODE 0x00000004 // Application can deal with sequence/ringbuffer
 // Status flags
 #define SC2_SDK_DEF_DLG_OFF     0x00000000 // Dialog is off
 #define SC2_SDK_DEF_DLG_ON      0x00000001 // Dialog is on
@@ -90,6 +92,18 @@ SC2_SDK_FUNC_DLG int WINAPI PCO_OpenDialogCam(HANDLE *ptr,
 //     int iXPos -> X position of the upper left corner of the dialog.
 //     int iYPos -> Y position of the upper left corner of the dialog.
 //     char *pcCaption -> String to be displayed in the caption bar of the dialog.
+//     In case you need to set a UNICODE string, please create the 
+//     string in this way:
+//     Create a structure in your application:
+//     struct 
+//     {
+//       char cUNI[4];
+//       wchar_t szName[100];
+//     }strOpenText;
+//     Fill the structure with the following strings
+//     sprintf_s(&strOpenText.cUNI[0],4, "UNI");// char string (will be recognized by the dll)
+//     swprintf_s(&strOpenText.szName[0], 100, L"Your UNICODE string");// UNICODE string
+//     Then set this parameter pcCaption to (char*)&strOpenText.cUNI[0]
 // Out: int -> Error message.
 /* Example:
   HANDLE hDialog;
@@ -196,6 +210,11 @@ SC2_SDK_FUNC_DLG DWORD WINAPI PCO_GetStatusDialogCam(HANDLE ptr, DWORD *dwStatus
   err = PCO_GetStatusDialogCam(hDialog, &status);
   ...
 */
+
+SC2_SDK_FUNC_DLG int WINAPI PCO_SetLanguageDialogCam(char *szLanguage);
+// Sets the dialog language.
+// In: char* szLanguage -> char pointer to set the dialog language, e.g. 'german'
+
 #ifdef __cplusplus
 }
 #endif  //C++

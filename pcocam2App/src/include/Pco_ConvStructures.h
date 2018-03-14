@@ -25,7 +25,7 @@
 //-----------------------------------------------------------------//
 // Rev.:     | Date:      | Changed:                               //
 // --------- | ---------- | ---------------------------------------//
-//  1.10     | 03.07.2003 |  gamma, alignement added, FRE          //
+//  1.10     | 03.07.2003 |  gamma, alignment added, FRE           //
 //-----------------------------------------------------------------//
 //  1.13     | 16.03.2005 |  PCO_CNV_COL_SET added, FRE            //
 //-----------------------------------------------------------------//
@@ -74,19 +74,19 @@
 
 typedef struct  {
 	WORD          wSize;
-	WORD          wDummy;
-	int           iScale_maxmax;          // Maximum value for max 
-	int           iScale_min;             // Lowest value for processing
-	int           iScale_max;             // Highest value for processing
-	int           iColor_temp;            // Color temperature  3500...20000
-	int           iColor_tint;            // Color correction  -100...100 // 5 int
-	int           iColor_saturation;      // Color saturation  -100...100
-	int           iColor_vibrance;        // Color dynamic saturation  -100...100
-	int           iContrast;              // Contrast  -100...100
-	int           iGamma;                 // Gamma  -100...100
-	int           iSRGB;				  // sRGB mode
-  unsigned char *pucLut;                // Pointer auf Lookup-Table // 10 int
-	DWORD     dwzzDummy1[52];             // 64 int
+	WORD          wScale_minmax;         // Maximum value for min
+	int           iScale_maxmax;         // Maximum value for max 
+	int           iScale_min;            // Lowest value for processing
+	int           iScale_max;            // Highest value for processing
+	int           iColor_temp;           // Color temperature  3500...20000
+	int           iColor_tint;           // Color correction  -100...100 // 5 int
+	int           iColor_saturation;     // Color saturation  -100...100
+	int           iColor_vibrance;       // Color dynamic saturation  -100...100
+	int           iContrast;             // Contrast  -100...100
+	int           iGamma;                // Gamma  -100...100
+	int           iSRGB;				         // sRGB mode
+  void          *pHistogrammData;      // internal pointer to histogram data // 10 int
+	DWORD     dwzzDummy1[52];            // 64 int
 }PCO_Display;
 
 #define BAYER_UPPER_LEFT_IS_RED        0x000000000
@@ -142,12 +142,17 @@ typedef struct {
 
 
 // Process internal flags, controlled by the dialog
-#define CONVERT_MODE_OUT_DOPOSTPROC    0x010000 // Post processing is enabled (e.g. 16->8, filter, etc.)
-#define CONVERT_MODE_OUT_DOLOWPASS     0x020000 // Resulting image will be low pass filtered
-#define CONVERT_MODE_OUT_DOBLUR        0x040000 // Resulting color image will be blurred
-#define CONVERT_MODE_OUT_DOMEDIAN      0x080000 // Resulting color image will be median filtered
-#define CONVERT_MODE_OUT_DOSHARPEN     0x100000 // Resulting color image will sharpened
-#define CONVERT_MODE_OUT_DOADSHARPEN   0x200000 // Resulting color image will 'adaptive' sharpened
+#define CONVERT_MODE_OUT_DOPOSTPROC    0x00010000 // Post processing is enabled (e.g. 16->8, filter, etc.)
+#define CONVERT_MODE_OUT_DOLOWPASS     0x00020000 // Resulting image will be low pass filtered
+#define CONVERT_MODE_OUT_DOBLUR        0x00040000 // Resulting color image will be blurred
+#define CONVERT_MODE_OUT_DOMEDIAN      0x00080000 // Resulting color image will be median filtered
+#define CONVERT_MODE_OUT_DOSHARPEN     0x00100000 // Resulting color image will be sharpened
+#define CONVERT_MODE_OUT_DOADSHARPEN   0x00200000 // Resulting color image will be 'adaptive' sharpened
+#define CONVERT_MODE_OUT_DOPCODEBAYER  0x00400000 // Demosaicking used is pco algorithm instead of CUVI (tunacode)
+
+#define CONVERT_MODE_OUT_DOHIST        0x00000010 // Calculate histogram (automatically set when auto minmax is set)
+#define CONVERT_MODE_OUT_AUTOMINMAX    0x00000020 // Does an auto min/max during conversion and sets the values
+#define CONVERT_MODE_OUT_AUTOMINMAX_SM 0x00000040 // same, but with smaller area (min+10% and max-10%)
 
 typedef struct 
 {
@@ -175,6 +180,8 @@ typedef struct
                                        // 0x00010000: Do post processing
                                        // 0x00020000: Do low pass filtering
                                        // 0x00040000: Do color blur
+                                       // 0x00400000: Demosaicking used is fast algorithm
+
   int                 iGPU_Processing_mode;// Mode for processing: 0->CPU, 1->GPU // 261 int
   int                 iConvertType;    // 1: BW, 2: RGB, 3: Pseudo, 4: 16bit-RGB
   DWORD               dwzzDummy1[58];  // 320 int

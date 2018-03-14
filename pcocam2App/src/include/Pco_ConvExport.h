@@ -118,16 +118,56 @@ int PCOCONVERT_API PCO_Convert16TOCOL16(HANDLE ph, int mode, int icolmode, int w
 //        bit1: 1 = mirror  
 //width:  width of picture
 //height: height of picture
-//b12:    pointer to picture data array
+//b12:    pointer to raw picture data array
 //b8:     pointer to byte data array (bw: 1 byte per pixel, rgb: 3 byte pp)
 //b24:    pointer to byte data array (RGB, 3 byte per pixel, grayscale)
 
 int PCOCONVERT_API PCO_GetWhiteBalance(HANDLE ph, int *color_temp, int *tint, int mode, int width, int height, word *gb12, int x_min, int y_min, int x_max, int y_max);
+// gets white balanced values for color_temp and tint
+//color_temp: int pointer to get the calculated color temperature
+//tint: int pointer to get the calculated tint value
+//mode:   0       = normal
+//        bit0: 1 = flip
+//        bit1: 1 = mirror  
+//width:  width of picture
+//height: height of picture
+//gb12:    pointer to raw picture data array
+//x_m..: rectangle to set the image region to be used for calculation
 
 int PCOCONVERT_API PCO_GetMaxLimit(float *r_max, float *g_max, float *b_max, float temp, float tint, int output_bits);
+// GetMaxLimit gets the RGB values for a given temp and tint. The max value within the convert
+// control dialog must not exceed the biggest value of the RGB values, e.g. in case R is the biggest
+// value, the max value can increase till the R value hits the bit resolution (4095). Same condition
+// must be met for decreasing the max value, e.g. in case B is the lowest value, the max value
+// can decrease till the B value hits the min value.
+// Usual:   ....min....B..max.G...R...4095(12bit), with max = R+G+B/3
+// Increase:....min.......B..max.G...R4095 -> max condition, R hits 4095
+// Decrease:....minB..max.G...R.......4095 -> min condition, B hits min
+//the values can be used to calculate the maximum values for scale_min and scale_max in the convert control
+// fmax = max(r_max,g_max,b_max)
+// fmin = min(r_max,g_max,b_max)
+// flimit = (float)((1 <<  m_strConvertNew.str_SensorInfo.iDataBits) - 1)
+// imaxmax = (int)(flimit / fmax);
+// iminmax = (int)(fmin * flimit / fmax);
+//r_max,g_max,b_max: float pointer to get the multiplicators
+//color_temp: color temperature to be used for calculation
+//tint: tint value to be used for calculation
+//output_bits: bit range of raw data
+
 
 int PCOCONVERT_API PCO_GetColorValues(float *pfColorTemp, float *pfColorTint, int iRedMax, int iGreenMax, int iBlueMax);
 
+int PCOCONVERT_API PCO_WhiteBalanceToDisplayStruct(HANDLE ph, PCO_Display* strDisplay, int mode, int width, int height,
+                                                   word *gb12, int x_min, int y_min, int x_max, int y_max);
+// Calculates the white balance and sets the values to the strDisplay struct while maintaining the limits
+// Gets the struct strDisplay from the convert Handle internally.
+//mode:   0       = normal
+//        bit0: 1 = flip
+//        bit1: 1 = mirror  
+//width:  width of picture
+//height: height of picture
+//gb12:    pointer to raw picture data array
+//x_m..: rectangle to set the image region to be used for calculation
 #ifdef __cplusplus
 }
 #endif

@@ -11,7 +11,7 @@
 //-----------------------------------------------------------------//
 // Author      | MBL, PCO AG                                       //
 //-----------------------------------------------------------------//
-// Revision    |  rev. 1.06 rel. 1.06                              //
+// Revision    |  rev. 1.08 rel. 1.08                              //
 //-----------------------------------------------------------------//
 
 //-----------------------------------------------------------------//
@@ -39,6 +39,8 @@
 //  1.06     | 29.09.2008 |  Added PCO_GIGE_TRANSFER_PARAM, FRE    //
 //-----------------------------------------------------------------//
 //  1.07     | 23.11.2011 |  Added IMAGE_TRANSFER_MODE_PARAM, VTI  //
+//-----------------------------------------------------------------//
+//  1.08     | 26.07.2017 |  Added DISCOVERY_ACK, VTI              //
 //-----------------------------------------------------------------//
 
 #if !defined SC2_SDKADDENDUM_H
@@ -123,16 +125,26 @@ typedef struct _PCO_USB_TRANSFER_PARAM {
    unsigned int   ClockFrequency;      // Pixelclock in Hz: 40000000,66000000,80000000
    unsigned int   Transmit;            // single or continuous transmitting images, 0-single, 1-continuous
    unsigned int   UsbConfig;           // 0=bulk_image, 1=iso_image
-   unsigned int   Img12Bit;			   // 1: 12Bit Image 0: 14Bit Image
+   unsigned int   ImgTransMode;        // Bit0: 14Bit Image
+                                       // Bit1: 12Bit Image (obsolete)
+                                       // Bit2: VTI coding enabled
+                                       // Bit3: 1024Byte padding enabled
 }PCO_USB_TRANSFER_PARAM;
 
+typedef struct _PCO_USB3_TRANSFER_PARAM {
+    unsigned int   uiFlags;             // Bit0: 0: USB 3.0 connection is used to connect camera to the PC (recommended)
+                                        //       1: USB 2.0 connection is used to connect camera to the PC
+                                        // Bit1..31: reserved
+}PCO_USB3_TRANSFER_PARAM;
+
 #define PCO_GIGE_PAKET_RESEND    0x00000001
-#define PCO_GIGE_BURST_MODE      0x00000002
-#define PCO_GIGE_MAXSPEED_MODE   0x00000004
-#define PCO_GIGE_DEBUG_MODE		 0x00000008
-#define PCO_GIGE_BW_SAME2ALL	 0x00000000
-#define PCO_GIGE_BW_ALL2MAX		 0x00000010
-#define PCO_GIGE_BW_2ACTIVE		 0x00000020
+//#define PCO_GIGE_BURST_MODE           0x00000002   !!! obsolete (22.06.2017) !!!
+//#define PCO_GIGE_MAXSPEED_MODE        0x00000004   !!! obsolete (22.06.2017) !!!
+//#define PCO_GIGE_DEBUG_MODE		    0x00000008   !!! obsolete (22.06.2017) !!!
+//#define PCO_GIGE_BW_SAME2ALL	        0x00000000   !!! obsolete (22.06.2017) !!!
+//#define PCO_GIGE_BW_ALL2MAX		    0x00000010   !!! obsolete (22.06.2017) !!!
+#define PCO_GIGE_CAM_SYNC		 0x00000010
+//#define PCO_GIGE_BW_2ACTIVE		    0x00000020   !!! obsolete (22.06.2017) !!!
 #define PCO_GIGE_DATAFORMAT_1x8  0x01080001
 #define PCO_GIGE_DATAFORMAT_1x16 0x01100007
 #define PCO_GIGE_DATAFORMAT_3x8  0x02180015
@@ -145,14 +157,13 @@ typedef struct _PCO_GIGE_TRANSFER_PARAM
   DWORD dwResendPercent;               // Number of lost packets of image in percent. If more packets got lost,
                                        // complete image will be resent or image transfer is failed (default 30).
   DWORD dwFlags;                       // Bit 0:   Set to enable packet resend
-                                       // Bit 1:   Set to enable Burst_mode
-									   // Bit 2:   Set to enable Max Speed Modus
-									   // Bit 3:   Set to enable Camera Debug Mode
-									   // Bit 4-7:   Reserved
-								       // Bit 8-11:0: Bandwidth is devided by number of connected cameras. PCO_GIGE_BW_SAME2ALL
-									   //	       1: Max-Speed-Mode is allways active regardless how many cameras are connected. PCO_GIGE_BW_ALL2MAX
-									   //          2: Maximal possible Bandwidth is used for active camera. Just one active camera is allowed. PCO_GIGE_BW_2ACTIVE
-									   // Bit 12-31: Reserved
+                                       // Bit 1:   !!! obsolete (22.06.2017) !!!: Set to enable Burst_mode
+									   // Bit 2:   !!! obsolete (22.06.2017) !!!: Set to enable Max Speed Modus
+									   // Bit 3:   !!! obsolete (22.06.2017) !!!: Set to enable Camera Debug Mode
+									   // Bit 4:   camera Sync Mutex
+									   // Bit 5:   Enable Jumbo Frames
+  									   // Bit 6:   Enable Intermediate Driver
+									   // Bit 8-31: Reserved
                                        // (LSB; default 0x00000001).      
   DWORD dwDataFormat;                  // DataFormat: default:  0x01100007
                                        // supported types:  Mono, 8Bit:  0x01080001
@@ -180,6 +191,48 @@ typedef struct _IMAGE_TRANSFER_MODE_PARAM
   WORD        ZZwDummy[10];        // for future use, set to zero
 } IMAGE_TRANSFER_MODE_PARAM;
 
+//Gige Vision Acknowledge Message Header
+typedef struct _GVCP_ACK_HEADER
+{
+    WORD	Status;
+    WORD	Acknowledge;
+    WORD	Length;
+    WORD	AckID;
+
+}GVCP_ACK_HEADER;
+
+//Gige Vision Discovery Acknowledge Message
+typedef struct _DISCOVERY_ACK
+{
+	GVCP_ACK_HEADER AckHeader;				//Gige Vision Header
+    WORD			SpecVersionMajor;		//Gige Vision Version Major
+    WORD			SpecVersionMinor;		//Gige Vision Version Minor
+    DWORD			DeviceMode;				//Gige Vision Device Mode
+    WORD			NicId;					//PCO Network Interface Card Identifier
+    WORD			DeviceMACHigh;			//Gige Vision Camera MAC Address High
+    DWORD			DeviceMACLow;			//Gige Vision Camera MAC Address Low
+	DWORD			IPConfigOptions;		//Gige Vision Ip Config Options
+	DWORD			IPConfigCurrent;		//Gige Vision Ip Config Current
+	DWORD			ValidConnection;		//PCO Connection Status: 0x0 invalid, 0x1 valid
+	DWORD			AccessAllowed;			//PCO Camera Access Status: 0x0 no access, 0x1 access allowed
+	DWORD			NICIp;					//PCO Network Interface Card Ip Address
+	DWORD			CurrentIP;				//Gige Vision Camera Ip Address
+	DWORD			CameraType;				//PCO Camera Type (available with Gige Camera IF V1.04 or higher)
+	DWORD			CameraSubType;			//PCO Camera Type (available with Gige Camera IF V1.04 or higher)
+	DWORD			NICSubnetMask;			//PCO Network Interface Card Subnet Mask
+	DWORD			CurrentSubnetMask;		//Gige Vision Camera Subnet Mask
+    DWORD           RFU1;					//changed to reserved from HWVersion @26.07.2017 VTI
+    DWORD           RFU2;					//changed to reserved from FWVersion @26.07.2017 VTI
+	DWORD			CameraSerialNumber;		//PCO Camera S/N (available with Gige Camera IF V1.04 or higher)
+	DWORD			DefaultGateway;			//Gige Vision Camera Gateway
+	BYTE			ManufacturerName[32];	//Gige Vision Manufacturer Name in ASCII
+    BYTE			ModelName[32];			//Gige Vision Camera Model Name in ASCII
+    BYTE			DeviceVersion[32];		//Gige Vision Camera Version
+    BYTE			ManufacSpecInfo[48];	//Gige Vision Manufacturer Specific Information
+    BYTE			SerialNumber[16];		//Gige Vision Camera Interface S/N
+    BYTE			UserDefinedName[16];	//Gige Vision User Defined Name
+
+}DISCOVERY_ACK;
 
 //loglevels for interface dll
 #define ERROR_M     0x0001
@@ -191,7 +244,7 @@ typedef struct _IMAGE_TRANSFER_MODE_PARAM
 #define INFO_M      0x0020
 #define COMMAND_M   0x0040
 
-#define PCI_M       0x0020
+#define PCI_M       0x0080
 
 #define TIME_M      0x1000 
 #define TIME_MD     0x2000 

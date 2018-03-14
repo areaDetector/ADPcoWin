@@ -60,7 +60,7 @@ int PCO_CONVERT_DIALOG_EXPORTS PCO_GetStatusConvertDialog(HANDLE hLutDialog, int
 int PCO_CONVERT_DIALOG_EXPORTS PCO_SetConvertDialog(HANDLE hLutDialog, HANDLE hLut);
 int PCO_CONVERT_DIALOG_EXPORTS PCO_GetConvertDialog(HANDLE hLutDialog, HANDLE hLut);
 int PCO_CONVERT_DIALOG_EXPORTS PCO_SetDataToDialog(HANDLE hLutDialog, int ixres, int iyres, void *b16_image,  void *rgb_image);
-
+int PCO_CONVERT_DIALOG_EXPORTS PCO_UpdateHistData(HANDLE ph, int ixres, int iyres);
 typedef struct
 {
   WORD         wCommand;               // Command sent to the main application

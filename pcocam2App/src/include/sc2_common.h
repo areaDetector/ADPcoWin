@@ -3,20 +3,21 @@
 //-------------------------------------------|       (*) header    //
 // Project     | PCO                         |       ( ) others    //
 //-----------------------------------------------------------------//
-// Platform    | Embedded System, PC                               //
+// Platform    | - Embedded platforms like M16C, AVR32, PIC32 etc. //
+//             | - PC with several Windows versions, Linux etc.    //
 //-----------------------------------------------------------------//
-// Environment | All 'C'-compiler used at PCO                      //
+// Environment | - Platform dependent                              //
 //-----------------------------------------------------------------//
 // Purpose     | Defines, constants for use with SDK commands for  //
 //             | pco.camera (SC2)                                  //
 //-----------------------------------------------------------------//
-// Author      | FRE, LWA, MBL, PCO AG                             //
+// Author      | MBl/FRe/LWa and others, PCO AG                    //
 //-----------------------------------------------------------------//
-// Revision    | Rev. 0.25                                         //
+// Revision    | versioned using SVN                               //
 //-----------------------------------------------------------------//
 // Notes       |                                                   //
 //-----------------------------------------------------------------//
-// (c) 2004 PCO AG  *  Donaupark 11 *  D-93309 Kelheim / Germany   //
+// (c) 2010-2014 PCO AG * Donaupark 11 * D-93309 Kelheim / Germany //
 // *  Phone: +49 (0)9441 / 2005-0  *                               //
 // *  Fax:   +49 (0)9441 / 2005-20 *  Email: info@pco.de           //
 //-----------------------------------------------------------------//
@@ -67,7 +68,13 @@ typedef struct
   WORD   wEXPOSURE_TIME_BASE;        // timebase ns/us/ms for following exposure time
   DWORD  dwEXPOSURE_TIME;            // exposure time in ns/us/ms  according to timebase
   DWORD  dwFRAMERATE_MILLIHZ;        // framerate in mHz, 0 if unknown or not
-  SHORT  sSENSOR_TEMPERATURE;        // current sensor temperature in 0.1 centigrade, 0x8000 if not known
+
+  SHORT  sSENSOR_TEMPERATURE;        // current sensor temperature in centigrade, 0x8000 if not known
+
+                                     // Note: Description changed 27.06.2017: Now centigrades, which
+                                     //       is current implementation in pco.dimax. This is 
+                                     //       different from the PCO_GetTemperature command which
+                                     //       provides the sensor temperature in 10th of degrees!
   // 30
   WORD   wIMAGE_SIZE_X;              // actual size of image in x direction (horizontal)
   WORD   wIMAGE_SIZE_Y;              // actual size of image in y direction (vertical)
