@@ -1232,6 +1232,9 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	case DllApi::cameraTypeEdgeGl:
 		paramADModel = "PCO.Camera Edge";
 		break;
+	case DllApi::cameraTypeEdgeCLHS:
+		paramADModel = "PCO.Camera Edge CLHS";
+		break;
 	case DllApi::cameraTypeDimaxStd:
 	case DllApi::cameraTypeDimaxTv:
 	case DllApi::cameraTypeDimaxAutomotive:
