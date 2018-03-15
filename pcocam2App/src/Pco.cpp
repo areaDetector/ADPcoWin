@@ -475,7 +475,8 @@ StateMachine::StateSelector Pco::smPollWhileAcquiring()
 {
 	// Don't poll for edge type cameras, there's nothing of interest
 	// and it gets in the way of fast acquisitions.
-	if(this->camType.camType != DllApi::cameraTypeEdge && this->camType.camType != DllApi::cameraTypeEdgeGl)
+	if(this->camType.camType != DllApi::cameraTypeEdge &&
+			this->camType.camType != DllApi::cameraTypeEdgeGl)
 	{
 		TakeLock takeLock(&this->apiLock);
 		try
@@ -1214,42 +1215,46 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	switch(this->camType.camType)
 	{
 	case DllApi::cameraType1200Hs:
-		paramADModel = "PCO.Camera 1200";
+		paramADModel = "pco.1200";
 		break;
 	case DllApi::cameraType1300:
-		paramADModel = "PCO.Camera 1300";
+		paramADModel = "pco.1300";
 		break;
 	case DllApi::cameraType1600:
-		paramADModel = "PCO.Camera 1600";
+		paramADModel = "pco.1600";
 		break;
 	case DllApi::cameraType2000:
-		paramADModel = "PCO.Camera 2000";
+		paramADModel = "pco.2000";
 		break;
 	case DllApi::cameraType4000:
-		paramADModel = "PCO.Camera 4000";
+		paramADModel = "pco.4000";
 		break;
 	case DllApi::cameraTypeEdge:
+		paramADModel = "pco.edge GL";
+		break;
 	case DllApi::cameraTypeEdgeGl:
-		paramADModel = "PCO.Camera Edge";
+		paramADModel = "pco.edge GL";
 		break;
 	case DllApi::cameraTypeEdgeCLHS:
-		paramADModel = "PCO.Camera Edge CLHS";
+		paramADModel = "pco.edge CLHS";
 		break;
 	case DllApi::cameraTypeDimaxStd:
 	case DllApi::cameraTypeDimaxTv:
 	case DllApi::cameraTypeDimaxAutomotive:
-		paramADModel = "PCO.Camera Dimax";
+		paramADModel = "pco.dimax";
 		break;
 	default:
-		paramADModel = "PCO.Camera Unknown";
+		paramADModel = "Unknown pco";
 		break;
 	}
 	paramADManufacturer = "PCO";
 	paramSerialNumber = (int)this->camType.serialNumber;
 	paramHardwareVersion = (int)this->camType.hardwareVersion;
 	paramFirmwareVersion = (int)this->camType.firmwareVersion;
-	paramIsEdge = (int)(this->camType.camType == DllApi::cameraTypeEdge ||
-			this->camType.camType == DllApi::cameraTypeEdgeGl);
+	paramIsEdge = (int)(
+			this->camType.camType == DllApi::cameraTypeEdge ||
+			this->camType.camType == DllApi::cameraTypeEdgeGl ||
+			this->camType.camType == DllApi::cameraTypeEdgeCLHS);
 
 	// Work out how to decode the BCD frame number in the image
 	this->shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
@@ -2247,7 +2252,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->api->arm(this->camera);
 
 	// For non-edge cameras, switch on recording state before buffers given
-	if(this->camType.camType != DllApi::cameraTypeEdge && this->camType.camType != DllApi::cameraTypeEdgeGl)
+	if(this->camType.camType != DllApi::cameraTypeEdge &&
+			this->camType.camType != DllApi::cameraTypeEdgeGl)
 	{
 		this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 	}
@@ -2264,7 +2270,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->lastImageNumberValid = false;
 
 	// For the edge, switch on recording after buffers given
-	if(this->camType.camType == DllApi::cameraTypeEdge || this->camType.camType == DllApi::cameraTypeEdgeGl)
+	if(this->camType.camType == DllApi::cameraTypeEdge ||
+			this->camType.camType == DllApi::cameraTypeEdgeGl)
 	{
 		this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 	}
