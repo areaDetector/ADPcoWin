@@ -4,3 +4,5 @@ lib/
 db/
 dbd/
 data/
+.cproject
+.project
