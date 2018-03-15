@@ -476,7 +476,8 @@ StateMachine::StateSelector Pco::smPollWhileAcquiring()
 	// Don't poll for edge type cameras, there's nothing of interest
 	// and it gets in the way of fast acquisitions.
 	if(this->camType.camType != DllApi::cameraTypeEdge &&
-			this->camType.camType != DllApi::cameraTypeEdgeGl)
+			this->camType.camType != DllApi::cameraTypeEdgeGl &&
+			this->camType.camType != DllApi::cameraTypeEdgeCLHS)
 	{
 		TakeLock takeLock(&this->apiLock);
 		try
@@ -909,6 +910,7 @@ bool Pco::roiSymmetryRequiredX() {
 bool Pco::roiSymmetryRequiredY() {
 	return (this->camType.camType == DllApi::cameraTypeEdge ||
 			this->camType.camType == DllApi::cameraTypeEdgeGl ||
+			this->camType.camType == DllApi::cameraTypeEdgeCLHS ||
 			this->camType.camType == DllApi::cameraTypeDimaxStd ||
 			this->camType.camType == DllApi::cameraTypeDimaxTv ||
 			this->camType.camType == DllApi::cameraTypeDimaxAutomotive);
@@ -1268,12 +1270,13 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 
 	// Make Edge specific function calls
 	if(this->camType.camType == DllApi::cameraTypeEdge || 
-			this->camType.camType == DllApi::cameraTypeEdgeGl)
+			this->camType.camType == DllApi::cameraTypeEdgeGl ||
+			this->camType.camType == DllApi::cameraTypeEdgeCLHS)
 	{
 		// Get Edge camera setup mode
 		unsigned long setupData[DllApi::cameraSetupDataSize];
 		unsigned short setupDataLen = DllApi::cameraSetupDataSize;
-		unsigned short setupType;
+		unsigned short setupType = 0;
 		this->api->getCameraSetup(this->camera, &setupType, setupData, &setupDataLen);
 		paramCameraSetup = setupData[0];
 	}
@@ -1605,6 +1608,7 @@ void Pco::onReboot(TakeLock& takeLock)
 	{
 	case DllApi::cameraTypeEdge:
 	case DllApi::cameraTypeEdgeGl:
+	case DllApi::cameraTypeEdgeCLHS:
 		this->post(Pco::requestReboot);
 		break;
 	default:
@@ -1992,6 +1996,7 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
     {
     case DllApi::cameraTypeEdge:
     case DllApi::cameraTypeEdgeGl:
+    case DllApi::cameraTypeEdgeCLHS:
         // Set the camlink transfer parameters, reading them back
         // again to make sure.
         if(this->cameraSetup == DllApi::edgeSetupGlobalShutter)
@@ -2253,7 +2258,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 
 	// For non-edge cameras, switch on recording state before buffers given
 	if(this->camType.camType != DllApi::cameraTypeEdge &&
-			this->camType.camType != DllApi::cameraTypeEdgeGl)
+			this->camType.camType != DllApi::cameraTypeEdgeGl &&
+			this->camType.camType != DllApi::cameraTypeEdgeCLHS)
 	{
 		this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 	}
@@ -2271,7 +2277,8 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 
 	// For the edge, switch on recording after buffers given
 	if(this->camType.camType == DllApi::cameraTypeEdge ||
-			this->camType.camType == DllApi::cameraTypeEdgeGl)
+			this->camType.camType == DllApi::cameraTypeEdgeGl ||
+			this->camType.camType == DllApi::cameraTypeEdgeCLHS)
 	{
 		this->api->setRecordingState(this->camera, DllApi::recorderStateOn);
 	}
