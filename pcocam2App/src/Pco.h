@@ -103,6 +103,16 @@ public:
 	IntegerParam paramConfirmedStop;
 	IntegerParam paramRoiSymmetryX;
 	IntegerParam paramRoiSymmetryY;
+	StringParam paramuCName;
+	StringParam paramuCFWVersion;
+	StringParam paramFPGAName;
+	StringParam paramFPGAFWVersion;
+	StringParam paramphyuCName;
+	StringParam paramphyuCFWVersion;
+	StringParam paramXMLName;
+	StringParam paramXMLFWVersion;
+	StringParam paramzFPGAName;
+	StringParam paramzFPGAFWVersion;
 
 // Constants
 public:
@@ -176,6 +186,7 @@ private:
 	DllApi::Storage camStorage;
     DllApi::Transfer camTransfer;
     DllApi::Sizes camSizes;
+    DllApi::Firmware firmware;
     int shiftLowBcd;         // Shift for decoding the BCD frame number in image
     int shiftHighBcd;        // Shift for decoding the BCD frame number in image
     TraceStream errorTrace;

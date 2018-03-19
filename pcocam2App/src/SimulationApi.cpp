@@ -353,6 +353,22 @@ int SimulationApi::doGetCameraType(Handle handle, CameraType* cameraType)
 }
 
 /**
+ * Get the firmware versions of all devices in the camera
+ */
+int SimulationApi::doGetFirmwareInfo(Handle handle, unsigned short deviceBlock, Firmware* firmware)
+{
+
+    int result = DllApi::errorAny;
+    if(paramConnected && paramOpen)
+    {
+    	// TODO: implement function for simulator
+        result = DllApi::errorNone;
+    }
+    return result;
+
+}
+
+/**
  * Get sensor information
  */
 int SimulationApi::doGetSensorStruct(Handle handle)

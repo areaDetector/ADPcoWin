@@ -187,6 +187,16 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramFriendlyRoiSetting(this, "PCO_ROI_FRIENDLY", 0)
 , paramRoiSymmetryX(this, "PCO_ROI_SYMMETRY_X", 0)
 , paramRoiSymmetryY(this, "PCO_ROI_SYMMETRY_Y", 0)
+, paramuCName(this, "PCO_UC_NAME", "")
+, paramuCFWVersion(this, "PCO_UC_FW_VERSION", "")
+, paramFPGAName(this, "PCO_FPGA_NAME", "")
+, paramFPGAFWVersion(this, "PCO_FPGA_FW_VERSION", "")
+, paramzFPGAName(this, "PCO_zFPGA_NAME", "")
+, paramzFPGAFWVersion(this, "PCO_zFPGA_FW_VERSION", "")
+, paramXMLName(this, "PCO_XML_NAME", "")
+, paramXMLFWVersion(this, "PCO_XML_FW_VERSION", "")
+, paramphyuCName(this, "PCO_PHY_UC_NAME", "")
+, paramphyuCFWVersion(this, "PCO_PHY_UC_FW_VERSION", "")
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -1135,6 +1145,19 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	api->getTimingStruct(camera);
 	api->getStorageStruct(camera, &camStorage);
 	api->getRecordingStruct(camera);
+
+	// Get camera firmware
+	api->getFirmwareInfo(camera, 0, &firmware);
+	paramuCName = firmware.uCName;
+	paramuCFWVersion = firmware.uCVersion;
+	paramphyuCName = firmware.phyuCName;
+	paramphyuCFWVersion = firmware.phyuCVersion;
+	paramFPGAName = firmware.FPGAName;
+	paramFPGAFWVersion = firmware.FPGAVersion;
+	paramzFPGAName = firmware.zFPGAName;
+	paramzFPGAFWVersion = firmware.zFPGAVersion;
+	paramXMLName = firmware.XMLName;
+	paramXMLFWVersion = firmware.XMLVersion;
 
 	// Corrections for values that appear to be incorrectly returned by the SDK
 	switch(this->camType.camType)

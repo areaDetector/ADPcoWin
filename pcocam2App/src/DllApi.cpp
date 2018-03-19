@@ -111,6 +111,18 @@ void DllApi::getCameraType(Handle handle, CameraType* cameraType) throw(PcoExcep
 }
 
 /**
+ * Get the firmware versions of all devices in the camera
+ */
+void DllApi::getFirmwareInfo(Handle handle, unsigned short block, Firmware* firmware) throw(PcoException)
+{
+	int result = doGetFirmwareInfo(handle, block, firmware);
+    if(result != DllApi::errorNone)
+    {
+        throw PcoException("getFirmwareInfo", result);
+    }
+}
+
+/**
  * Get sensor information
  */
 void DllApi::getSensorStruct(Handle handle) throw(PcoException)

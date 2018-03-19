@@ -25,6 +25,9 @@
 #include "load.h"
 #include "SC2_CamExport.h"
 
+// TODO Remove after testing
+#include <iostream>
+
 /**
  * Constructor
  */
@@ -191,6 +194,79 @@ int PcoApi::doGetCameraType(Handle handle, CameraType* cameraType)
 	cameraType->hardwareVersion = info.dwHWVersion;
 	cameraType->firmwareVersion = info.dwFWVersion;
     return result;
+}
+
+/**
+ * Get the firmware versions of all devices in the camera
+ */
+int PcoApi::doGetFirmwareInfo(Handle handle, unsigned short deviceBlock, Firmware* firmware)
+{
+	// TODO: Refactor this into multiple functions and use enums for devices?
+	PCO_FW_Vers firmwareVersion;
+	int result = PCO_GetFirmwareInfo(handle, deviceBlock, &firmwareVersion);
+	int deviceNum = firmwareVersion.DeviceNum;
+	int maxDevicesPerBlock = 10;
+	int devices = deviceNum;
+	if (deviceNum > maxDevicesPerBlock) devices = maxDevicesPerBlock; // Each block contains 10 devices
+	// Device identifiers
+	std::string uC = "(uC)";
+	std::string FPGA = "(FPGA)";
+	std::string phyuC = "(Phy uC)";
+	std::string XML = "(XML)";
+	std::string zFPGA = "(0-FPGA)";
+	for (int i=0; i<devices; i++)
+	{
+		// Device information
+		std::string deviceName(firmwareVersion.Device[i].szName);
+		int variant = (int)firmwareVersion.Device[i].wVariant;
+		int majorVersion = (int)firmwareVersion.Device[i].bMajorRev;
+		int minorVersion = (int)firmwareVersion.Device[i].bMinorRev;
+		std::string version = std::to_string(static_cast<long long>(majorVersion)) + "." + std::to_string(static_cast<long long>(minorVersion));
+		// Device type
+		std::size_t found = deviceName.find(uC);
+		if (found == std::string::npos)
+		{
+			found = deviceName.find(FPGA);
+			if (found == std::string::npos)
+			{
+				found = deviceName.find(phyuC);
+				if (found == std::string::npos)
+				{
+					found = deviceName.find(XML);
+					if (found == std::string::npos)
+					{
+						found = deviceName.find(zFPGA);
+						if (found != std::string::npos)
+						{
+							firmware->zFPGAName = deviceName;
+							firmware->zFPGAVersion = version;
+						}
+					}
+					else
+					{
+						firmware->XMLName = deviceName;
+						firmware->XMLVersion = version;
+					}
+				}
+				else
+				{
+					firmware->phyuCName = deviceName;
+					firmware->phyuCVersion = version;
+				}
+			}
+			else
+			{
+				firmware->FPGAName = deviceName;
+				firmware->FPGAVersion = version;
+			}
+		}
+		else
+		{
+			firmware->uCName = deviceName;
+			firmware->uCVersion = version;
+		}
+	}
+	return result;
 }
 
 /**
