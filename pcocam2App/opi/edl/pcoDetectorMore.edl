@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 529
-y 82
+x 2136
+y 63
 w 796
 h 897
 font "arial-bold-r-12.0"
@@ -254,7 +254,7 @@ release 0
 x 695
 y 730
 w 80
-h 20
+h 25
 fgColor index 46
 bgColor index 3
 topShadowColor index 1
@@ -2204,5 +2204,48 @@ value {
   "Values set in camera"
 }
 autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 515
+w 57
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Device F/W"
+}
+autoSize
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 4
+release 0
+x 90
+y 510
+w 95
+h 20
+fgColor index 43
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "arial-bold-r-12.0"
+buttonLabel "Device FW"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "pcoDetectorDeviceFW.edl"
+}
 endObjectProperties
 
