@@ -113,6 +113,8 @@ public:
 	StringParam paramXMLFWVersion;
 	StringParam paramzFPGAName;
 	StringParam paramzFPGAFWVersion;
+	IntegerParam paramInterfaceType;
+	IntegerParam paramInterfaceIsCameraLink;
 
 // Constants
 public:

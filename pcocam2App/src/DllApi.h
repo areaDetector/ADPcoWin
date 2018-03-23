@@ -70,6 +70,7 @@ public:
     enum {bitAlignmentMsb=0, bitAlignmentLsb=1};
     enum {transferTransmitEnable=1, transferTransmitLongGap=2};
 	enum {storageNumSegments=4};
+	enum {fireWire=1, cameraLink=2, USBGen2=3, GigE=4, Serial=5, USBGen3=6, cameraLinkHS=7};
 
 // Types
 public:
@@ -119,6 +120,7 @@ public:
 		unsigned long serialNumber;     // serial number of the device
 		unsigned long hardwareVersion;  // hardware version
 		unsigned long firmwareVersion;  // firmware version
+		unsigned short interfaceType;	// interface
 	};
 	struct Storage
 	{
@@ -135,7 +137,7 @@ public:
 		std::string FPGAVersion;
 		std::string phyuCName;			// Physical uC
 		std::string phyuCVersion;
-		std::string zFPGAName;				// 0-FPGA
+		std::string zFPGAName;			// 0-FPGA
 		std::string zFPGAVersion;
 		std::string XMLName;			// XML
 		std::string XMLVersion;

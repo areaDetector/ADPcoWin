@@ -197,6 +197,8 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramXMLFWVersion(this, "PCO_XML_FW_VERSION", "")
 , paramphyuCName(this, "PCO_PHY_UC_NAME", "")
 , paramphyuCFWVersion(this, "PCO_PHY_UC_FW_VERSION", "")
+, paramInterfaceType(this, "PCO_INTERFACE", 0)
+, paramInterfaceIsCameraLink(this, "PCO_USES_CAMERALINK", 0)
 , stateMachine(NULL)
 , triggerTimer(NULL)
 , api(NULL)
@@ -1280,6 +1282,8 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 			this->camType.camType == DllApi::cameraTypeEdge ||
 			this->camType.camType == DllApi::cameraTypeEdgeGl ||
 			this->camType.camType == DllApi::cameraTypeEdgeCLHS);
+	paramInterfaceType = (int)this->camType.interfaceType;
+	if (paramInterfaceType == DllApi::cameraLink) paramInterfaceIsCameraLink = 1;
 
 	// Work out how to decode the BCD frame number in the image
 	this->shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
@@ -2032,7 +2036,8 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
         }
         else 
         {
-            if(this->xCamSize>=Pco::edgeXSizeNeedsReducedCamlink &&
+        	// TODO Check: I believe this should be above 1920 (change applied), rather than above or equal to
+            if(this->xCamSize>Pco::edgeXSizeNeedsReducedCamlink &&
                     this->pixRate>=Pco::edgePixRateNeedsReducedCamlink)
             {
                 // Options for edge are PCO_CL_DATAFORMAT_5x12L (uses sqrt LUT) and 

@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 602
-y 545
+x 2442
+y 433
 w 397
 h 525
 font "arial-bold-r-12.0"
@@ -34,7 +34,7 @@ release 0
 x 0
 y 0
 w 395
-h 345
+h 350
 lineColor index 5
 fill
 fillColor index 5
@@ -49,7 +49,7 @@ release 0
 x 5
 y 5
 w 380
-h 335
+h 340
 lineColor index 14
 fill
 fillColor index 3
@@ -565,7 +565,7 @@ major 4
 minor 4
 release 0
 x 275
-y 310
+y 315
 w 100
 h 25
 fgColor index 43
@@ -774,45 +774,6 @@ botShadowColor index 11
 controlPv "$(P)$(R)ADC_MODE"
 indicatorPv "$(P)$(R)ADC_MODE_RBV"
 font "helvetica-bold-r-10.0"
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 130
-y 315
-w 58
-h 12
-font "helvetica-bold-r-10.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "CamlinkClk"
-}
-autoSize
-endObjectProperties
-
-# (Textupdate)
-object TextupdateClass
-beginObjectProperties
-major 10
-minor 0
-release 0
-x 190
-y 315
-w 70
-h 15
-controlPv "$(P)$(R)CAMLINKCLOCK_RBV"
-fgColor index 16
-fgAlarm
-bgColor index 10
-fill
-font "helvetica-bold-r-10.0"
-fontAlign "center"
 endObjectProperties
 
 # (Static Text)
@@ -1247,5 +1208,104 @@ endGroup
 visPv "$(P):RSYNC:DFFREE"
 visMin "1"
 visMax "999999999"
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 305
+y 295
+w 60
+h 15
+controlPv "$(P)$(R)INTERFACE"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 255
+y 295
+w 44
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "Interface"
+}
+autoSize
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 130
+y 315
+w 130
+h 15
+
+beginGroup
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 130
+y 315
+w 58
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "CamlinkClk"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 190
+y 315
+w 70
+h 15
+controlPv "$(P)$(R)CAMLINKCLOCK_RBV"
+fgColor index 16
+fgAlarm
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+endGroup
+
+visPv "$(P)$(R)USESCAMERALINK"
+visInvert
+visMin "0"
+visMax "1"
 endObjectProperties
 

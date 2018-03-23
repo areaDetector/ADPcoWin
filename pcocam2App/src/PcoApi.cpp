@@ -193,6 +193,7 @@ int PcoApi::doGetCameraType(Handle handle, CameraType* cameraType)
 	cameraType->serialNumber = info.dwSerialNumber;
 	cameraType->hardwareVersion = info.dwHWVersion;
 	cameraType->firmwareVersion = info.dwFWVersion;
+	cameraType->interfaceType = info.wInterfaceType;
     return result;
 }
 

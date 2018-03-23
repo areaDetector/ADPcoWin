@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2136
-y 63
+x 2991
+y 64
 w 796
 h 897
 font "arial-bold-r-12.0"
@@ -1445,46 +1445,6 @@ value {
 autoSize
 endObjectProperties
 
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 20
-y 470
-w 64
-h 12
-font "helvetica-bold-r-10.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "H/W Version"
-}
-autoSize
-endObjectProperties
-
-# (Static Text)
-object activeXTextClass
-beginObjectProperties
-major 4
-minor 1
-release 1
-x 20
-y 490
-w 63
-h 12
-font "helvetica-bold-r-10.0"
-fgColor index 14
-bgColor index 3
-useDisplayBg
-value {
-  "F/W Version"
-}
-autoSize
-endObjectProperties
-
 # (Textupdate)
 object TextupdateClass
 beginObjectProperties
@@ -1496,42 +1456,6 @@ y 450
 w 95
 h 15
 controlPv "$(P)$(R)SERIAL_NUMBER_RBV"
-fgColor index 16
-bgColor index 10
-fill
-font "helvetica-bold-r-10.0"
-fontAlign "center"
-endObjectProperties
-
-# (Textupdate)
-object TextupdateClass
-beginObjectProperties
-major 10
-minor 0
-release 0
-x 90
-y 470
-w 95
-h 15
-controlPv "$(P)$(R)HARDWARE_VERSION_RBV"
-fgColor index 16
-bgColor index 10
-fill
-font "helvetica-bold-r-10.0"
-fontAlign "center"
-endObjectProperties
-
-# (Textupdate)
-object TextupdateClass
-beginObjectProperties
-major 10
-minor 0
-release 0
-x 90
-y 490
-w 95
-h 15
-controlPv "$(P)$(R)FIRMWARE_VERSION_RBV"
 fgColor index 16
 bgColor index 10
 fill
@@ -2247,5 +2171,123 @@ numDsps 1
 displayFileName {
   0 "pcoDetectorDeviceFW.edl"
 }
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 20
+y 470
+w 165
+h 15
+
+beginGroup
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 470
+w 64
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "H/W Version"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 90
+y 470
+w 95
+h 15
+controlPv "$(P)$(R)HARDWARE_VERSION_RBV"
+fgColor index 16
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+endGroup
+
+visPv "$(P)$(R)HARDWARE_VERSION_RBV"
+visInvert
+visMin "0"
+visMax "0.1"
+endObjectProperties
+
+# (Group)
+object activeGroupClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 20
+y 490
+w 165
+h 15
+
+beginGroup
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 20
+y 490
+w 63
+h 12
+font "helvetica-bold-r-10.0"
+fgColor index 14
+bgColor index 3
+useDisplayBg
+value {
+  "F/W Version"
+}
+autoSize
+endObjectProperties
+
+# (Textupdate)
+object TextupdateClass
+beginObjectProperties
+major 10
+minor 0
+release 0
+x 90
+y 490
+w 95
+h 15
+controlPv "$(P)$(R)FIRMWARE_VERSION_RBV"
+fgColor index 16
+bgColor index 10
+fill
+font "helvetica-bold-r-10.0"
+fontAlign "center"
+endObjectProperties
+
+endGroup
+
+visPv "$(P)$(R)FIRMWARE_VERSION_RBV"
+visInvert
+visMin "0"
+visMax "0.1"
 endObjectProperties
 
