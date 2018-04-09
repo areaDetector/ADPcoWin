@@ -25,9 +25,6 @@
 #include "load.h"
 #include "SC2_CamExport.h"
 
-// TODO Remove after testing
-#include <iostream>
-
 /**
  * Constructor
  */

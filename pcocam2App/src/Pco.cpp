@@ -385,6 +385,8 @@ Pco* Pco::getPco(const char* portName)
  */
 void Pco::doReboot()
 {
+	// TODO: check if this parameter being set (used for embedded PCO screen) fixes pixel rate selection
+	paramConnected = 0;
 	TakeLock takeLock(this);
 	unsigned long setupData[DllApi::cameraSetupDataSize];
 	unsigned short setupDataLen = DllApi::cameraSetupDataSize;
@@ -431,6 +433,7 @@ StateMachine::StateSelector Pco::smInitialiseWait()
  */
 StateMachine::StateSelector Pco::smConnectToCamera()
 {
+
 	StateMachine::StateSelector result;
 	TakeLock takeLock(this);
     // Close the camera if we think it might be open
