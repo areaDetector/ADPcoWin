@@ -9,6 +9,8 @@
 # This associates the template with an edm screen
 # % gui, $(PORT), edmtab, pcoDetector.edl, P=$(P),R=$(R)
 
+include "pcocam2_detail.template"
+
 # All tags starting with gdatag are DLS specific for GDA
 # % gdatag, template, pcocam, $(PORT)_pcocam, $(PORT) pcocam class instance
 
