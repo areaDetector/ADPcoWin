@@ -23,7 +23,7 @@
 # % gui, $(PORT), demand, Bin X , $(P)$(R)BinX
 # % gui, $(PORT), demand, Bin Y , $(P)$(R)BinY
 # % gui, $(PORT), readback, Region Start X , $(P)$(R)MinX_RBV
-# % gui, $(PORT), readback, Regio Start Y , $(P)$(R)MinY_RBV
+# % gui, $(PORT), readback, Region Start Y , $(P)$(R)MinY_RBV
 # % gui, $(PORT), demand, Region Start X , $(P)$(R)MinX
 # % gui, $(PORT), demand, Region Start Y , $(P)$(R)MinY
 # % gui, $(PORT), readback, Region Size X , $(P)$(R)SizeX_RBV
@@ -86,9 +86,6 @@
 # % gui, $(PORT), readback, CCD Temperature , $(P)$(R)Temperature_RBV
 # % gui, $(PORT), readback, PSU Temperature , $(P)$(R)POWER_TEMP_RBV
 # % gui, $(PORT), readback, Buffers In Use , $(P)$(R)BUFFERS_IN_USE_RBV
-# % gui, $(PORT), readback,  Local Disk Used , $(P):RSYNC:DFPERCENT
-# % gui, $(PORT), readback,  Local Disk Free , $(P):RSYNC:DFFREE
-# % gui, $(PORT), readback,  Local Disk Total , $(P):RSYNC:DFTOTAL
 # % gui, $(PORT), readback, Data Format , $(P)$(R)DATAFORMAT_RBV
 # % gui, $(PORT), readback, X Cam Size , $(P)$(R)XCAMSIZE_RBV
 # % gui, $(PORT), readback, Y Cam Size , $(P)$(R)YCAMSIZE_RBV
@@ -98,10 +95,10 @@
 # % gui, $(PORT), readback, Uses Camlink? , $(P)$(R)USESCAMERALINK
 # % gui, $(PORT), groupExit, PCO parametersExit
 ## Messages
-# % gui, $(PORT), groupHeading, Messages
-# % gui, $(PORT), readback, String To Server , $(P)$(R)StringToServer_RBV
-# % gui, $(PORT), readback, String From Server , $(P)$(R)StringFromServer_RBV
-# % gui, $(PORT), groupExit, MessagesExit
+## % gui, $(PORT), groupHeading, Messages
+## % gui, $(PORT), readback, String To Server , $(P)$(R)StringToServer_RBV
+## % gui, $(PORT), readback, String From Server , $(P)$(R)StringFromServer_RBV
+## % gui, $(PORT), groupExit, MessagesExit
 ## Attributes
 # % gui, $(PORT), groupHeading, Attributes
 # % gui, $(PORT), demandString, Attributes XML File , $(P)$(R)NDAttributesFile
@@ -160,8 +157,8 @@
 # % gui, $(PORT), readback, Array Allocation Failure (Session)  , $(P)$(R)PERF:CNT:OUTOFARRAYS_RBV
 # % gui, $(PORT), readback, Invalid Frames (Session)  , $(P)$(R)PERF:CNT:INVALID_RBV
 # % gui, $(PORT), readback, Frame Status Errors (Session)  , $(P)$(R)PERF:CNT:FRAMESTATUS_RBV
-# % gui, $(PORT), readback, Faults While Waiting (Session) , (P)$(R)PERF:CNT:WAITFAULT_RBV
-# % gui, $(PORT), readback, PCO Driver Errors (Session) , (P)$(R)PERF:CNT:DRIVERERROR_RBV
+# % gui, $(PORT), readback, Faults While Waiting (Session) , $(P)$(R)PERF:CNT:WAITFAULT_RBV
+# % gui, $(PORT), readback, PCO Driver Errors (Session) , $(P)$(R)PERF:CNT:DRIVERERROR_RBV
 # % gui, $(PORT), readback, Frame Capture Errors (Session) , $(P)$(R)PERF:CNT:CAPTUREERROR_RBV
 # % gui, $(PORT), readback, Acquisition Faults (Session) , $(P)$(R)PERF:CNT:POLLGETFRAME_RBV
 # % gui, $(PORT), readback, Faults (Session)  , $(P)$(R)PERF:CNT:FAULT_RBV
@@ -203,26 +200,35 @@
 ## Binning and Region of Interest
 # % gui, $(PORT), groupHeading, Binning and Region of Interest
 # % gui, $(PORT), readback, Max Binning Horizontal , $(P)$(R)MAXBINHORZ_RBV
-# % gui, $(PORT), readback, Bin Step Horizontal , $(P)$(R)BINHORZSTEPPING_RBV
-# % gui, $(PORT), readback, ROI Step Horizontal , $(P)$(R)ROIHORZSTEPS_RBV
-# % gui, $(PORT), readback, ROI Symmetry X , $(P)$(R)ROI_SYMMETRYX_RBV
 # % gui, $(PORT), readback, Max Binning Vertical , $(P)$(R)MAXBINVERT_RBV
+# % gui, $(PORT), readback, Bin Step Horizontal , $(P)$(R)BINHORZSTEPPING_RBV
 # % gui, $(PORT), readback, Bin Step Vertical , $(P)$(R)BINVERTSTEPPING_RBV
+# % gui, $(PORT), readback, ROI Step Horizontal , $(P)$(R)ROIHORZSTEPS_RBV
 # % gui, $(PORT), readback, ROI Step Vertical , $(P)$(R)ROIVERTSTEPS_RBV
+# % gui, $(PORT), readback, ROI Symmetry X , $(P)$(R)ROI_SYMMETRYX_RBV
 # % gui, $(PORT), readback, ROI Symmetry Y , $(P)$(R)ROI_SYMMETRYY_RBV
 # % gui, $(PORT), demand, Symmetrical ROI X % , $(P)$(R)ROIPCX
 # % gui, $(PORT), demand, Symmetrical ROI Y % , $(P)$(R)ROIPCY
-# % gui, $(PORT), readback, Pending Changes? , $(P)$(R)ROI_FRIENDLY_RBV
+# % gui, $(PORT), readback, Region start X , $(P)$(R)MinX_RBV
+# % gui, $(PORT), readback, Region start Y , $(P)$(R)MinY_RBV
+# % gui, $(PORT), readback, Region size X , $(P)$(R)SizeX_RBV
+# % gui, $(PORT), readback, Region size Y , $(P)$(R)SizeY_RBV
+# % gui, $(PORT), statusbits, Pending Changes? , $(P)$(R)ROI_FRIENDLY_RBV
 # % gui, $(PORT), enum, Validate and Set ROI , $(P)$(R)APPLY_BIN_ROI
 # % gui, $(PORT), groupExit, Binning and Region of InterestExit
 ## PCO Hardware Sync Signals
-# % gui, $(PORT), groupHeading, Hardware Sync Signals
-# % gui, $(PORT), demand, Trigger High , $(P)$(R)DIO:TRIG.HIGH
-# % gui, $(PORT), enum, HW Capture , $(P)$(R)DIO:CAPTURE
-# % gui, $(PORT), readback, Capture , $(P)$(R)DIO:CAPTURE
-# % gui, $(PORT), readback, Trigger , $(P)$(R)DIO:TRIG
-# % gui, $(PORT), readback, Exposing , $(P)$(R)DIO:EXPOSING
-# % gui, $(PORT), readback, Busy , $(P)$(R)DIO:BUSY
-# % gui, $(PORT), groupExit, PCO Hardware Sync SignalsExit
+## % gui, $(PORT), groupHeading, Hardware Sync Signals
+## % gui, $(PORT), demand, Trigger High , $(P)$(R)DIO:TRIG.HIGH
+## % gui, $(PORT), enum, HW Capture , $(P)$(R)DIO:CAPTURE
+## % gui, $(PORT), readback, Capture , $(P)$(R)DIO:CAPTURE
+## % gui, $(PORT), readback, Trigger , $(P)$(R)DIO:TRIG
+## % gui, $(PORT), readback, Exposing , $(P)$(R)DIO:EXPOSING
+## % gui, $(PORT), readback, Busy , $(P)$(R)DIO:BUSY
+## % gui, $(PORT), groupExit, PCO Hardware Sync SignalsExit
 ## PVs which could not be matched to section
 
+
+# % gui, $(PORT), groupHeading, Local Mem (Historical)
+# % gui, $(PORT), readback,  Local Disk Used , $(P):RSYNC:DFPERCENT
+# % gui, $(PORT), readback,  Local Disk Free , $(P):RSYNC:DFFREE
+# % gui, $(PORT), readback,  Local Disk Total , $(P):RSYNC:DFTOTA
