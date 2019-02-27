@@ -385,7 +385,6 @@ Pco* Pco::getPco(const char* portName)
  */
 void Pco::doReboot()
 {
-	// TODO: check if this parameter being set (used for embedded PCO screen) fixes pixel rate selection
 	paramConnected = 0;
 	TakeLock takeLock(this);
 	unsigned long setupData[DllApi::cameraSetupDataSize];
@@ -1260,7 +1259,7 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 		paramADModel = "pco.4000";
 		break;
 	case DllApi::cameraTypeEdge:
-		paramADModel = "pco.edge GL";
+		paramADModel = "pco.edge";
 		break;
 	case DllApi::cameraTypeEdgeGl:
 		paramADModel = "pco.edge GL";
@@ -1340,7 +1339,9 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	this->api->setTriggerMode(this->camera, DllApi::triggerExternal);
 
 	// Set the storage mode to FIFO
-	this->api->setStorageMode(this->camera, DllApi::storageModeFifoBuffer);
+    if(this->camType.camType != DllApi::cameraTypeEdgeCLHS){
+	   this->api->setStorageMode(this->camera, DllApi::storageModeFifoBuffer);
+    }
 
 	// Default data type
 	paramNDDataType = NDUInt16;
@@ -2010,7 +2011,7 @@ void Pco::freeImageBuffers() throw()
 
 /**
  * Depending on the camera, pixel rate and x image size we may have to adjust the transfer parameters
- * in order to achieve the frame rate required across camlink. 
+ * in order to achieve the frame rate required across camlink. The CLHS interface doesn't require any adjustments.
  * The Edge in rolling shutter mode and > 50fps we have to select 12 bit transfer and a look up 
  * table to do the compression.
  * By experiment the following formats appear to work/not work with the Edge:
@@ -2026,7 +2027,6 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
     {
     case DllApi::cameraTypeEdge:
     case DllApi::cameraTypeEdgeGl:
-    case DllApi::cameraTypeEdgeCLHS:
         // Set the camlink transfer parameters, reading them back
         // again to make sure.
         if(this->cameraSetup == DllApi::edgeSetupGlobalShutter)
@@ -2039,7 +2039,6 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
         }
         else 
         {
-        	// TODO Check: I believe this should be above 1920 (change applied), rather than above or equal to
             if(this->xCamSize>Pco::edgeXSizeNeedsReducedCamlink &&
                     this->pixRate>=Pco::edgePixRateNeedsReducedCamlink)
             {
@@ -2070,7 +2069,8 @@ void Pco::adjustTransferParamsAndLut() throw(PcoException)
         this->api->setActiveLookupTable(this->camera, lutIdentifier);
         break;
     default:
-    	this->dataFormat = dataformatNotEdge;
+        // Non-edge cameras and the pco.edge CLHS don't adjust the data format
+    	this->dataFormat = dataformatDefault;
         break;
     }
 }
@@ -2341,13 +2341,16 @@ void Pco::cfgAdcMode() throw(PcoException)
  */
 void Pco::cfgMemoryMode() throw(PcoException)
 {
-    unsigned short v;
-	this->api->setRecorderSubmode(this->camera, this->recoderSubmode);
-	this->api->getRecorderSubmode(this->camera, &v);
-	this->recoderSubmode = v;
-	this->api->setStorageMode(this->camera, this->storageMode);
-	this->api->getStorageMode(this->camera, &v);
-	this->storageMode = v;
+    // The pco.edge CLHS does not support the storage mode calls
+    if(this->camType.camType != DllApi::cameraTypeEdgeCLHS){
+        unsigned short v;
+    	this->api->setRecorderSubmode(this->camera, this->recoderSubmode);
+    	this->api->getRecorderSubmode(this->camera, &v);
+    	this->recoderSubmode = v;
+    	this->api->setStorageMode(this->camera, this->storageMode);
+    	this->api->getStorageMode(this->camera, &v);
+    	this->storageMode = v;
+    }
 }
 
 /**
