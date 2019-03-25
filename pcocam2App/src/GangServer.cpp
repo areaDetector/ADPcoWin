@@ -16,6 +16,7 @@
 #include "epicsExport.h"
 #include "iocsh.h"
 #include <cstring>
+#include <algorithm>
 #include "TakeLock.h"
 #include "FreeLock.h"
 
