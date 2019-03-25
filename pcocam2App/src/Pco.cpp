@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdarg>
+#include <algorithm>
 #include "epicsExport.h"
 #include "epicsThread.h"
 #include "iocsh.h"
@@ -1521,7 +1522,7 @@ bool Pco::pollCamera()
 		paramAcqEnable = (int)acqEnable;
 	    paramCamRamUse = ramUsePercent;
 		paramCamRamUseFrames = ramUseFrames;
-		paramBuffersInUse = this->pNDArrayPool->numBuffers() - this->pNDArrayPool->numFree();
+		paramBuffersInUse = this->pNDArrayPool->getNumBuffers() - this->pNDArrayPool->getNumFree();
     }
     catch(PcoException& e)
     {
