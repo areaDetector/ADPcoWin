@@ -1,9 +1,9 @@
 ## This file was generated using detailConverter.py
 
 ## This associates a BOY screen with the template
-# % gui, $(PORT), boydetail, pcocam2App_opi/pcocam2_detail.opi, P=$(P), R=$(R), DESC=Camera
-# % gui, $(PORT), boyembed, pcocam2App_opi/pcocam2_embed.opi, P=$(P), R=$(R), DESC=Camera
-# % gui, $(PORT), boyembed, pcocam2App_opi/pcocam2_embed_box.opi, P=$(P), R=$(R), DESC=Camera
+# % gui, $(PORT), boydetail, pcowinApp_opi/pcowin_detail.opi, P=$(P), R=$(R), DESC=Camera
+# % gui, $(PORT), boyembed, pcowinApp_opi/pcowin_embed.opi, P=$(P), R=$(R), DESC=Camera
+# % gui, $(PORT), boyembed, pcowinApp_opi/pcowin_embed_box.opi, P=$(P), R=$(R), DESC=Camera
 
 ## Info
 # % gui, $(PORT), groupHeading, Info

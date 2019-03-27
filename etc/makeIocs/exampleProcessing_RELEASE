@@ -11,6 +11,4 @@ NORMATIVETYPESCPP = $(SUPPORT)/normativeTypesCPP/4-0-2
 ADBINARIES        = $(SUPPORT)/ADBinaries/2-2dls2
 ADCORE            = $(SUPPORT)/ADCore/2-3dls3
 ADUTIL            = $(SUPPORT)/adUtil/2-2
-PCOCAM2=$(WORK)/pcocam2
-
 

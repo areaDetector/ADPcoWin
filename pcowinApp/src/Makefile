@@ -6,41 +6,41 @@ include $(TOP)/configure/CONFIG
 # Build an Diamond Support Module
 # -------------------------------
 
-LIBRARY_IOC += pcocam2
+LIBRARY_IOC += pcowin
 
 # xxxRecord.h will be created from xxxRecord.dbd
 #DBDINC += xxx.h
 
 # xxxRecord.dbd will be installed into <top>/dbd
-DBD += pcocam2Support.dbd
-DBD += pcocam2HardwareSupport.dbd
+DBD += pcowinSupport.dbd
+DBD += pcowinHardwareSupport.dbd
 
 # The following are compiled and added to the support library
-pcocam2_SRCS += Pco.cpp
-pcocam2_SRCS += DllApi.cpp
-pcocam2_SRCS += NDArrayException.cpp
-pcocam2_SRCS += AsynException.cpp
-pcocam2_SRCS += StateMachine.cpp
-pcocam2_SRCS += TraceStream.cpp
-pcocam2_SRCS += GangServer.cpp
-pcocam2_SRCS += GangClient.cpp
-pcocam2_SRCS += GangConnection.cpp
-pcocam2_SRCS += GangConfig.cpp
-pcocam2_SRCS += GangMemberConfig.cpp
-pcocam2_SRCS += GangServerConfig.cpp
-pcocam2_SRCS += SocketProtocol.cpp
-pcocam2_SRCS += PerformanceMonitor.cpp
-pcocam2_SRCS += PcoException.cpp
-pcocam2_SRCS_WIN32 += PcoApi.cpp
-pcocam2_SRCS += SimulationApi.cpp
-pcocam2_SRCS += TakeLock.cpp
-pcocam2_SRCS += FreeLock.cpp
-pcocam2_SRCS += IntegerParam.cpp
-pcocam2_SRCS += DoubleParam.cpp
-pcocam2_SRCS += StringParam.cpp
-pcocam2_SRCS += AsynParam.cpp
-pcocam2_SRCS += ADDriverEx.cpp
-pcocam2_SRCS += NdArrayRef.cpp
+pcowin_SRCS += Pco.cpp
+pcowin_SRCS += DllApi.cpp
+pcowin_SRCS += NDArrayException.cpp
+pcowin_SRCS += AsynException.cpp
+pcowin_SRCS += StateMachine.cpp
+pcowin_SRCS += TraceStream.cpp
+pcowin_SRCS += GangServer.cpp
+pcowin_SRCS += GangClient.cpp
+pcowin_SRCS += GangConnection.cpp
+pcowin_SRCS += GangConfig.cpp
+pcowin_SRCS += GangMemberConfig.cpp
+pcowin_SRCS += GangServerConfig.cpp
+pcowin_SRCS += SocketProtocol.cpp
+pcowin_SRCS += PerformanceMonitor.cpp
+pcowin_SRCS += PcoException.cpp
+pcowin_SRCS_WIN32 += PcoApi.cpp
+pcowin_SRCS += SimulationApi.cpp
+pcowin_SRCS += TakeLock.cpp
+pcowin_SRCS += FreeLock.cpp
+pcowin_SRCS += IntegerParam.cpp
+pcowin_SRCS += DoubleParam.cpp
+pcowin_SRCS += StringParam.cpp
+pcowin_SRCS += AsynParam.cpp
+pcowin_SRCS += ADDriverEx.cpp
+pcowin_SRCS += NdArrayRef.cpp
 
 # Include path to vendor headers
 USR_INCLUDES_WIN32 += -I../include/
@@ -73,7 +73,7 @@ endif
 #HOST_OPT=NO
 
 # We need to link against the EPICS Base libraries
-pcocam2_LIBS += $(EPICS_BASE_IOC_LIBS)
+pcowin_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 

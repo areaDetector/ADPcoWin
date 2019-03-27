@@ -12,7 +12,7 @@
 # All tags starting with gdatag are DLS specific for GDA
 # % gdatag, template, pcocam, $(PORT)_pcocam, $(PORT) pcocam class instance
 
-include "pcocam2_detail.template"
+include "pcowin_detail.template"
 
 ## Dummy records for Diamond archiver
 ## CCD Temperature is defined in ADBase.template

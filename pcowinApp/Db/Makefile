@@ -16,7 +16,7 @@ DB += pco_gangconnection.template
 DB += pco_gangserver.template
 DB += PCO_dio_logic.template
 DB += PCO_dio_sim.template
-DB += pcocam2_detail.template
+DB += pcowin_detail.template
 
 #----------------------------------------------------
 # In a Diamond IOC Application, build db files from

@@ -4,7 +4,7 @@
   <!--Opening and saving this file in cs-studio will delete this comment and stop dls_xmlbuilder regenerating it-->
   <boy_version>4.0.102.201411050817</boy_version>
   <grid_space>5</grid_space>
-  <name>Pcocam2 Detail</name>
+  <name>PcoWin Detail</name>
   <background_color>
     <color name="Canvas" red="200" green="200" blue="200" />
   </background_color>
@@ -65,7 +65,7 @@
           <color name="Text: FG" red="0" green="0" blue="0" />
         </foreground_color>
         <border_alarm_sensitive>false</border_alarm_sensitive>
-        <opi_file>pcocam2_embed_box.opi</opi_file>
+        <opi_file>pcowin_embed_box.opi</opi_file>
         <name>auto(boyembed)</name>
         <macros>
           <include_parent_macros>true</include_parent_macros>

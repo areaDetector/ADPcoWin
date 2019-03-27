@@ -55,7 +55,7 @@
       <include_parent_macros>true</include_parent_macros>
     </macros>
     <name>$(DESC)</name>
-    <opi_file>pcocam2_embed.opi</opi_file>
+    <opi_file>pcowin_embed.opi</opi_file>
     <resize_behaviour>1</resize_behaviour>
     <rules />
     <scale_options>
