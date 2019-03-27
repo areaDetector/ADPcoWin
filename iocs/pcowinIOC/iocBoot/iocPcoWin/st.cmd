@@ -1,7 +1,7 @@
 < envPaths
 errlogInit(20000)
 
-dbLoadDatabase("$(TOP)/dbd/pcocam2App.dbd")
+dbLoadDatabase("$(TOP)/dbd/pcowinApp.dbd")
 pcocam2App_registerRecordDeviceDriver(pdbbase) 
 
 # Prefix for all records
@@ -47,7 +47,7 @@ dbLoadRecords("$(ADCORE)/db/NDStdArrays.template", "P=$(PREFIX),R=image1:,PORT=I
 
 # Load all other plugins using commonPlugins.cmd
 < $(ADCORE)/iocBoot/commonPlugins.cmd
-set_requestfile_path("$(ADPCOWIN)/pcocam2App/Db")
+set_requestfile_path("$(ADPCOWIN)/pcowinApp/Db")
 
 iocInit()
 
