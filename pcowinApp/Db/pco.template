@@ -6,22 +6,14 @@
 #% macro, TIMEOUT, Timeout
 #% macro, ADDR, Asyn Port address
 
-# This associates the template with an edm screen
-# % gui, $(PORT), edmtab, pcoDetector.edl, P=$(P),R=$(R)
-
-# All tags starting with gdatag are DLS specific for GDA
-# % gdatag, template, pcocam, $(PORT)_pcocam, $(PORT) pcocam class instance
-
-include "pcowin_detail.template"
-
-## Dummy records for Diamond archiver
+## Dummy records for archiver
 ## CCD Temperature is defined in ADBase.template
 # % archiver 10 monitor
 record(ai, "$(P)$(R)Temperature_RBV")
 {
      info("archiver", "10 Monitor")
 }
-## End dummy records for Diamond archiver
+## End dummy records for archiver
 
 include "ADBase.template"
 

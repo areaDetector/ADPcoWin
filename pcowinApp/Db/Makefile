@@ -8,19 +8,17 @@ include $(TOP)/configure/CONFIG
 #DB_OPT = YES
 
 #----------------------------------------------------
-# In a Diamond Support Module, install
-# templates like this
+#
+# Include the following templates
 #
 DB += pco.template
 DB += pco_gangconnection.template
 DB += pco_gangserver.template
 DB += PCO_dio_logic.template
 DB += PCO_dio_sim.template
-DB += pcowin_detail.template
 
 #----------------------------------------------------
-# In a Diamond IOC Application, build db files from
-# template files like this
+# Build db files from template files
 #
 #DB += pcocamfull.db
 

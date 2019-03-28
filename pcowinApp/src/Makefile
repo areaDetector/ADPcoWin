@@ -2,10 +2,6 @@ TOP=../..
 
 include $(TOP)/configure/CONFIG
 
-# -------------------------------
-# Build an Diamond Support Module
-# -------------------------------
-
 LIBRARY_IOC += pcowin
 
 # xxxRecord.h will be created from xxxRecord.dbd
