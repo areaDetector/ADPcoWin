@@ -1,8 +1,18 @@
 < envPaths
 errlogInit(20000)
 
+# Directories
+epicsEnvSet("TOP", "../..")
+epicsEnvSet("ADPCOWIN", "../../../..")
+
+# Need to set path to ADCORE here
+epicsEnvSet("ADCORE", "")
+
+# Asyn port name
+epicsEnvSet("PORT", "pcocam")
+
 dbLoadDatabase("$(TOP)/dbd/pcowinApp.dbd")
-pcocam2App_registerRecordDeviceDriver(pdbbase) 
+pcowinApp_registerRecordDeviceDriver(pdbbase) 
 
 # Prefix for all records
 epicsEnvSet("PREFIX", "13PCO1:")
@@ -25,8 +35,12 @@ epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 epicsEnvSet("NELEMENTS", "12592912")
 
 # pcoConfig(const char* portName, int maxBuffers, size_t maxMemory)
-
 pcoConfig("$(PORT)", 0, 0)
+
+# pcoApiConfig(const char* portName)
+pcoApiConfig("$(PORT)")
+
+# Asyn tracing
 asynSetTraceIOMask($(PORT), 0, 2)
 #asynSetTraceMask($(PORT), 0, 0xFF)
 #asynSetTraceFile($(PORT), 0, "asynTrace.out")
@@ -53,4 +67,3 @@ iocInit()
 
 # save things every thirty seconds
 create_monitor_set("auto_settings.req", 30,"P=$(PREFIX)")
-
