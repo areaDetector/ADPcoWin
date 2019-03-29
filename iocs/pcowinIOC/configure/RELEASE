@@ -4,9 +4,7 @@
 
 ADPCOWIN=$(TOP)/../..
 
--include $(ADPCOWIN)/configure/RELEASE_LIBS_INCLUDE
--include $(ADPCOWIN)/configure/RELEASE_PATHS.local.$(EPICS_HOST_ARCH)
--include $(ADPCOWIN)/RELEASE.local
--include $(ADPCOWIN)/configure/RELEASE.local
-
+-include $(TOP)/../../../configure/RELEASE_PRODS_INCLUDE
+-include $(TOP)/RELEASE.local
 -include $(TOP)/configure/RELEASE.local
+
