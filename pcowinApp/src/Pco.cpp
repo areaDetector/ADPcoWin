@@ -23,6 +23,7 @@
 #include "TakeLock.h"
 #include "FreeLock.h"
 #include "initHooks.h"
+#include "PcoCameraDevice.h"
 
 // Set this symbol to 1 if you want to be able to set
 // an arbitary ROI and binning that uses the hardware
@@ -107,8 +108,9 @@ void pcoInitHookFunction(initHookState state)
  *            allowed to allocate. Set this to -1 to allow an unlimited number of buffers.
  * \param[in] maxMemory The maximum amount of memory that the NDArrayPool for this driver is
  *            allowed to allocate. Set this to -1 to allow an unlimited amount of memory.
+ * \param[in] numCameraDevices The number of camera devices to create firmware parameters for.
  */
-Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
+Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory, int numCameraDevices)
 : ADDriverEx(portName, 1, maxBuffers, maxMemory)
 , paramPixRate(this, "PCO_PIX_RATE", 0)
 , paramAdcMode(this, "PCO_ADC_MODE", DllApi::adcModeDual,
@@ -188,16 +190,6 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
 , paramFriendlyRoiSetting(this, "PCO_ROI_FRIENDLY", 0)
 , paramRoiSymmetryX(this, "PCO_ROI_SYMMETRY_X", 0)
 , paramRoiSymmetryY(this, "PCO_ROI_SYMMETRY_Y", 0)
-, paramuCName(this, "PCO_UC_NAME", "")
-, paramuCFWVersion(this, "PCO_UC_FW_VERSION", "")
-, paramFPGAName(this, "PCO_FPGA_NAME", "")
-, paramFPGAFWVersion(this, "PCO_FPGA_FW_VERSION", "")
-, paramzFPGAName(this, "PCO_zFPGA_NAME", "")
-, paramzFPGAFWVersion(this, "PCO_zFPGA_FW_VERSION", "")
-, paramXMLName(this, "PCO_XML_NAME", "")
-, paramXMLFWVersion(this, "PCO_XML_FW_VERSION", "")
-, paramphyuCName(this, "PCO_PHY_UC_NAME", "")
-, paramphyuCFWVersion(this, "PCO_PHY_UC_FW_VERSION", "")
 , paramInterfaceType(this, "PCO_INTERFACE", 0)
 , paramInterfaceIsCameraLink(this, "PCO_USES_CAMERALINK", 0)
 , stateMachine(NULL)
@@ -244,6 +236,23 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory)
         pixRateEnumValues[i] = 0;
         pixRateEnumStrings[i] = (char *)calloc(MAX_ENUM_STRING_SIZE, sizeof(char));
         pixRateEnumSeverities[i] = 0;
+    }
+    // Create and initialise the firmware parameters
+    const int tempBufferSize = 100;
+    char charBuff[tempBufferSize];
+    for(int i=0; i<numCameraDevices; i++) {
+        pcoCameraDeviceName.push_back(0);
+        pcoCameraDeviceVariant.push_back(0);
+        pcoCameraDeviceVersion.push_back(0);
+        epicsSnprintf(charBuff, tempBufferSize, "PCO_CAMDEV%d:NAME", i);
+        createParam(charBuff, asynParamOctet, &pcoCameraDeviceName[i]);
+        setStringParam(pcoCameraDeviceName[i], "");
+        epicsSnprintf(charBuff, tempBufferSize, "PCO_CAMDEV%d:VARIANT", i);
+        createParam(charBuff, asynParamInt32, &pcoCameraDeviceVariant[i]);
+        setIntegerParam(pcoCameraDeviceVariant[i], 0);
+        epicsSnprintf(charBuff, tempBufferSize, "PCO_CAMDEV%d:VERSION", i);
+        createParam(charBuff, asynParamOctet, &pcoCameraDeviceVersion[i]);
+        setStringParam(pcoCameraDeviceVersion[i], "");
     }
     // Create the state machine
     stateMachine = new StateMachine("Pco", this,
@@ -1151,19 +1160,6 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 	api->getStorageStruct(camera, &camStorage);
 	api->getRecordingStruct(camera);
 
-	// Get camera firmware
-	api->getFirmwareInfo(camera, 0, &firmware);
-	paramuCName = firmware.uCName;
-	paramuCFWVersion = firmware.uCVersion;
-	paramphyuCName = firmware.phyuCName;
-	paramphyuCFWVersion = firmware.phyuCVersion;
-	paramFPGAName = firmware.FPGAName;
-	paramFPGAFWVersion = firmware.FPGAVersion;
-	paramzFPGAName = firmware.zFPGAName;
-	paramzFPGAFWVersion = firmware.zFPGAVersion;
-	paramXMLName = firmware.XMLName;
-	paramXMLFWVersion = firmware.XMLVersion;
-
 	// Corrections for values that appear to be incorrectly returned by the SDK
 	switch(this->camType.camType)
 	{
@@ -1287,6 +1283,9 @@ void Pco::initialiseCamera(TakeLock& takeLock)
 			this->camType.camType == DllApi::cameraTypeEdgeCLHS);
 	paramInterfaceType = (int)this->camType.interfaceType;
 	if (paramInterfaceType == DllApi::cameraLink) paramInterfaceIsCameraLink = 1;
+
+    // Get firmware information
+    getDeviceFirmwareInfo();
 
 	// Work out how to decode the BCD frame number in the image
 	this->shiftLowBcd = Pco::bitsPerShortWord - this->camDescription.dynResolution;
@@ -3269,13 +3268,36 @@ template<typename T> void Pco::sumArray(NDArray* startingArray,
     }
 }
 
+/**
+ * Get firmware information of each device on the camera
+ */
+void Pco::getDeviceFirmwareInfo()
+{
+    std::vector<PcoCameraDevice> cameraDevices;
+    std::string modelName = paramADModel;
+    api->getFirmwareInfo(camera, cameraDevices);
+    std::cout << modelName << ": Found " << cameraDevices.size()
+              << " devices on camera" << std::endl;
+    for(unsigned int i=0; i<cameraDevices.size(); i++) {
+        // Check that we have enough asyn parameters for storage
+        if (i+1 > pcoCameraDeviceName.size()) {
+            std::cout << "Warning: Not enough parameters available to store camera device information (limit of "
+                      << pcoCameraDeviceName.size() << " devices)" << std::endl;
+            break;
+        }
+        setStringParam(pcoCameraDeviceName[i], cameraDevices[i].getName());
+        setIntegerParam(pcoCameraDeviceVariant[i], cameraDevices[i].getVariant());
+        setStringParam(pcoCameraDeviceVersion[i], cameraDevices[i].getVersion());
+    }
+}
+
 // IOC shell configuration command
-extern "C" int pcoConfig(const char* portName, int maxBuffers, size_t maxMemory)
+extern "C" int pcoConfig(const char* portName, int maxBuffers, size_t maxMemory, int numCameraDevices)
 {
     Pco* existing = Pco::getPco(portName);
     if(existing == NULL)
     {
-        new Pco(portName, maxBuffers, maxMemory);
+        new Pco(portName, maxBuffers, maxMemory, numCameraDevices);
     }
     else
     {
@@ -3286,12 +3308,13 @@ extern "C" int pcoConfig(const char* portName, int maxBuffers, size_t maxMemory)
 static const iocshArg pcoConfigArg0 = {"Port name", iocshArgString};
 static const iocshArg pcoConfigArg1 = {"maxBuffers", iocshArgInt};
 static const iocshArg pcoConfigArg2 = {"maxMemory", iocshArgInt};
+static const iocshArg pcoConfigArg3 = {"numCameraDevices", iocshArgInt};
 static const iocshArg * const pcoConfigArgs[] = {&pcoConfigArg0, &pcoConfigArg1,
-        &pcoConfigArg2};
-static const iocshFuncDef configPco = {"pcoConfig", 3, pcoConfigArgs};
+        &pcoConfigArg2, &pcoConfigArg3};
+static const iocshFuncDef configPco = {"pcoConfig", 4, pcoConfigArgs};
 static void configPcoCallFunc(const iocshArgBuf *args)
 {
-    pcoConfig(args[0].sval, args[1].ival, args[2].ival);
+    pcoConfig(args[0].sval, args[1].ival, args[2].ival, args[3].ival);
 }
 
 /** Register the commands */

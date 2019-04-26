@@ -355,7 +355,7 @@ int SimulationApi::doGetCameraType(Handle handle, CameraType* cameraType)
 /**
  * Get the firmware versions of all devices in the camera
  */
-int SimulationApi::doGetFirmwareInfo(Handle handle, unsigned short deviceBlock, Firmware* firmware)
+int SimulationApi::doGetFirmwareInfo(Handle handle, std::vector<PcoCameraDevice> &devices)
 {
 
     int result = DllApi::errorAny;
