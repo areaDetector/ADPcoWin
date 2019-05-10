@@ -35,6 +35,7 @@ pcowin_SRCS += IntegerParam.cpp
 pcowin_SRCS += DoubleParam.cpp
 pcowin_SRCS += StringParam.cpp
 pcowin_SRCS += AsynParam.cpp
+pcowin_SRCS += PcoCameraDevice.cpp
 pcowin_SRCS += ADDriverEx.cpp
 pcowin_SRCS += NdArrayRef.cpp
 

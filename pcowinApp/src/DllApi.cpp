@@ -113,9 +113,9 @@ void DllApi::getCameraType(Handle handle, CameraType* cameraType) throw(PcoExcep
 /**
  * Get the firmware versions of all devices in the camera
  */
-void DllApi::getFirmwareInfo(Handle handle, unsigned short block, Firmware* firmware) throw(PcoException)
+void DllApi::getFirmwareInfo(Handle handle, std::vector<PcoCameraDevice> &devices) throw(PcoException)
 {
-	int result = doGetFirmwareInfo(handle, block, firmware);
+	int result = doGetFirmwareInfo(handle, devices);
     if(result != DllApi::errorNone)
     {
         throw PcoException("getFirmwareInfo", result);

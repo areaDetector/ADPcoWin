@@ -30,7 +30,7 @@ class Pco: public ADDriverEx
 {
 // Construction
 public:
-    Pco(const char* portName, int maxBuffers, size_t maxMemory);
+    Pco(const char* portName, int maxBuffers, size_t maxMemory, int numCameraDevices);
     virtual ~Pco();
 
 // Parameters
@@ -103,18 +103,13 @@ public:
 	IntegerParam paramConfirmedStop;
 	IntegerParam paramRoiSymmetryX;
 	IntegerParam paramRoiSymmetryY;
-	StringParam paramuCName;
-	StringParam paramuCFWVersion;
-	StringParam paramFPGAName;
-	StringParam paramFPGAFWVersion;
-	StringParam paramphyuCName;
-	StringParam paramphyuCFWVersion;
-	StringParam paramXMLName;
-	StringParam paramXMLFWVersion;
-	StringParam paramzFPGAName;
-	StringParam paramzFPGAFWVersion;
 	IntegerParam paramInterfaceType;
 	IntegerParam paramInterfaceIsCameraLink;
+
+    // Camera devices
+    std::vector<int> pcoCameraDeviceName;
+    std::vector<int> pcoCameraDeviceVersion;
+    std::vector<int> pcoCameraDeviceVariant;
 
 // Constants
 public:
@@ -188,7 +183,6 @@ private:
 	DllApi::Storage camStorage;
     DllApi::Transfer camTransfer;
     DllApi::Sizes camSizes;
-    DllApi::Firmware firmware;
     int shiftLowBcd;         // Shift for decoding the BCD frame number in image
     int shiftHighBcd;        // Shift for decoding the BCD frame number in image
     TraceStream errorTrace;
@@ -347,6 +341,7 @@ private:
 	bool readNextMemoryImage();
 	bool roiSymmetryRequiredX();
 	bool roiSymmetryRequiredY();
+    void getDeviceFirmwareInfo();
 
 
 public:

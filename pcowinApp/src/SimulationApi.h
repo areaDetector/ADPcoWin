@@ -37,7 +37,7 @@ protected:
     virtual int doRebootCamera(Handle handle);
     virtual int doGetGeneral(Handle handle);
     virtual int doGetCameraType(Handle handle, CameraType* cameraType);
-    virtual int doGetFirmwareInfo(Handle handle, unsigned short deviceBlock, Firmware* firmware);
+    virtual int doGetFirmwareInfo(Handle handle, std::vector<PcoCameraDevice> &devices);
     virtual int doGetSensorStruct(Handle handle);
     virtual int doGetTimingStruct(Handle handle);
     virtual int doGetCameraDescription(Handle handle, Description* description);

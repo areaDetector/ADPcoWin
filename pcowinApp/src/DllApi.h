@@ -16,6 +16,7 @@
 #include <string>
 #include "asynPortDriver.h"
 #include "PcoException.h"
+#include "PcoCameraDevice.h"
 class Pco;
 class TraceStream;
 
@@ -129,19 +130,6 @@ public:
 		unsigned long segmentSizePages[storageNumSegments];  // Segment sizes in pages
 		unsigned short activeSegment;   // The active segment number
 	};
-	struct Firmware
-	{
-		std::string uCName;				// Microcontroller
-		std::string uCVersion;
-		std::string FPGAName;			// FPGA
-		std::string FPGAVersion;
-		std::string phyuCName;			// Physical uC
-		std::string phyuCVersion;
-		std::string zFPGAName;			// 0-FPGA
-		std::string zFPGAVersion;
-		std::string XMLName;			// XML
-		std::string XMLVersion;
-	};
 
 // API for derived classes to implement
 protected:
@@ -150,7 +138,7 @@ protected:
     virtual int doRebootCamera(Handle handle) = 0;
     virtual int doGetGeneral(Handle handle) = 0;
     virtual int doGetCameraType(Handle handle, CameraType* cameraType) = 0;
-    virtual int doGetFirmwareInfo(Handle handle, unsigned short deviceBlock, Firmware* firmware) = 0;
+    virtual int doGetFirmwareInfo(Handle handle, std::vector<PcoCameraDevice> &devices) = 0;
     virtual int doGetSensorStruct(Handle handle) = 0;
     virtual int doGetTimingStruct(Handle handle) = 0;
     virtual int doGetCameraDescription(Handle handle, Description* description) = 0;
@@ -243,7 +231,7 @@ public:
     void rebootCamera(Handle handle) throw(PcoException);
     void getGeneral(Handle handle) throw(PcoException);
     void getCameraType(Handle handle, CameraType* cameraType) throw(PcoException);
-    void getFirmwareInfo(Handle handle, unsigned short deviceBlock, Firmware* firmware) throw(PcoException);
+    void getFirmwareInfo(Handle handle, std::vector<PcoCameraDevice> &devices) throw(PcoException);
     void getSensorStruct(Handle handle) throw(PcoException);
     void getTimingStruct(Handle handle) throw(PcoException);
     void getCameraDescription(Handle handle, Description* description) throw(PcoException);
