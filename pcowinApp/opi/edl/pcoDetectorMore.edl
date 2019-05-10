@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 2991
-y 64
+x 2995
+y 88
 w 796
 h 897
 font "arial-bold-r-12.0"
@@ -2138,14 +2138,14 @@ minor 1
 release 1
 x 20
 y 515
-w 57
+w 55
 h 12
 font "helvetica-bold-r-10.0"
 fgColor index 14
 bgColor index 3
 useDisplayBg
 value {
-  "Device F/W"
+  "Device Info"
 }
 autoSize
 endObjectProperties
@@ -2165,7 +2165,7 @@ bgColor index 3
 topShadowColor index 1
 botShadowColor index 11
 font "arial-bold-r-12.0"
-buttonLabel "Device FW"
+buttonLabel "Device Info"
 numPvs 4
 numDsps 1
 displayFileName {

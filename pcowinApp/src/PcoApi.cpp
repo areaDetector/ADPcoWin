@@ -195,76 +195,58 @@ int PcoApi::doGetCameraType(Handle handle, CameraType* cameraType)
 }
 
 /**
- * Get the firmware versions of all devices in the camera
+ * Get the firmware versions of all devices
  */
-int PcoApi::doGetFirmwareInfo(Handle handle, unsigned short deviceBlock, Firmware* firmware)
+int PcoApi::doGetFirmwareInfo(Handle handle, std::vector<PcoCameraDevice> &devices)
 {
-	// TODO: Refactor this into multiple functions and use enums for devices?
-	PCO_FW_Vers firmwareVersion;
-	int result = PCO_GetFirmwareInfo(handle, deviceBlock, &firmwareVersion);
-	int deviceNum = firmwareVersion.DeviceNum;
-	int maxDevicesPerBlock = 10;
-	int devices = deviceNum;
-	if (deviceNum > maxDevicesPerBlock) devices = maxDevicesPerBlock; // Each block contains 10 devices
-	// Device identifiers
-	std::string uC = "(uC)";
-	std::string FPGA = "(FPGA)";
-	std::string phyuC = "(Phy uC)";
-	std::string XML = "(XML)";
-	std::string zFPGA = "(0-FPGA)";
-	for (int i=0; i<devices; i++)
-	{
-		// Device information
-		std::string deviceName(firmwareVersion.Device[i].szName);
-		int variant = (int)firmwareVersion.Device[i].wVariant;
-		int majorVersion = (int)firmwareVersion.Device[i].bMajorRev;
-		int minorVersion = (int)firmwareVersion.Device[i].bMinorRev;
-		std::string version = std::to_string(static_cast<long long>(majorVersion)) + "." + std::to_string(static_cast<long long>(minorVersion));
-		// Device type
-		std::size_t found = deviceName.find(uC);
-		if (found == std::string::npos)
-		{
-			found = deviceName.find(FPGA);
-			if (found == std::string::npos)
-			{
-				found = deviceName.find(phyuC);
-				if (found == std::string::npos)
-				{
-					found = deviceName.find(XML);
-					if (found == std::string::npos)
-					{
-						found = deviceName.find(zFPGA);
-						if (found != std::string::npos)
-						{
-							firmware->zFPGAName = deviceName;
-							firmware->zFPGAVersion = version;
-						}
-					}
-					else
-					{
-						firmware->XMLName = deviceName;
-						firmware->XMLVersion = version;
-					}
-				}
-				else
-				{
-					firmware->phyuCName = deviceName;
-					firmware->phyuCVersion = version;
-				}
-			}
-			else
-			{
-				firmware->FPGAName = deviceName;
-				firmware->FPGAVersion = version;
-			}
-		}
-		else
-		{
-			firmware->uCName = deviceName;
-			firmware->uCVersion = version;
-		}
-	}
-	return result;
+
+    PCO_FW_Vers firmwareVersion;
+    int maxDevicesPerBlock = 10;
+    int currentBlock = 0;
+
+    // Get the first block of devices
+    int result = PCO_GetFirmwareInfo(handle, currentBlock, &firmwareVersion);
+    int deviceNum = firmwareVersion.DeviceNum;
+
+    // Total number of device blocks
+    int numBlocks = deviceNum/maxDevicesPerBlock + 1;
+
+    // Iterate over all device blocks
+    int numDevicesInBlock;
+    while (currentBlock < numBlocks) {
+
+        // Get number of devices in the selected block
+        if (currentBlock+1 == numBlocks) {
+            numDevicesInBlock = deviceNum%maxDevicesPerBlock;
+        }
+        else {
+            numDevicesInBlock = maxDevicesPerBlock;
+        }
+
+        // Parse devices in current block
+        for (int i=0; i<numDevicesInBlock; i++)
+        {
+            // Get the information
+            std::string deviceName(firmwareVersion.Device[i].szName);
+            int variant = (int)firmwareVersion.Device[i].wVariant;
+            int majorVersion = (int)firmwareVersion.Device[i].bMajorRev;
+            int minorVersion = (int)firmwareVersion.Device[i].bMinorRev;
+
+            // Add the device to our list
+            devices.push_back(PcoCameraDevice(deviceName, majorVersion, minorVersion, variant));
+        }
+
+        // Increment block counter
+        currentBlock += 1;
+
+        // Check for the next block
+        if (currentBlock < numBlocks) {
+            result = PCO_GetFirmwareInfo(handle, currentBlock, &firmwareVersion);
+        }
+
+    }
+
+    return result;
 }
 
 /**
