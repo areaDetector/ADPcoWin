@@ -1,30 +1,20 @@
 < envPaths
 errlogInit(20000)
 
-# Directories
-epicsEnvSet("TOP", "../..")
-epicsEnvSet("ADPCOWIN", "../../../..")
-
-# Need to set path to ADCORE here
-epicsEnvSet("ADCORE", "")
-
-# Asyn port name
-epicsEnvSet("PORT", "pcocam")
-
 dbLoadDatabase("$(TOP)/dbd/pcowinApp.dbd")
 pcowinApp_registerRecordDeviceDriver(pdbbase) 
 
 # Prefix for all records
-epicsEnvSet("PREFIX", "13PCO1:")
+epicsEnvSet("PREFIX", "XF05IDD-ES{PCO:1}:")
 
 # The port name for the detector
 epicsEnvSet("PORT",   "PCO1")
-# Really large queue so we can stream to disk at full camera speed
-epicsEnvSet("QSIZE",  "2000")   
+# Larger queue size may be need to stream to disk at full camera speed, up tp 2000
+epicsEnvSet("QSIZE",  "20")   
 # The maximim image width; used for row profiles in the NDPluginStats plugin
-epicsEnvSet("XSIZE",  "2048")
+epicsEnvSet("XSIZE",  "2560")
 # The maximim image height; used for column profiles in the NDPluginStats plugin
-epicsEnvSet("YSIZE",  "2048")
+epicsEnvSet("YSIZE",  "2160")
 # The maximum number of time series points in the NDPluginStats plugin
 epicsEnvSet("NCHANS", "2048")
 # The maximum number of frames buffered in the NDPluginCircularBuff plugin
@@ -32,10 +22,10 @@ epicsEnvSet("CBUFFS", "500")
 # The search path for database files
 epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 # Define NELEMENTS to be enough for a 2048x2048x3 (color) image
-epicsEnvSet("NELEMENTS", "12592912")
+epicsEnvSet("NELEMENTS", "11059200")
 
 # pcoConfig(const char* portName, int maxBuffers, size_t maxMemory)
-pcoConfig("$(PORT)", 0, 0)
+pcoConfig("$(PORT)", 0, 0, 8)
 
 # pcoApiConfig(const char* portName)
 pcoApiConfig("$(PORT)")
@@ -47,6 +37,14 @@ asynSetTraceIOMask($(PORT), 0, 2)
 #asynSetTraceInfoMask($(PORT), 0, 0xf)
 
 dbLoadRecords("$(ADPCOWIN)/db/pco.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=0")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=1")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=2")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=3")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=4")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=5")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=6")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=7")
 
 # What other database files need to be loaded?
 
