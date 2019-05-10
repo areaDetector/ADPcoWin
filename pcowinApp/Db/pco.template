@@ -1428,7 +1428,7 @@ record(longout, "$(P)$(R)PERF:TESTCOUNT")
 }
 
 # Camera interface
-record(mbbi, $(P)$(R)INTERFACE)
+record(mbbi, "$(P)$(R)INTERFACE")
 {
     field(DTYP, asynInt32)
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_INTERFACE")
@@ -1452,7 +1452,7 @@ record(mbbi, $(P)$(R)INTERFACE)
 }
 
 # Uses Camera Link
-record(bi, $(P)$(R)USESCAMERALINK)
+record(bi, "$(P)$(R)USESCAMERALINK")
 {
     field(DTYP, asynInt32)
     field(INP, "@asyn($(PORT),$(ADDR),$(TIMEOUT))PCO_USES_CAMERALINK")

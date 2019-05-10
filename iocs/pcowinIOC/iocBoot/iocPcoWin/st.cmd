@@ -5,7 +5,7 @@ dbLoadDatabase("$(TOP)/dbd/pcowinApp.dbd")
 pcowinApp_registerRecordDeviceDriver(pdbbase) 
 
 # Prefix for all records
-epicsEnvSet("PREFIX", "13PCO1:")
+epicsEnvSet("PREFIX", "XF05IDD-ES{PCO:1}:")
 
 # The port name for the detector
 epicsEnvSet("PORT",   "PCO1")
@@ -25,7 +25,7 @@ epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 epicsEnvSet("NELEMENTS", "11059200")
 
 # pcoConfig(const char* portName, int maxBuffers, size_t maxMemory)
-pcoConfig("$(PORT)", 0, 0)
+pcoConfig("$(PORT)", 0, 0, 8)
 
 # pcoApiConfig(const char* portName)
 pcoApiConfig("$(PORT)")
@@ -37,6 +37,14 @@ asynSetTraceIOMask($(PORT), 0, 2)
 #asynSetTraceInfoMask($(PORT), 0, 0xf)
 
 dbLoadRecords("$(ADPCOWIN)/db/pco.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=0")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=1")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=2")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=3")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=4")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=5")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=6")
+dbLoadRecords("$(ADPCOWIN)/db/pco_device_firmware.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),N=7")
 
 # What other database files need to be loaded?
 
