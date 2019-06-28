@@ -575,25 +575,10 @@ record(longin, "$(P)$(R)CAMLINKCLOCK_RBV")
 
 # Parameters that are not implemented and are disabled to remove them
 # from the GUI.
-record(ao, "$(P)$(R)Gain")
-{
-    field(DISA, "1")
-}
+
 record(mbbo, "$(P)$(R)ColorMode")
 {
     field(DISA, "1")
-}
-record(ai, "$(P)$(R)Gain_RBV")
-{
-    field(DISA, "1")
-}
-record(bo, "$(P)$(R)ReverseX") 
-{
-  field(DISA, "1")
-}
-record(bo, "$(P)$(R)ReverseY") 
-{
-  field(DISA, "1")
 }
 
 # CCD Cooling parameters
