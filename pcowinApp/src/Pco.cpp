@@ -706,7 +706,7 @@ StateMachine::StateSelector Pco::smAcquireImage()
 	StateMachine::StateSelector result;
     if(!receiveImages())
     {
-        //startCamera();
+        startCamera();
         result = StateMachine::firstState;
     }
     else
