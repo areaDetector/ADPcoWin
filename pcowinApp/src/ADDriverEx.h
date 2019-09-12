@@ -51,15 +51,12 @@ public:
 	StringParam paramADStatusMessage;
 	EnumParam<NDDataType_t> paramNDDataType;
 	DoubleParam paramADAcquireTime;
-	DoubleParam paramADGain;
 	DoubleParam paramADTemperature;
 	EnumParam<ADStatus_t> paramADStatus;
 	IntegerParam paramADTriggerMode;
 	IntegerParam paramADNumImages;
 	IntegerParam paramADImageMode;
 	DoubleParam paramADAcquirePeriod;
-	IntegerParam paramADReverseX;
-	IntegerParam paramADReverseY;
 	IntegerParam paramNDArrayCounter;
 	IntegerParam paramADAcquire;
 	IntegerParam paramNDArraySizeX;

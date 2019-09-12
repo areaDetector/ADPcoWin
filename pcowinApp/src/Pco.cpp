@@ -2199,8 +2199,6 @@ void Pco::doArm() throw(std::bad_alloc, PcoException)
 	this->delayTime = paramDelayTime;
 	this->cameraSetup = paramCameraSetup;
 	this->dataType = paramNDDataType;
-	this->reverseX = paramADReverseX;
-	this->reverseY = paramADReverseY;
 	this->minExposureTime = paramExpTimeMin;
 	this->maxExposureTime = paramExpTimeMax;
 	this->minDelayTime = paramDelayTimeMin;
