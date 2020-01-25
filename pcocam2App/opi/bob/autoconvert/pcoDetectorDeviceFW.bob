@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<display version="2.0.0">
+  <name>pcoDetectorDeviceFW</name>
+  <x>1213</x>
+  <y>242</y>
+  <width>290</width>
+  <height>230</height>
+  <background_color>
+    <color name="GLOBAL canvas" red="200" green="200" blue="200">
+    </color>
+  </background_color>
+  <grid_step_x>5</grid_step_x>
+  <grid_step_y>5</grid_step_y>
+  <widget type="rectangle" version="2.0.0">
+    <name>EDM activeRectangleClass</name>
+    <width>291</width>
+    <height>36</height>
+    <line_width>1</line_width>
+    <line_color>
+      <color name="48" red="0" green="0" blue="0">
+      </color>
+    </line_color>
+    <background_color>
+      <color name="48" red="0" green="0" blue="0">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)uC:NAME</pv_name>
+    <x>60</x>
+    <y>65</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>EDM activeXTextClass</name>
+    <text>uC</text>
+    <x>5</x>
+    <y>65</y>
+    <width>45</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="black-14" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>EDM activeXTextClass</name>
+    <text>PCO - $(P)$(R)</text>
+    <y>5</y>
+    <width>290</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="18.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="black-14" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)uC:FWVERSION</pv_name>
+    <x>175</x>
+    <y>65</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)phyuC:FWVERSION</pv_name>
+    <x>175</x>
+    <y>90</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)phyuC:NAME</pv_name>
+    <x>60</x>
+    <y>90</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>EDM activeXTextClass</name>
+    <text>Phy uC</text>
+    <x>5</x>
+    <y>90</y>
+    <width>45</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="black-14" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)FPGA:FWVERSION</pv_name>
+    <x>175</x>
+    <y>115</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)FPGA:NAME</pv_name>
+    <x>60</x>
+    <y>115</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>EDM activeXTextClass</name>
+    <text>FPGA</text>
+    <x>5</x>
+    <y>115</y>
+    <width>45</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="black-14" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>EDM activeXTextClass</name>
+    <text>0-FPGA</text>
+    <x>5</x>
+    <y>140</y>
+    <width>45</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="black-14" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)zFPGA:FWVERSION</pv_name>
+    <x>175</x>
+    <y>140</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)zFPGA:NAME</pv_name>
+    <x>60</x>
+    <y>140</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)XML:FWVERSION</pv_name>
+    <x>175</x>
+    <y>165</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>EDM TextupdateClass</name>
+    <pv_name>$(P)$(R)XML:NAME</pv_name>
+    <x>60</x>
+    <y>165</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="green-16" red="0" green="224" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="Wid-bg/Anno-pri" red="105" green="105" blue="105">
+      </color>
+    </background_color>
+    <horizontal_alignment>1</horizontal_alignment>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>EDM activeXTextClass</name>
+    <text>XML</text>
+    <x>5</x>
+    <y>165</y>
+    <width>45</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="black-14" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="action_button" version="3.0.0">
+    <name>EDM activeExitButtonClass</name>
+    <actions>
+      <action type="execute">
+        <script file="EmbeddedPy">
+          <text><![CDATA[from org.csstudio.display.builder.runtime.script import ScriptUtil
+ScriptUtil.closeDisplay(widget)
+]]></text>
+        </script>
+        <description>close</description>
+      </action>
+    </actions>
+    <text>EXIT</text>
+    <x>200</x>
+    <y>195</y>
+    <width>80</width>
+    <height>25</height>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="16.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="purple-46" red="192" green="0" blue="192">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>EDM activeXTextClass</name>
+    <text>Device name</text>
+    <x>60</x>
+    <y>40</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="black-14" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>EDM activeXTextClass</name>
+    <text>Firmware</text>
+    <x>175</x>
+    <y>40</y>
+    <width>105</width>
+    <font>
+      <font family="Liberation Sans" style="BOLD" size="12.0">
+      </font>
+    </font>
+    <foreground_color>
+      <color name="black-14" red="0" green="0" blue="0">
+      </color>
+    </foreground_color>
+    <background_color>
+      <color name="GLOBAL canvas" red="200" green="200" blue="200">
+      </color>
+    </background_color>
+    <vertical_alignment>1</vertical_alignment>
+  </widget>
+</display>
