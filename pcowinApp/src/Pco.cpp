@@ -3067,7 +3067,9 @@ void Pco::processFrame(NDArray* image)
             epicsTimeGetCurrent(&imageTime);
         }
         image->timeStamp = imageTime.secPastEpoch +
-                imageTime.nsec / Pco::oneNanosecond;
+                imageTime.nsec * Pco::oneNanosecond;
+        // Required as of ADCore 2-0 - https://cars.uchicago.edu/software/epics/areaDetectorTimeStampSupport.html
+        updateTimeStamp(&image->epicsTS);
         this->getAttributes(image->pAttributeList);
         // Show the image to the gang system
         if(this->gangConnection)
