@@ -3037,6 +3037,11 @@ void Pco::processFrame(NDArray* image)
     }
     if(nextImageReady)
     {
+        // Update statistics if not a client
+        if (!this->gangConnection){
+            this->arrayCounter++;
+            this->numImagesCounter++;
+        }
         // Attach the image information
         image->uniqueId = this->arrayCounter;
         epicsTimeStamp imageTime;
@@ -3074,9 +3079,6 @@ void Pco::processFrame(NDArray* image)
  */
 void Pco::imageComplete(NDArray* image)
 {
-    // Update statistics
-    this->arrayCounter++;
-    this->numImagesCounter++;
     // Pass the array on
     this->doCallbacksGenericPointer(image, NDArrayData, 0);
     image->release();
