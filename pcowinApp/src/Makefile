@@ -43,13 +43,7 @@ pcowin_SRCS += NdArrayRef.cpp
 USR_INCLUDES_WIN32 += -I../include/
 
 # These are the vendor libraries
-ifeq (win32-x86, $(findstring win32-x86, $(T_A)))
-  LIB_INSTALLS += $(wildcard ../lib/*.lib)
-  BIN_INSTALLS += $(wildcard ../dll/*.dll)
-  USR_CFLAGS += -DDEBUG  /Zi /O2
-  USR_CPPFLAGS += -DDEBUG /Zi /O2
-  USR_LDFLAGS += /INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF
-else ifeq (windows-x64-debug, $(findstring windows-x64-debug, $(T_A)))
+ifeq (windows-x64-debug, $(findstring windows-x64-debug, $(T_A)))
   LIB_INSTALLS += $(wildcard ../lib64/*.lib)
   BIN_INSTALLS += $(wildcard ../dll64/*.dll)
   USR_CFLAGS += /wd4290

@@ -102,8 +102,8 @@ void DllApi::getCameraType(Handle handle, CameraType* cameraType) throw(PcoExcep
     int result = doGetCameraType(handle, cameraType);
     *this->trace << "DllApi->GetCameraType(" << handle << ", " <<
             cameraType->camType << ", " << cameraType->serialNumber << ", " << 
-			cameraType->hardwareVersion << ", " << cameraType->firmwareVersion << 
-			") = " << result << std::endl;
+            cameraType->hardwareVersion << ", " << cameraType->firmwareVersion << 
+            ") = " << result << std::endl;
     if(result != DllApi::errorNone)
     {
         throw PcoException("getCameraType", result);
@@ -115,7 +115,7 @@ void DllApi::getCameraType(Handle handle, CameraType* cameraType) throw(PcoExcep
  */
 void DllApi::getFirmwareInfo(Handle handle, std::vector<PcoCameraDevice> &devices) throw(PcoException)
 {
-	int result = doGetFirmwareInfo(handle, devices);
+    int result = doGetFirmwareInfo(handle, devices);
     if(result != DllApi::errorNone)
     {
         throw PcoException("getFirmwareInfo", result);
@@ -180,10 +180,10 @@ void DllApi::getStorageStruct(Handle handle, Storage* storage) throw(PcoExceptio
 {
     int result = doGetStorageStruct(handle, storage);
     *this->trace << "DllApi->GetStorageStruct(" << handle << ", " <<
-		storage->ramSizePages << ", " << storage->pageSizePixels << ", {" <<
-		storage->segmentSizePages[0] << ", " << storage->segmentSizePages[1] << ", " <<
-		storage->segmentSizePages[2] << ", " << storage->segmentSizePages[3] << "}, " <<
-		storage->activeSegment << ") = " << result << std::endl;
+        storage->ramSizePages << ", " << storage->pageSizePixels << ", {" <<
+        storage->segmentSizePages[0] << ", " << storage->segmentSizePages[1] << ", " <<
+        storage->segmentSizePages[2] << ", " << storage->segmentSizePages[3] << "}, " <<
+        storage->activeSegment << ") = " << result << std::endl;
     if(result != DllApi::errorNone)
     {
         throw PcoException("getStorageStruct", result);
@@ -450,7 +450,7 @@ void DllApi::setRoi(Handle handle, unsigned short x0, unsigned short y0,
 {
     int result = doSetRoi(handle, x0, y0, x1, y1);
     this->trace->printf("DllApi->SetRoi(%p, %hu, %hu, %hu, %hu) = 0x%x\n",
-    		handle, x0, y0, x1, y1, result);
+            handle, x0, y0, x1, y1, result);
     if(result != DllApi::errorNone)
     {
         throw PcoException("setRoi", result);
@@ -684,7 +684,7 @@ void DllApi::setRecordingState(Handle handle, unsigned short state) throw(PcoExc
 {
     int result = doSetRecordingState(handle, state);
     this->trace->printf("DllApi->SetRecordingState(%p, %hu) = 0x%x\n",
-    		handle, state, result);
+            handle, state, result);
     if(result != DllApi::errorNone)
     {
         throw PcoException("setRecordingState", result);
@@ -773,7 +773,7 @@ void DllApi::arm(Handle handle) throw(PcoException)
 {
     int result = doArm(handle);
     this->trace->printf("DllApi->Arm(%p) = 0x%x\n",
-    		handle, result);
+            handle, result);
     if(result != DllApi::errorNone)
     {
         throw PcoException("arm", result);
@@ -800,11 +800,11 @@ void DllApi::addBufferEx(Handle handle, unsigned long firstImage, unsigned long 
  * Get an image from memory
  */
 void DllApi::getImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
-		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
-		unsigned short yRes, unsigned short bitRes) throw(PcoException)
+        unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+        unsigned short yRes, unsigned short bitRes) throw(PcoException)
 {
     int result = doGetImageEx(handle, segment, firstImage, lastImage, 
-			bufferNumber, xRes, yRes, bitRes);
+            bufferNumber, xRes, yRes, bitRes);
     this->trace->printf("DllApi->GetImageEx(%p, %hu, %lu, %lu, %hd, %hu, %hu, %hu) = 0x%x\n",
             handle, segment, firstImage, lastImage, bufferNumber, xRes, yRes, bitRes, result);
     if(result != DllApi::errorNone)
@@ -919,7 +919,7 @@ void DllApi::setActiveLookupTable(Handle handle, unsigned short identifier) thro
  * Set the driver timeouts
  */
 void DllApi::setTimeouts(Handle handle, unsigned int commandTimeout,
-		unsigned int imageTimeout, unsigned int transferTimeout)
+        unsigned int imageTimeout, unsigned int transferTimeout)
 {
     int result = doSetTimeouts(handle, commandTimeout, imageTimeout, transferTimeout);
     this->trace->printf("DllApi->SetTimeouts(%p, %u, %u, %u) = 0x%x\n",
@@ -962,7 +962,7 @@ void DllApi::getCameraRamSize(Handle handle, unsigned long* numPages, unsigned s
  * Get camera health status
  */
 void DllApi::getCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
-		unsigned long* status)
+        unsigned long* status)
 {
     int result = doGetCameraHealthStatus(handle, warnings, errors, status);
     *this->trace << "DllApi->GetCameraHealthStatus(" << handle << ", " <<
@@ -1075,7 +1075,7 @@ void DllApi::setNoiseFilterMode(Handle handle, unsigned short mode) throw(PcoExc
  * Set the camera RAM segment size.
  */
 void DllApi::setCameraRamSegmentSize(Handle handle, unsigned long seg1,
-	unsigned long seg2, unsigned long seg3, unsigned long seg4) throw(PcoException)
+    unsigned long seg2, unsigned long seg3, unsigned long seg4) throw(PcoException)
 {
     int result = doSetCameraRamSegmentSize(handle, seg1, seg2, seg3, seg4);
     *this->trace << "DllApi->SetCameraRamSegmentSize(" << handle <<
@@ -1091,9 +1091,9 @@ void DllApi::setCameraRamSegmentSize(Handle handle, unsigned long seg1,
  */
 void DllApi::startFrameCapture(bool useGetImage)
 {
-	doStartFrameCapture(useGetImage);
-	*this->trace << "DllApi->startFrameCapture(" << useGetImage << ")" << std::endl;
-	this->stopped = false;
+    doStartFrameCapture(useGetImage);
+    *this->trace << "DllApi->startFrameCapture(" << useGetImage << ")" << std::endl;
+    this->stopped = false;
 }
 
 /**
@@ -1101,9 +1101,9 @@ void DllApi::startFrameCapture(bool useGetImage)
  */
 void DllApi::stopFrameCapture()
 {
-	this->stopped = true;
-	doStopFrameCapture();
-	*this->trace << "DllApi->stopFrameCapture()" << std::endl;
+    this->stopped = true;
+    doStopFrameCapture();
+    *this->trace << "DllApi->stopFrameCapture()" << std::endl;
 }
 
 /**
@@ -1111,6 +1111,6 @@ void DllApi::stopFrameCapture()
  */
 bool DllApi::isStopped()
 {
-	return this->stopped;
+    return this->stopped;
 }
 

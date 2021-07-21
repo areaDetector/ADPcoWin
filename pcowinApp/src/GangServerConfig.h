@@ -17,13 +17,13 @@ class Pco;
 
 class GangServerConfig {
 public:
-	GangServerConfig();
-	~GangServerConfig();
-	void toPco(Pco* pco, GangConnection* gangConnection, TakeLock& takeLock);
-	void fromPco(Pco* pco, GangServer* gangServer, TakeLock& takeLock);
-	void* data();
+    GangServerConfig();
+    ~GangServerConfig();
+    void toPco(Pco* pco, GangConnection* gangConnection, TakeLock& takeLock);
+    void fromPco(Pco* pco, GangServer* gangServer, TakeLock& takeLock);
+    void* data();
 private:
-	GangServer::GangFunction gangFunction;
+    GangServer::GangFunction gangFunction;
 };
 
 #endif /* GANGSERVERCONFIG_H_ */

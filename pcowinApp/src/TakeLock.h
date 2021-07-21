@@ -31,20 +31,20 @@ class FreeLock;
 class TakeLock {
 friend class FreeLock;
 public:
-	TakeLock(asynPortDriver* driver, bool alreadyTaken=false);
-	TakeLock(epicsMutex* mutex);
-	TakeLock(FreeLock& freeLock);
-	virtual ~TakeLock();
-	void lock();
-	void unlock();
-	void callParamCallbacks();
+    TakeLock(asynPortDriver* driver, bool alreadyTaken=false);
+    TakeLock(epicsMutex* mutex);
+    TakeLock(FreeLock& freeLock);
+    virtual ~TakeLock();
+    void lock();
+    void unlock();
+    void callParamCallbacks();
 private:
-	TakeLock();
-	TakeLock(const TakeLock& other);
-	TakeLock& operator=(const TakeLock& other);
-	asynPortDriver* driver;
-	epicsMutex* mutex;
-	bool initiallyTaken;
+    TakeLock();
+    TakeLock(const TakeLock& other);
+    TakeLock& operator=(const TakeLock& other);
+    asynPortDriver* driver;
+    epicsMutex* mutex;
+    bool initiallyTaken;
 };
 
 #endif /* TAKELOCK_H_ */

@@ -95,9 +95,9 @@ protected:
     virtual int doArm(Handle handle);
     virtual int doAddBufferEx(Handle handle, unsigned long firstImage, unsigned long lastImage,
         short bufferNumber, unsigned short xRes, unsigned short yRes, unsigned short bitRes);
-	virtual int doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
-		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
-		unsigned short yRes, unsigned short bitRes);
+    virtual int doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
+        unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+        unsigned short yRes, unsigned short bitRes);
     virtual int doGetBufferStatus(Handle handle, short bufferNumber, unsigned long* statusDll,
         unsigned long* statusDrv);
     virtual int doForceTrigger(Handle handle, unsigned short* triggered);
@@ -108,22 +108,22 @@ protected:
             unsigned long* validImageCount, unsigned long* maxImageCount);
     virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier);
     virtual int doSetTimeouts(Handle handle, unsigned int commandTimeout,
-    		unsigned int imageTimeout, unsigned int transferTimeout);
-	virtual int doClearRamSegment(Handle handle);
-	virtual int doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize);
-	virtual int doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
-			unsigned long* status);
-	virtual int doGetCameraBusyStatus(Handle handle, unsigned short* status);
-	virtual int doGetExpTrigSignalStatus(Handle handle, unsigned short* status);
-	virtual int doGetAcqEnblSignalStatus(Handle handle, unsigned short* status);
-	virtual int doSetSensorFormat(Handle handle, unsigned short format);
-	virtual int doSetDoubleImageMode(Handle handle, unsigned short mode);
-	virtual int doSetOffsetMode(Handle handle, unsigned short mode);
-	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode);
-	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
-		unsigned long seg2, unsigned long seg3, unsigned long seg4);
-	virtual void doStartFrameCapture(bool useGetImage);
-	virtual void doStopFrameCapture();
+            unsigned int imageTimeout, unsigned int transferTimeout);
+    virtual int doClearRamSegment(Handle handle);
+    virtual int doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize);
+    virtual int doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
+            unsigned long* status);
+    virtual int doGetCameraBusyStatus(Handle handle, unsigned short* status);
+    virtual int doGetExpTrigSignalStatus(Handle handle, unsigned short* status);
+    virtual int doGetAcqEnblSignalStatus(Handle handle, unsigned short* status);
+    virtual int doSetSensorFormat(Handle handle, unsigned short format);
+    virtual int doSetDoubleImageMode(Handle handle, unsigned short mode);
+    virtual int doSetOffsetMode(Handle handle, unsigned short mode);
+    virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode);
+    virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
+        unsigned long seg2, unsigned long seg3, unsigned long seg4);
+    virtual void doStartFrameCapture(bool useGetImage);
+    virtual void doStopFrameCapture();
 
 // Overrides of epicsThreadRunable
 public:
@@ -148,8 +148,8 @@ protected:
     Handle stopEvent;
     Handle startEvent;
     bool buffersValid;
-	Handle handle;
-	bool useGetImage;
+    Handle handle;
+    bool useGetImage;
 
 // Functions
 protected:

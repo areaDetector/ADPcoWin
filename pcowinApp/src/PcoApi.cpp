@@ -63,78 +63,78 @@ void PcoApi::run()
 {
     while(true)
     {
-		::ResetEvent(this->startEvent);
+        ::ResetEvent(this->startEvent);
         // Wait for the start event
         HANDLE waitEvents[PcoApi::numberOfWaitingEvents] = {this->startEvent};
         DWORD result = ::WaitForMultipleObjects(PcoApi::numberOfWaitingEvents,
             waitEvents, FALSE, INFINITE);
-		::ResetEvent(this->startEvent);
+        ::ResetEvent(this->startEvent);
         if(result == WAIT_OBJECT_0)
         {
-			*trace << "#### Entering run event loop" << std::endl;
-			::ResetEvent(this->stopEvent);
+            *trace << "#### Entering run event loop" << std::endl;
+            ::ResetEvent(this->stopEvent);
             bool running = true;
             while(running)
             {
-				if(this->useGetImage)
-				{
-					// Check for stopped
-					if(::WaitForSingleObject(this->stopEvent, 100) == WAIT_OBJECT_0)
-					{
-						// Stop event received
-						::ResetEvent(this->stopEvent);
-						running = false;
-						*trace << "#### Exiting run event loop" << std::endl;
-					}
-					else
-					{
-						// Try to get a frame
-						this->pco->getFrames();
-					}
-				}
-				else
-				{
-					// Wait for an image or the stop event
-					HANDLE runEvents[PcoApi::numberOfRunningEvents];
-					runEvents[PcoApi::stopEventIndex] = this->stopEvent;
-					for(int i=0; i<DllApi::maxNumBuffers; i++)
-					{
-						if(this->buffers[i].eventHandle != NULL)
-						{
-							runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[i].eventHandle;
-						}
-					}
-					result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
-						runEvents, FALSE, PcoApi::waitTimeoutMs);
-					{
-						// What should we do?
-						if(result == WAIT_TIMEOUT)
-						{
-							// Do a poll
-							this->pco->pollForFrames();
-						}
-						else if(::WaitForSingleObject(this->stopEvent, 0) == WAIT_OBJECT_0)
-						{
-							// Stop event received
-							::ResetEvent(this->stopEvent);
-							running = false;
-							*trace << "#### Exiting run event loop" << std::endl;
-						}
-						else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
-							result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
-						{
-							// Handle a buffer ready
-							int eventBufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
-							this->pco->frameReceived(eventBufferNumber);
-						}
-						else
-						{
-							// Faulty exit reason
-							*trace << "#### Unhandled wait result " << result << std::endl;
-							this->pco->frameWaitFault();
-						}
-					}
-				}
+                if(this->useGetImage)
+                {
+                    // Check for stopped
+                    if(::WaitForSingleObject(this->stopEvent, 100) == WAIT_OBJECT_0)
+                    {
+                        // Stop event received
+                        ::ResetEvent(this->stopEvent);
+                        running = false;
+                        *trace << "#### Exiting run event loop" << std::endl;
+                    }
+                    else
+                    {
+                        // Try to get a frame
+                        this->pco->getFrames();
+                    }
+                }
+                else
+                {
+                    // Wait for an image or the stop event
+                    HANDLE runEvents[PcoApi::numberOfRunningEvents];
+                    runEvents[PcoApi::stopEventIndex] = this->stopEvent;
+                    for(int i=0; i<DllApi::maxNumBuffers; i++)
+                    {
+                        if(this->buffers[i].eventHandle != NULL)
+                        {
+                            runEvents[PcoApi::firstBufferEventIndex+i] = this->buffers[i].eventHandle;
+                        }
+                    }
+                    result = ::WaitForMultipleObjects(PcoApi::numberOfRunningEvents,
+                        runEvents, FALSE, PcoApi::waitTimeoutMs);
+                    {
+                        // What should we do?
+                        if(result == WAIT_TIMEOUT)
+                        {
+                            // Do a poll
+                            this->pco->pollForFrames();
+                        }
+                        else if(::WaitForSingleObject(this->stopEvent, 0) == WAIT_OBJECT_0)
+                        {
+                            // Stop event received
+                            ::ResetEvent(this->stopEvent);
+                            running = false;
+                            *trace << "#### Exiting run event loop" << std::endl;
+                        }
+                        else if(result >= WAIT_OBJECT_0+PcoApi::firstBufferEventIndex &&
+                            result < WAIT_OBJECT_0+PcoApi::firstBufferEventIndex+DllApi::maxNumBuffers)
+                        {
+                            // Handle a buffer ready
+                            int eventBufferNumber = result - WAIT_OBJECT_0 - PcoApi::firstBufferEventIndex;
+                            this->pco->frameReceived(eventBufferNumber);
+                        }
+                        else
+                        {
+                            // Faulty exit reason
+                            *trace << "#### Unhandled wait result " << result << std::endl;
+                            this->pco->frameWaitFault();
+                        }
+                    }
+                }
             }
         }
     }
@@ -147,8 +147,8 @@ void PcoApi::run()
 int PcoApi::doOpenCamera(Handle* handle, unsigned short camNum)
 {
     int result = PCO_OpenCamera(handle, camNum);
-	this->handle = *handle;
-	return result;
+    this->handle = *handle;
+    return result;
 }
 
 /**
@@ -187,10 +187,10 @@ int PcoApi::doGetCameraType(Handle handle, CameraType* cameraType)
     info.wSize = sizeof(info);
     int result = PCO_GetCameraType(handle, &info);
     cameraType->camType = info.wCamType;
-	cameraType->serialNumber = info.dwSerialNumber;
-	cameraType->hardwareVersion = info.dwHWVersion;
-	cameraType->firmwareVersion = info.dwFWVersion;
-	cameraType->interfaceType = info.wInterfaceType;
+    cameraType->serialNumber = info.dwSerialNumber;
+    cameraType->hardwareVersion = info.dwHWVersion;
+    cameraType->firmwareVersion = info.dwFWVersion;
+    cameraType->interfaceType = info.wInterfaceType;
     return result;
 }
 
@@ -267,10 +267,10 @@ int PcoApi::doGetTimingStruct(Handle handle)
 {
     PCO_Timing info;
     info.wSize = sizeof(info);
-	for(int i=0; i<NUM_MAX_SIGNALS; i++)
-	{
-	    info.strSignal[i].wSize = sizeof(info.strSignal[i]);
-	}
+    for(int i=0; i<NUM_MAX_SIGNALS; i++)
+    {
+        info.strSignal[i].wSize = sizeof(info.strSignal[i]);
+    }
     return PCO_GetTimingStruct(handle, &info);
 }
 
@@ -322,13 +322,13 @@ int PcoApi::doGetStorageStruct(Handle handle, Storage* storage)
     int result = PCO_GetStorageStruct(handle, &info);
     if(result == DllApi::errorNone)
     {
-		storage->ramSizePages = info.dwRamSize;
-		storage->pageSizePixels = info.wPageSize;
-		for(int i=0; i<DllApi::storageNumSegments; i++)
-		{
-			storage->segmentSizePages[i] = info.dwRamSegSize[i];
-		}
-		storage->activeSegment = info.wActSeg;
+        storage->ramSizePages = info.dwRamSize;
+        storage->pageSizePixels = info.wPageSize;
+        for(int i=0; i<DllApi::storageNumSegments; i++)
+        {
+            storage->segmentSizePages[i] = info.dwRamSegSize[i];
+        }
+        storage->activeSegment = info.wActSeg;
     }
     return result;
 }
@@ -651,7 +651,7 @@ int PcoApi::doGetRecorderSubmode(Handle handle, unsigned short* mode)
  */
 int PcoApi::doSetRecorderSubmode(Handle handle, unsigned short mode)
 {
-	return PCO_SetRecorderSubmode(handle, mode);
+    return PCO_SetRecorderSubmode(handle, mode);
 }
 
 /**
@@ -709,7 +709,7 @@ int PcoApi::doAddBufferEx(Handle handle, unsigned long firstImage, unsigned long
 {
     if(this->buffersValid)
     {
-		::ResetEvent(this->buffers[bufferNumber].eventHandle);
+        ::ResetEvent(this->buffers[bufferNumber].eventHandle);
         return PCO_AddBufferEx(handle, firstImage, lastImage, bufferNumber,
                 xRes, yRes, bitRes);
     }
@@ -723,8 +723,8 @@ int PcoApi::doAddBufferEx(Handle handle, unsigned long firstImage, unsigned long
  * Get an image from memory.
  */
 int PcoApi::doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
-		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
-		unsigned short yRes, unsigned short bitRes)
+        unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+        unsigned short yRes, unsigned short bitRes)
 {
     return PCO_GetImageEx(handle, segment, firstImage, lastImage, bufferNumber,
             xRes, yRes, bitRes);
@@ -785,12 +785,12 @@ int PcoApi::doGetNumberOfImagesInSegment(Handle handle, unsigned short segment,
  * Set driver timeouts
  */
 int PcoApi::doSetTimeouts(Handle handle, unsigned int commandTimeout,
-		unsigned int imageTimeout, unsigned int transferTimeout)
+        unsigned int imageTimeout, unsigned int transferTimeout)
 {
-	unsigned int buff[3];
-	buff[0] = commandTimeout;
-	buff[1] = imageTimeout;
-	buff[2] = transferTimeout;
+    unsigned int buff[3];
+    buff[0] = commandTimeout;
+    buff[1] = imageTimeout;
+    buff[2] = transferTimeout;
     return PCO_SetTimeouts(handle, &buff, sizeof(buff));
 }
 
@@ -799,8 +799,8 @@ int PcoApi::doSetTimeouts(Handle handle, unsigned int commandTimeout,
  */
 int PcoApi::doSetActiveLookupTable(Handle handle, unsigned short identifier)
 {
-	unsigned short p1 = identifier;
-	unsigned short p2 = 0;
+    unsigned short p1 = identifier;
+    unsigned short p2 = 0;
     return PCO_SetActiveLookupTable(handle, &p1, &p2);
 }
 
@@ -817,16 +817,16 @@ int PcoApi::doClearRamSegment(Handle handle)
  */
 int PcoApi::doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize)
 {
-	return PCO_GetCameraRamSize(handle, numPages, pageSize);
+    return PCO_GetCameraRamSize(handle, numPages, pageSize);
 }
 
 /**
  * Get the camera health status
  */
 int PcoApi::doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
-			unsigned long* status)
+            unsigned long* status)
 {
-	return PCO_GetCameraHealthStatus(handle, warnings, errors, status);
+    return PCO_GetCameraHealthStatus(handle, warnings, errors, status);
 }
 
 /**
@@ -834,7 +834,7 @@ int PcoApi::doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsi
  */
 int PcoApi::doGetCameraBusyStatus(Handle handle, unsigned short* status)
 {
-	return PCO_GetCameraBusyStatus(handle, status);
+    return PCO_GetCameraBusyStatus(handle, status);
 }
 
 /**
@@ -842,7 +842,7 @@ int PcoApi::doGetCameraBusyStatus(Handle handle, unsigned short* status)
  */
 int PcoApi::doGetExpTrigSignalStatus(Handle handle, unsigned short* status)
 {
-	return PCO_GetExpTrigSignalStatus(handle, status);
+    return PCO_GetExpTrigSignalStatus(handle, status);
 }
 
 /**
@@ -850,7 +850,7 @@ int PcoApi::doGetExpTrigSignalStatus(Handle handle, unsigned short* status)
  */
 int PcoApi::doGetAcqEnblSignalStatus(Handle handle, unsigned short* status)
 {
-	return PCO_GetAcqEnblSignalStatus(handle, status);
+    return PCO_GetAcqEnblSignalStatus(handle, status);
 }
 
 /**
@@ -858,7 +858,7 @@ int PcoApi::doGetAcqEnblSignalStatus(Handle handle, unsigned short* status)
  */
 int PcoApi::doSetSensorFormat(Handle handle, unsigned short format)
 {
-	return PCO_SetSensorFormat(handle, format);
+    return PCO_SetSensorFormat(handle, format);
 }
 
 /**
@@ -866,7 +866,7 @@ int PcoApi::doSetSensorFormat(Handle handle, unsigned short format)
  */
 int PcoApi::doSetDoubleImageMode(Handle handle, unsigned short mode)
 {
-	return PCO_SetDoubleImageMode(handle, mode);
+    return PCO_SetDoubleImageMode(handle, mode);
 }
 
 /**
@@ -874,7 +874,7 @@ int PcoApi::doSetDoubleImageMode(Handle handle, unsigned short mode)
  */
 int PcoApi::doSetOffsetMode(Handle handle, unsigned short mode)
 {
-	return PCO_SetOffsetMode(handle, mode);
+    return PCO_SetOffsetMode(handle, mode);
 }
 
 /**
@@ -882,17 +882,17 @@ int PcoApi::doSetOffsetMode(Handle handle, unsigned short mode)
  */
 int PcoApi::doSetNoiseFilterMode(Handle handle, unsigned short mode)
 {
-	return PCO_SetNoiseFilterMode(handle, mode);
+    return PCO_SetNoiseFilterMode(handle, mode);
 }
 
 /**
  * Set the camera RAM segment size
  */
 int PcoApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
-	unsigned long seg2, unsigned long seg3, unsigned long seg4)
+    unsigned long seg2, unsigned long seg3, unsigned long seg4)
 {
-	unsigned long segs[4] = {seg1, seg2, seg3, seg4};
-	return PCO_SetCameraRamSegmentSize(handle, segs);
+    unsigned long segs[4] = {seg1, seg2, seg3, seg4};
+    return PCO_SetCameraRamSegmentSize(handle, segs);
 }
 
 /*
@@ -900,7 +900,7 @@ int PcoApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
  */
 void PcoApi::doStartFrameCapture(bool useGetImage)
 {
-	this->useGetImage = useGetImage;
+    this->useGetImage = useGetImage;
     ::SetEvent(this->startEvent);
 }
 

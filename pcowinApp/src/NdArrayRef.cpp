@@ -12,7 +12,7 @@
 
 // Default constructor
 NdArrayRef::NdArrayRef()
-	: array(NULL)
+    : array(NULL)
 {
 }
 
@@ -20,41 +20,41 @@ NdArrayRef::NdArrayRef()
 // pointer as soon as one is obtained.  Note that this
 // NOT increment the reference counter.
 NdArrayRef::NdArrayRef(NDArray* array)
-	: array(array)
+    : array(array)
 {
 }
 
 // Copy constructor.
 NdArrayRef::NdArrayRef(const NdArrayRef& other)
-	: array(NULL)
+    : array(NULL)
 {
-	*this = other;
+    *this = other;
 }
 
 // Destructor.  Release any array we hold.
 NdArrayRef::~NdArrayRef()
 {
-	if(array)
-	{
-		array->release();
-	}
+    if(array)
+    {
+        array->release();
+    }
 }
 
 // Assignment operator.
 NdArrayRef& NdArrayRef::operator=(const NdArrayRef& other)
 {
-	if(array)
-	{
-		array->release();
-	}
-	array = other.array;
-	array->reserve();
-	return *this;
+    if(array)
+    {
+        array->release();
+    }
+    array = other.array;
+    array->reserve();
+    return *this;
 }
 
 // Cast operator that allows the use of this object in place of
 // a pointer to the NDArray.
 NdArrayRef::operator NDArray*() const
 {
-	return array;
+    return array;
 }

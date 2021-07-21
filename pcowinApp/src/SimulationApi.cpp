@@ -99,7 +99,7 @@ SimulationApi::SimulationApi(Pco* pco, TraceStream* trace)
     // Create the state machine
     this->stateMachine = new StateMachine("SimulationApi", this->pco,
             &paramStateRecord, trace);
-	// Events
+    // Events
     requestConnectionUp = stateMachine->event("ConnectionUp");
     requestConnectionDown = stateMachine->event("ConnectionDown");
     requestOpen = stateMachine->event("Open");
@@ -117,21 +117,21 @@ SimulationApi::SimulationApi(Pco* pco, TraceStream* trace)
     stateRecording = stateMachine->state("Recording");
     // Transitions
     stateMachine->transition(stateConnected, requestConnectionDown, NULL, stateDisconnected);
-	stateMachine->transition(stateConnected, requestOpen, NULL, stateOpen);
-	stateMachine->transition(stateOpen, requestConnectionDown, NULL, stateDisconnected);
-	stateMachine->transition(stateOpen, requestClose, NULL, stateConnected);
-	stateMachine->transition(stateOpen, requestArm, NULL, stateArmed);
-	stateMachine->transition(stateDisconnected, requestConnectionUp, NULL, stateConnected);
-	stateMachine->transition(stateArmed, requestConnectionDown, NULL, stateDisconnected);
-	stateMachine->transition(stateArmed, requestClose, NULL, stateConnected);
-	stateMachine->transition(stateArmed, requestStartRecording, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStartRecording), stateRecording);
-	stateMachine->transition(stateArmed, requestCancelImages, NULL, stateOpen);
-	stateMachine->transition(stateRecording, requestConnectionDown, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateDisconnected);
-	stateMachine->transition(stateRecording, requestClose, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateConnected);
-	stateMachine->transition(stateRecording, requestStopRecording, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateArmed);
-	stateMachine->transition(stateRecording, requestTrigger, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smCreateFrame), stateRecording);
-	// Starting state
-	stateMachine->initialState(stateConnected);
+    stateMachine->transition(stateConnected, requestOpen, NULL, stateOpen);
+    stateMachine->transition(stateOpen, requestConnectionDown, NULL, stateDisconnected);
+    stateMachine->transition(stateOpen, requestClose, NULL, stateConnected);
+    stateMachine->transition(stateOpen, requestArm, NULL, stateArmed);
+    stateMachine->transition(stateDisconnected, requestConnectionUp, NULL, stateConnected);
+    stateMachine->transition(stateArmed, requestConnectionDown, NULL, stateDisconnected);
+    stateMachine->transition(stateArmed, requestClose, NULL, stateConnected);
+    stateMachine->transition(stateArmed, requestStartRecording, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStartRecording), stateRecording);
+    stateMachine->transition(stateArmed, requestCancelImages, NULL, stateOpen);
+    stateMachine->transition(stateRecording, requestConnectionDown, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateDisconnected);
+    stateMachine->transition(stateRecording, requestClose, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateConnected);
+    stateMachine->transition(stateRecording, requestStopRecording, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smStopTriggerTimer), stateArmed);
+    stateMachine->transition(stateRecording, requestTrigger, new StateMachine::Act<SimulationApi>(this, &SimulationApi::smCreateFrame), stateRecording);
+    // Starting state
+    stateMachine->initialState(stateConnected);
 }
 
 /**
@@ -158,7 +158,7 @@ StateMachine::StateSelector SimulationApi::smStartRecording()
 {
     startTriggerTimer();
     frameNumber = 0;
-	return StateMachine::firstState;
+    return StateMachine::firstState;
 }
 
 /**
@@ -167,7 +167,7 @@ StateMachine::StateSelector SimulationApi::smStartRecording()
 StateMachine::StateSelector SimulationApi::smStopTriggerTimer()
 {
     stateMachine->stopTimer();
-	return StateMachine::firstState;
+    return StateMachine::firstState;
 }
 
 /**
@@ -177,7 +177,7 @@ StateMachine::StateSelector SimulationApi::smCreateFrame()
 {
     generateFrame();
     startTriggerTimer();
-	return StateMachine::firstState;
+    return StateMachine::firstState;
 }
 
 /**
@@ -309,7 +309,7 @@ int SimulationApi::doOpenCamera(Handle* handle, unsigned short camNum)
  */
 int SimulationApi::doCloseCamera(Handle handle)
 {
-	paramOpen = false;
+    paramOpen = false;
     this->post(SimulationApi::requestClose);
     return DllApi::errorNone;
 }
@@ -344,9 +344,9 @@ int SimulationApi::doGetCameraType(Handle handle, CameraType* cameraType)
     if(paramConnected && paramOpen)
     {
         cameraType->camType = paramCameraType;
-		cameraType->serialNumber = 0x00000001;
-		cameraType->hardwareVersion = 0x00000002;
-		cameraType->firmwareVersion = 0x00000003;
+        cameraType->serialNumber = 0x00000001;
+        cameraType->hardwareVersion = 0x00000002;
+        cameraType->firmwareVersion = 0x00000003;
         result = DllApi::errorNone;
     }
     return result;
@@ -361,7 +361,7 @@ int SimulationApi::doGetFirmwareInfo(Handle handle, std::vector<PcoCameraDevice>
     int result = DllApi::errorAny;
     if(paramConnected && paramOpen)
     {
-    	// TODO: implement function for simulator
+        // TODO: implement function for simulator
         result = DllApi::errorNone;
     }
     return result;
@@ -439,13 +439,13 @@ int SimulationApi::doGetStorageStruct(Handle handle, Storage* storage)
     int result = DllApi::errorAny;
     if(paramConnected && paramOpen)
     {
-		storage->ramSizePages = (unsigned long)paramRamSize;
-		storage->pageSizePixels= (unsigned short)paramPageSize;
-		for(int i=0; i<DllApi::storageNumSegments; i++)
-		{
-			storage->segmentSizePages[storageNumSegments] = 0;
-		}
-		storage->activeSegment = 0;
+        storage->ramSizePages = (unsigned long)paramRamSize;
+        storage->pageSizePixels= (unsigned short)paramPageSize;
+        for(int i=0; i<DllApi::storageNumSegments; i++)
+        {
+            storage->segmentSizePages[storageNumSegments] = 0;
+        }
+        storage->activeSegment = 0;
         result = DllApi::errorNone;
     }
     return result;
@@ -664,7 +664,7 @@ int SimulationApi::doGetCameraSetup(Handle handle, unsigned short* setupType,
 int SimulationApi::doSetCameraSetup(Handle handle, unsigned short setupType,
         unsigned long* setupData, unsigned short setupDataLen)
 {
-	return DllApi::errorNone;
+    return DllApi::errorNone;
 }
 
 /**
@@ -1088,7 +1088,7 @@ int SimulationApi::doAddBufferEx(Handle handle, unsigned long firstImage, unsign
     {
         // Are the parameters correct?
         if((int)xRes == paramActualHorzRes && (int)yRes == paramActualVertRes &&
-        		firstImage==0 && lastImage==0)
+                firstImage==0 && lastImage==0)
         {
             // Put the buffer on the queue
             int v = bufferNumber;
@@ -1103,8 +1103,8 @@ int SimulationApi::doAddBufferEx(Handle handle, unsigned long firstImage, unsign
  * Get an image from memory.
  */
 int SimulationApi::doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
-		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
-		unsigned short yRes, unsigned short bitRes)
+        unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+        unsigned short yRes, unsigned short bitRes)
 {
     return DllApi::errorAny;
 }
@@ -1199,7 +1199,7 @@ int SimulationApi::doSetActiveLookupTable(Handle handle, unsigned short identifi
  * Set driver timeouts
  */
 int SimulationApi::doSetTimeouts(Handle handle, unsigned int commandTimeout,
-		unsigned int imageTimeout, unsigned int transferTimeout)
+        unsigned int imageTimeout, unsigned int transferTimeout)
 {
     return DllApi::errorNone;
 }
@@ -1209,9 +1209,9 @@ int SimulationApi::doSetTimeouts(Handle handle, unsigned int commandTimeout,
  */
 int SimulationApi::doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize)
 {
-	*numPages = 0;
-	*pageSize = 0;
-	return DllApi::errorNone;
+    *numPages = 0;
+    *pageSize = 0;
+    return DllApi::errorNone;
 }
 
 /**
@@ -1226,11 +1226,11 @@ int SimulationApi::doClearRamSegment(Handle handle)
  * Get the camera health status
  */
 int SimulationApi::doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
-			unsigned long* status)
+            unsigned long* status)
 {
-	*warnings = 0;
-	*errors = 0;
-	*status = 0;
+    *warnings = 0;
+    *errors = 0;
+    *status = 0;
     return DllApi::errorNone;
 }
 
@@ -1239,7 +1239,7 @@ int SimulationApi::doGetCameraHealthStatus(Handle handle, unsigned long* warning
  */
 int SimulationApi::doGetCameraBusyStatus(Handle handle, unsigned short* status)
 {
-	*status = 0;
+    *status = 0;
     return DllApi::errorNone;
 }
 
@@ -1248,7 +1248,7 @@ int SimulationApi::doGetCameraBusyStatus(Handle handle, unsigned short* status)
  */
 int SimulationApi::doGetExpTrigSignalStatus(Handle handle, unsigned short* status)
 {
-	*status = 0;
+    *status = 0;
     return DllApi::errorNone;
 }
 
@@ -1257,7 +1257,7 @@ int SimulationApi::doGetExpTrigSignalStatus(Handle handle, unsigned short* statu
  */
 int SimulationApi::doGetAcqEnblSignalStatus(Handle handle, unsigned short* status)
 {
-	*status = 0;
+    *status = 0;
     return DllApi::errorNone;
 }
 
@@ -1297,7 +1297,7 @@ int SimulationApi::doSetNoiseFilterMode(Handle handle, unsigned short mode)
  * Set the camera RAM segment size
  */
 int SimulationApi::doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
-	unsigned long seg2, unsigned long seg3, unsigned long seg4)
+    unsigned long seg2, unsigned long seg3, unsigned long seg4)
 {
     return DllApi::errorNone;
 }

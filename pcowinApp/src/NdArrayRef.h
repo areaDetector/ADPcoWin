@@ -18,14 +18,14 @@ class NDArray;
 
 class NdArrayRef {
 public:
-	NdArrayRef();
-	NdArrayRef(NDArray* array);
-	NdArrayRef(const NdArrayRef& other);
-	virtual ~NdArrayRef();
-	NdArrayRef& operator=(const NdArrayRef& other);
-	operator NDArray*() const;
+    NdArrayRef();
+    NdArrayRef(NDArray* array);
+    NdArrayRef(const NdArrayRef& other);
+    virtual ~NdArrayRef();
+    NdArrayRef& operator=(const NdArrayRef& other);
+    operator NDArray*() const;
 private:
-	NDArray* array;
+    NDArray* array;
 };
 
 #endif /* PCOCAM2APP_SRC_NDARRAYREF_H_ */
