@@ -65,62 +65,62 @@ StateMachine::Timer::expireStatus StateMachine::Timer::expire(const epicsTime& c
 
 /* Transition action constructor. */
 StateMachine::TransitionAct::TransitionAct(AbstractAct* act, const State* s1, const State* s2,
-		const State* s3, const State* s4)
-	: act(act), s1(s1), s2(s2), s3(s3), s4(s4)
+        const State* s3, const State* s4)
+    : act(act), s1(s1), s2(s2), s3(s3), s4(s4)
 {
 }
 
 /* Trasition action destructor */
 StateMachine::TransitionAct::~TransitionAct()
 {
-	if(act)
-	{
-		delete act;
-	}
+    if(act)
+    {
+        delete act;
+    }
 }
 
 /* Execute this transition action and return the next state. */
 const StateMachine::State* StateMachine::TransitionAct::execute() const
 {
-	const State* result = s1;
-	if(act)
-	{
-		switch((*act)())
-		{
-		case firstState:
-			result = s1;
-			break;
-		case secondState:
-			result = s2;
-			break;
-		case thirdState:
-			result = s3;
-			break;
-		default:
-			result = s4;
-			break;
-		}
-	}
-	return result;
+    const State* result = s1;
+    if(act)
+    {
+        switch((*act)())
+        {
+        case firstState:
+            result = s1;
+            break;
+        case secondState:
+            result = s2;
+            break;
+        case thirdState:
+            result = s3;
+            break;
+        default:
+            result = s4;
+            break;
+        }
+    }
+    return result;
 }
 
 /* Transition key constructor. */
 StateMachine::TransitionKey::TransitionKey(const State* st, const Event* ev)
-	: st(st), ev(ev)
+    : st(st), ev(ev)
 {
 }
 
 /* Transition key default constructor. */
 StateMachine::TransitionKey::TransitionKey()
-	: st(NULL), ev(NULL)
+    : st(NULL), ev(NULL)
 {
 }
 
 /* Transition key copy constructor. */
 StateMachine::TransitionKey::TransitionKey(const TransitionKey& other)
-	: st(NULL), ev(NULL)
+    : st(NULL), ev(NULL)
 {
-	*this = other;
+    *this = other;
 }
 
 /* Transition key destructor */
@@ -131,15 +131,15 @@ StateMachine::TransitionKey::~TransitionKey()
 /* Transition key assignment operator */
 StateMachine::TransitionKey& StateMachine::TransitionKey::operator=(const TransitionKey& other)
 {
-	st=other.st; 
-	ev=other.ev; 
-	return *this;
+    st=other.st; 
+    ev=other.ev; 
+    return *this;
 }
 
 /* Transition key less than operator so this object can be used as a map key */
 bool StateMachine::TransitionKey::operator<(const TransitionKey& other) const
 {
-	return *st == *other.st ? *ev < *other.ev : *st < *other.st;
+    return *st == *other.st ? *ev < *other.ev : *st < *other.st;
 }
 
 /**
@@ -181,21 +181,21 @@ StateMachine::~StateMachine()
     this->timerQueue.release();
     std::map<TransitionKey, TransitionAct*>::iterator pos;
     for(std::map<TransitionKey, TransitionAct*>::iterator pos=transitions.begin();
-    		pos!=transitions.end(); ++pos)
+            pos!=transitions.end(); ++pos)
     {
-    	delete pos->second;
+        delete pos->second;
     }
-	transitions.clear();
+    transitions.clear();
     for(std::list<const State*>::iterator pos=states.begin();
-    		pos!=states.end(); ++pos)
+            pos!=states.end(); ++pos)
     {
-    	delete *pos;
+        delete *pos;
     }
     states.clear();
     for(std::list<const Event*>::iterator pos=events.begin();
-    		pos!=events.end(); ++pos)
+            pos!=events.end(); ++pos)
     {
-    	delete *pos;
+        delete *pos;
     }
     events.clear();
 }
@@ -204,21 +204,21 @@ StateMachine::~StateMachine()
  * Define a state transition.
  */
 void StateMachine::transition(const State* st, const Event* ev, AbstractAct* act,
-		const State* s1, const State* s2, const State* s3, const State* s4)
+        const State* s1, const State* s2, const State* s3, const State* s4)
 {
-	// The transition
-	TransitionAct* action = new TransitionAct(act, s1, s2, s3, s4);
-	TransitionKey key(st, ev);
-	// Is one already in the map with this st/ev pair?
-	std::map<TransitionKey, TransitionAct*>::iterator pos = transitions.find(key);
-	if(pos != transitions.end())
-	{
-		// Yes, remove it.
-		delete pos->second;
-		transitions.erase(pos);
-	}
-	// Add in this transition
-	transitions[key] = action;
+    // The transition
+    TransitionAct* action = new TransitionAct(act, s1, s2, s3, s4);
+    TransitionKey key(st, ev);
+    // Is one already in the map with this st/ev pair?
+    std::map<TransitionKey, TransitionAct*>::iterator pos = transitions.find(key);
+    if(pos != transitions.end())
+    {
+        // Yes, remove it.
+        delete pos->second;
+        transitions.erase(pos);
+    }
+    // Add in this transition
+    transitions[key] = action;
 }
 
 /**
@@ -226,8 +226,8 @@ void StateMachine::transition(const State* st, const Event* ev, AbstractAct* act
  */
 const StateMachine::State* StateMachine::state(const char* name)
 {
-	states.push_back(new State(name, (int)states.size()));
-	return states.back();
+    states.push_back(new State(name, (int)states.size()));
+    return states.back();
 }
 
 /**
@@ -235,8 +235,8 @@ const StateMachine::State* StateMachine::state(const char* name)
  */
 const StateMachine::Event* StateMachine::event(const char* name)
 {
-	events.push_back(new Event(name, (int)events.size()));
-	return events.back();
+    events.push_back(new Event(name, (int)events.size()));
+    return events.back();
 }
 
 /**
@@ -244,7 +244,7 @@ const StateMachine::Event* StateMachine::event(const char* name)
  */
 void StateMachine::initialState(const State* state)
 {
-	currentState = state;
+    currentState = state;
 }
 
 
@@ -256,7 +256,7 @@ void StateMachine::post(const Event* req)
 {
     if(tracer != NULL)
     {
-    	*(tracer) << name << ": post request = " << *req << std::endl;
+        *(tracer) << name << ": post request = " << *req << std::endl;
     }
     requestQueue.trySend(&req, sizeof(const Event*));
 }
@@ -292,27 +292,27 @@ void StateMachine::run()
         if(requestQueue.receive(&event, sizeof(const Event*)) == sizeof(const Event*))
         {
             // Get the event processed
-			TransitionKey key(currentState, event);
-			std::map<TransitionKey, TransitionAct*>::iterator pos = transitions.find(key);
-			const State* nextState = this->currentState;
-			if(pos != transitions.end())
-			{
-				nextState = pos->second->execute();
-			}
+            TransitionKey key(currentState, event);
+            std::map<TransitionKey, TransitionAct*>::iterator pos = transitions.find(key);
+            const State* nextState = this->currentState;
+            if(pos != transitions.end())
+            {
+                nextState = pos->second->execute();
+            }
             // Do the trace
             if(tracer != NULL)
             {
-            	(*tracer) << name << ": " << *currentState << "--" << *event << "--> " <<
-            			*nextState << std::endl;
+                (*tracer) << name << ": " << *currentState << "--" << *event << "--> " <<
+                        *nextState << std::endl;
             }
             // Update the state record
             {
-            	TakeLock takeLock(portDriver);
-            	std::string record = *paramRecord;
-            	record += (char)(int)*nextState;
-            	size_t startPos = record.size() - maxStateRecordLength;
-            	startPos = std::max<size_t>(startPos, 0);
-            	*paramRecord = record.substr(startPos, maxStateRecordLength);
+                TakeLock takeLock(portDriver);
+                std::string record = *paramRecord;
+                record += (char)(int)*nextState;
+                size_t startPos = record.size() - maxStateRecordLength;
+                startPos = std::max<size_t>(startPos, 0);
+                *paramRecord = record.substr(startPos, maxStateRecordLength);
             }
             // Change the state
             currentState = nextState;

@@ -18,14 +18,14 @@ class epicsMutex;
 class FreeLock {
 friend class TakeLock;
 public:
-	FreeLock(TakeLock& takeLock);
-	virtual ~FreeLock();
+    FreeLock(TakeLock& takeLock);
+    virtual ~FreeLock();
 private:
-	FreeLock();
-	FreeLock(const FreeLock& other);
-	FreeLock& operator=(const FreeLock& other);
-	asynPortDriver* driver;
-	epicsMutex* mutex;
+    FreeLock();
+    FreeLock(const FreeLock& other);
+    FreeLock& operator=(const FreeLock& other);
+    asynPortDriver* driver;
+    epicsMutex* mutex;
 };
 
 #endif /* PCOCAM2APP_SRC_FREELOCK_H_ */

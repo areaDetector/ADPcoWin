@@ -14,7 +14,7 @@
 // Constructor.
 ADDriverEx::ADDriverEx(const char* portName, int numAddresses, int maxBuffers, size_t maxMemory)
 : ADDriver(portName,
-		/*maxAddr=*/numAddresses, /*numParams=*/500, maxBuffers, maxMemory,
+        /*maxAddr=*/numAddresses, /*numParams=*/500, maxBuffers, maxMemory,
         asynInt32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask | asynInt16ArrayMask | asynEnumMask,
         asynInt32ArrayMask | asynFloat64ArrayMask | asynGenericPointerMask | asynInt16ArrayMask | asynEnumMask,
         ASYN_CANBLOCK,          // ASYN_CANBLOCK=0, ASYN_MULTIDEVICE=0
@@ -60,91 +60,91 @@ ADDriverEx::~ADDriverEx()
 // Deregister an asyn parameter
 void ADDriverEx::deregisterParam(AsynParam* param)
 {
-	std::map<int, std::list<AsynParam*> >::iterator pos = params[param->getList()].find(param->getHandle());
-	if(pos != params[param->getList()].end())
-	{
-		pos->second.remove(param);
-	}
+    std::map<int, std::list<AsynParam*> >::iterator pos = params[param->getList()].find(param->getHandle());
+    if(pos != params[param->getList()].end())
+    {
+        pos->second.remove(param);
+    }
 }
 
 // Create (or connect to an existing) param
 int ADDriverEx::makeParam(AsynParam* param)
 {
-	int handle;
-	// Connect to an existing parameter first
-	asynStatus ok = findParam(param->getList(), param->getName().c_str(), &handle);
-	if(ok != asynSuccess)
-	{
-		// Create one
-		ok = ADDriver::createParam(param->getList(), param->getName().c_str(), param->getType(), &handle);
-		if(ok != asynSuccess)
-		{
-			std::stringstream str;
-			str << "Unable to create parameter " << param->getName();
-			throw AsynException(ok, str.str().c_str());
-		}
-	}
-	// Remember the association
-	addParameterToList(param, handle);
-	return handle;
+    int handle;
+    // Connect to an existing parameter first
+    asynStatus ok = findParam(param->getList(), param->getName().c_str(), &handle);
+    if(ok != asynSuccess)
+    {
+        // Create one
+        ok = ADDriver::createParam(param->getList(), param->getName().c_str(), param->getType(), &handle);
+        if(ok != asynSuccess)
+        {
+            std::stringstream str;
+            str << "Unable to create parameter " << param->getName();
+            throw AsynException(ok, str.str().c_str());
+        }
+    }
+    // Remember the association
+    addParameterToList(param, handle);
+    return handle;
 }
 
 // Add the parameter to the appropriate list mapped by the given handle.
 void ADDriverEx::addParameterToList(AsynParam* param, int handle)
 {
-	// Get or add an entry for this handle
-	std::map<int, std::list<AsynParam*> >::iterator pos = params[param->getList()].find(handle);
-	if(pos == params[param->getList()].end())
-	{
-		params[param->getList()][handle] = std::list<AsynParam*>();
-		pos = params[param->getList()].find(handle);
-	}
-	// Add the parameter to the list
-	pos->second.push_back(param);
+    // Get or add an entry for this handle
+    std::map<int, std::list<AsynParam*> >::iterator pos = params[param->getList()].find(handle);
+    if(pos == params[param->getList()].end())
+    {
+        params[param->getList()][handle] = std::list<AsynParam*>();
+        pos = params[param->getList()].find(handle);
+    }
+    // Add the parameter to the list
+    pos->second.push_back(param);
 }
 
 // Attach to an existing parameter identified by its handle.  Return the name.
 std::string ADDriverEx::attachParam(AsynParam* param)
 {
-	std::string result;
-	// Get the parameter name
-	const char* name;
-	asynStatus ok = getParamName(param->getList(), param->getHandle(), &name);
-	if(ok != asynSuccess)
-	{
-		std::stringstream str;
-		str << "Unable to attach to parameter " << param->getHandle();
-		throw AsynException(ok, str.str().c_str());
-	}
-	result = name;
-	// Remember the association
-	addParameterToList(param, param->getHandle());
-	return result;
+    std::string result;
+    // Get the parameter name
+    const char* name;
+    asynStatus ok = getParamName(param->getList(), param->getHandle(), &name);
+    if(ok != asynSuccess)
+    {
+        std::stringstream str;
+        str << "Unable to attach to parameter " << param->getHandle();
+        throw AsynException(ok, str.str().c_str());
+    }
+    result = name;
+    // Remember the association
+    addParameterToList(param, param->getHandle());
+    return result;
 }
 
 // Notify all the parameter objects attached to the parameter
 // identified by the pasynUser that it has changed.
 void ADDriverEx::notifyParameters(asynUser* pasynUser, TakeLock& takeLock)
 {
-	// Information
+    // Information
     int handle = pasynUser->reason;
     int list;
     pasynManager->getAddr(pasynUser, &list);
     if(list < 0)
     {
-    	list = 0;
+        list = 0;
     }
     // Get the parameter objects representing this parameter
-	std::map<int, std::list<AsynParam*> >::iterator paramPos = params[list].find(handle);
-	if(paramPos != params[list].end())
-	{
-		// Call the notifications
-		std::list<AsynParam*>::iterator pos;
-		for(pos=paramPos->second.begin(); pos!=paramPos->second.end(); ++pos)
-		{
-			(*pos)->notify(takeLock);
-		}
-	}
+    std::map<int, std::list<AsynParam*> >::iterator paramPos = params[list].find(handle);
+    if(paramPos != params[list].end())
+    {
+        // Call the notifications
+        std::list<AsynParam*>::iterator pos;
+        for(pos=paramPos->second.begin(); pos!=paramPos->second.end(); ++pos)
+        {
+            (*pos)->notify(takeLock);
+        }
+    }
 }
 
 // A 32 bit integer write to a parameter
