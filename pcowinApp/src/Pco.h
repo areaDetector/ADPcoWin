@@ -59,10 +59,6 @@ public:
     IntegerParam paramHwRoiY2;
     IntegerParam paramXCamSize;
     IntegerParam paramYCamSize;
-    IntegerParam paramApplyBinningAndRoi;
-    IntegerParam paramRoiPercentX;
-    IntegerParam paramRoiPercentY;
-    IntegerParam paramFriendlyRoiSetting;
     IntegerParam paramCamlinkClock;
     IntegerParam paramMinCoolingSetpoint;
     IntegerParam paramMaxCoolingSetpoint;
@@ -101,6 +97,10 @@ public:
     IntegerParam paramBuffersInUse;
     IntegerParam paramDataFormat;
     IntegerParam paramConfirmedStop;
+    IntegerParam paramApplyBinningAndRoi;
+    IntegerParam paramRoiPercentX;
+    IntegerParam paramRoiPercentY;
+    IntegerParam paramFriendlyRoiSetting;
     IntegerParam paramRoiSymmetryX;
     IntegerParam paramRoiSymmetryY;
     IntegerParam paramInterfaceType;
