@@ -33,6 +33,10 @@ public:
     Pco(const char* portName, int maxBuffers, size_t maxMemory, int numCameraDevices);
     virtual ~Pco();
 
+// These are the methods that we override from ADDriverEx */
+public:
+  virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
+
 // Parameters
 public:
     IntegerParam paramPixRate;
@@ -278,6 +282,8 @@ private:
     unsigned long memoryImageCounter;
     int fifoQueueSize;
     bool useGetFrames;
+    epicsEventId acquireStartedEvent;
+    int acquireStartEventTimeout;
 
 public:
     static std::map<std::string, Pco*> thePcos;

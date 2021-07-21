@@ -14,6 +14,7 @@
 #include <algorithm>
 #include "epicsExport.h"
 #include "epicsThread.h"
+#include "epicsEvent.h"
 #include "iocsh.h"
 #include "db_access.h"
 #include <iostream>
@@ -253,6 +254,13 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory, int numCameraDe
         epicsSnprintf(charBuff, tempBufferSize, "PCO_CAMDEV%d:VERSION", i);
         createParam(charBuff, asynParamOctet, &pcoCameraDeviceVersion[i]);
         setStringParam(pcoCameraDeviceVersion[i], "");
+    }
+    // Event to be signalled when camera has started acquiring
+    acquireStartEventTimeout = 10;
+    this->acquireStartedEvent = epicsEventMustCreate(epicsEventEmpty);
+    if (!this->acquireStartedEvent) {
+        printf("Pco::Pco: epicsEventCreate failure for acquire start event\n");
+        return;
     }
     // Create the state machine
     stateMachine = new StateMachine("Pco", this,
@@ -601,6 +609,8 @@ StateMachine::StateSelector Pco::smArmAndAcquire()
         }
         this->nowAcquiring();
         this->startCamera();
+        // Send the signal so Pco::writeInt32 knows the camera is ready
+        epicsEventSignal(acquireStartedEvent);
     }
     catch(std::exception& e)
     {
@@ -627,6 +637,7 @@ StateMachine::StateSelector Pco::smAcquire()
 {
     this->nowAcquiring();
     this->startCamera();
+    epicsEventSignal(acquireStartedEvent);
     return StateMachine::firstState;
 }
 
@@ -3289,6 +3300,43 @@ void Pco::getDeviceFirmwareInfo()
         setIntegerParam(pcoCameraDeviceVariant[i], cameraDevices[i].getVariant());
         setStringParam(pcoCameraDeviceVersion[i], cameraDevices[i].getVersion());
     }
+}
+
+/**
+ * Override writeInt32 from ADDriverEx
+ */
+asynStatus Pco::writeInt32(asynUser *pasynUser, int value)
+{
+    asynStatus status = asynSuccess;
+    // We handle ADAcquire here so we can wait until the camera is ready
+    if(pasynUser->reason == ADAcquire && value == 1)
+    {
+        // Check we aren't already acquiring
+        if(paramADAcquire == 0)
+        {
+            // Send notifications with the parameter updated
+            TakeLock takeLock(this, /*alreadyTaken=*/true);
+            paramADAcquire = 1;
+            ADDriverEx::notifyParameters(pasynUser, takeLock);
+            {
+                // Temporarily unlock whilst we wait for the event to say the camera is ready
+                FreeLock freelock(takeLock);
+                unsigned int eventStatus = epicsEventWaitWithTimeout(acquireStartedEvent, acquireStartEventTimeout);
+                if (eventStatus != epicsEventWaitOK)
+                {
+                    // We didn't get the event in time
+                    printf("Acquire event timeout. Did the arm fail?\n");
+                    status = asynError;
+                }
+            }
+            // The parameter callbacks happens when takeLock goes out of scope (destructor method)
+        }
+    }
+    // Parent class handles all other parameter changes
+    else {
+        status = ADDriverEx::writeInt32(pasynUser, value);
+    }
+    return status;
 }
 
 // IOC shell configuration command
