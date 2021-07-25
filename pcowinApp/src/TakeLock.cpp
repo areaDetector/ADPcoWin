@@ -14,43 +14,43 @@
  * taken lock if alreadyTaken is true).
  */
 TakeLock::TakeLock(asynPortDriver* driver, bool alreadyTaken)
-	: driver(driver)
-	, mutex(NULL)
-	, initiallyTaken(alreadyTaken)
+    : driver(driver)
+    , mutex(NULL)
+    , initiallyTaken(alreadyTaken)
 {
-	if(!alreadyTaken)
-	{
-		driver->lock();
-	}
+    if(!alreadyTaken)
+    {
+        driver->lock();
+    }
 }
 
 /**
  * Constructor.  Use this to take a lock that is represented by a FreeLock.
  */
 TakeLock::TakeLock(FreeLock& freeLock)
-	: driver(freeLock.driver)
-	, mutex(freeLock.mutex)
-	, initiallyTaken(false)
+    : driver(freeLock.driver)
+    , mutex(freeLock.mutex)
+    , initiallyTaken(false)
 {
-	if(driver != NULL)
-	{
-		driver->lock();
-	}
-	else
-	{
-		mutex->lock();
-	}
+    if(driver != NULL)
+    {
+        driver->lock();
+    }
+    else
+    {
+        mutex->lock();
+    }
 }
 
 /**
  * Constructor.  Use this to take an arbitary mutex.
  */
 TakeLock::TakeLock(epicsMutex* mutex)
-	: driver(NULL)
-	, mutex(mutex)
-	, initiallyTaken(false)
+    : driver(NULL)
+    , mutex(mutex)
+    , initiallyTaken(false)
 {
-	mutex->lock();
+    mutex->lock();
 }
 
 /**
@@ -59,20 +59,20 @@ TakeLock::TakeLock(epicsMutex* mutex)
  */
 TakeLock::~TakeLock()
 {
-	if(driver != NULL)
-	{
-		driver->callParamCallbacks();
-		if(!initiallyTaken)
-		{
-			driver->unlock();
-		}
-	}
-	else
-	{
-		if(!initiallyTaken)
-		{
-			mutex->unlock();
-		}
-	}
+    if(driver != NULL)
+    {
+        driver->callParamCallbacks();
+        if(!initiallyTaken)
+        {
+            driver->unlock();
+        }
+    }
+    else
+    {
+        if(!initiallyTaken)
+        {
+            mutex->unlock();
+        }
+    }
 }
 

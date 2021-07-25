@@ -15,11 +15,11 @@
 class AsynException: public std::exception
 {
 public:
-	AsynException(asynStatus code, const char* description) throw();
-	virtual ~AsynException() throw();
-	virtual const char* what() const throw();
+    AsynException(asynStatus code, const char* description) throw();
+    virtual ~AsynException() throw();
+    virtual const char* what() const throw();
 protected:
-	std::string description;
+    std::string description;
 };
 
 #endif /* PCOCAM2APP_SRC_ASYNEXCEPTION_H_ */

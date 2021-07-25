@@ -27,7 +27,7 @@ protected:
 
 // API
 public:
-	void initialise();
+    void initialise();
 };
 
 #endif

@@ -88,9 +88,9 @@ protected:
     virtual int doSetRecorderSubmode(Handle handle, unsigned short mode);
     virtual int doAllocateBuffer(Handle handle, short* bufferNumber, unsigned long size,
             unsigned short** buffer, Handle* event);
-	virtual int doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
-		unsigned long lastImage, short bufferNumber, unsigned short xRes, 
-		unsigned short yRes, unsigned short bitRes);
+    virtual int doGetImageEx(Handle handle, unsigned short segment, unsigned long firstImage,
+        unsigned long lastImage, short bufferNumber, unsigned short xRes, 
+        unsigned short yRes, unsigned short bitRes);
     virtual int doCancelImages(Handle handle);
     virtual int doCamlinkSetImageParameters(Handle handle, unsigned short xRes, unsigned short yRes);
     virtual int doArm(Handle handle);
@@ -106,87 +106,87 @@ protected:
             unsigned long* validImageCount, unsigned long* maxImageCount);
     virtual int doSetActiveLookupTable(Handle handle, unsigned short identifier);
     virtual int doSetTimeouts(Handle handle, unsigned int commandTimeout,
-    		unsigned int imageTimeout, unsigned int transferTimeout);
+            unsigned int imageTimeout, unsigned int transferTimeout);
     virtual int doClearRamSegment(Handle handle);
-	virtual int doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize);
-	virtual int doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
-			unsigned long* status);
-	virtual int doGetCameraBusyStatus(Handle handle, unsigned short* status);
-	virtual int doGetExpTrigSignalStatus(Handle handle, unsigned short* status);
-	virtual int doGetAcqEnblSignalStatus(Handle handle, unsigned short* status);
-	virtual int doSetSensorFormat(Handle handle, unsigned short format);
-	virtual int doSetDoubleImageMode(Handle handle, unsigned short mode);
-	virtual int doSetOffsetMode(Handle handle, unsigned short mode);
-	virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode);
-	virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
-		unsigned long seg2, unsigned long seg3, unsigned long seg4);
-	virtual void doStartFrameCapture(bool useGetImage);
-	virtual void doStopFrameCapture();
+    virtual int doGetCameraRamSize(Handle handle, unsigned long* numPages, unsigned short* pageSize);
+    virtual int doGetCameraHealthStatus(Handle handle, unsigned long* warnings, unsigned long* errors,
+            unsigned long* status);
+    virtual int doGetCameraBusyStatus(Handle handle, unsigned short* status);
+    virtual int doGetExpTrigSignalStatus(Handle handle, unsigned short* status);
+    virtual int doGetAcqEnblSignalStatus(Handle handle, unsigned short* status);
+    virtual int doSetSensorFormat(Handle handle, unsigned short format);
+    virtual int doSetDoubleImageMode(Handle handle, unsigned short mode);
+    virtual int doSetOffsetMode(Handle handle, unsigned short mode);
+    virtual int doSetNoiseFilterMode(Handle handle, unsigned short mode);
+    virtual int doSetCameraRamSegmentSize(Handle handle, unsigned long seg1,
+        unsigned long seg2, unsigned long seg3, unsigned long seg4);
+    virtual void doStartFrameCapture(bool useGetImage);
+    virtual void doStopFrameCapture();
 
 // Parameters
 private:
-	IntegerParam paramConnected;
-	IntegerParam paramOpen;;
-	IntegerParam paramCameraType;
-	IntegerParam paramMaxHorzRes;
-	IntegerParam paramMaxVertRes;
-	IntegerParam paramDynResolution;
-	IntegerParam paramMaxBinHorz;
-	IntegerParam paramMaxBinVert;
-	IntegerParam paramBinHorzStepping;
-	IntegerParam paramBinVertStepping;
-	IntegerParam paramRoiHorSteps;
-	IntegerParam paramRoiVertSteps;
-	IntegerParam paramPixelRate;
-	IntegerParam paramConvFact;
-	IntegerParam paramGeneralCaps;
-	IntegerParam paramRamSize;
-	IntegerParam paramPageSize;
-	IntegerParam paramBaudRate;
-	IntegerParam paramClockFrequency;
-	IntegerParam paramCamlinkLines;
-	IntegerParam paramDataFormat;
-	IntegerParam paramTransmit;
-	IntegerParam paramActualHorzRes;
-	IntegerParam paramActualVertRes;
-	IntegerParam paramTimeYear;
-	IntegerParam paramTimeMonth;
-	IntegerParam paramTimeDay;
-	IntegerParam paramTimeHour;
-	IntegerParam paramTimeMinute;
-	IntegerParam paramTimeSecond;
-	IntegerParam paramTempCcd;
-	IntegerParam paramTempCamera;
-	IntegerParam paramTempPsu;
-	IntegerParam paramBitAlignment;
-	IntegerParam paramEdgeGlobalShutter;
-	IntegerParam paramActualHorzBin;
-	IntegerParam paramActualVertBin;
-	IntegerParam paramActualRoiX0;
-	IntegerParam paramActualRoiY0;
-	IntegerParam paramActualRoiX1;
-	IntegerParam paramActualRoiY1;
-	IntegerParam paramTriggerMode;
-	IntegerParam paramStorageMode;
-	IntegerParam paramTimestampMode;
-	IntegerParam paramAcquireMode;
-	IntegerParam paramDelayTime;
-	IntegerParam paramDelayTimebase;
-	IntegerParam paramExposureTime;
-	IntegerParam paramExposureTimebase;
-	IntegerParam paramActualConvFact;
-	IntegerParam paramAdcOperation;
-	IntegerParam paramRecordingState;
-	IntegerParam paramRecorderSubmode;
-	IntegerParam paramCamlinkHorzRes;
-	IntegerParam paramCamlinkVertRes;
-	IntegerParam paramArmed;
-	IntegerParam paramClearStateRecord;
-	IntegerParam paramExternalTrigger;
-	StringParam paramStateRecord;
+    IntegerParam paramConnected;
+    IntegerParam paramOpen;;
+    IntegerParam paramCameraType;
+    IntegerParam paramMaxHorzRes;
+    IntegerParam paramMaxVertRes;
+    IntegerParam paramDynResolution;
+    IntegerParam paramMaxBinHorz;
+    IntegerParam paramMaxBinVert;
+    IntegerParam paramBinHorzStepping;
+    IntegerParam paramBinVertStepping;
+    IntegerParam paramRoiHorSteps;
+    IntegerParam paramRoiVertSteps;
+    IntegerParam paramPixelRate;
+    IntegerParam paramConvFact;
+    IntegerParam paramGeneralCaps;
+    IntegerParam paramRamSize;
+    IntegerParam paramPageSize;
+    IntegerParam paramBaudRate;
+    IntegerParam paramClockFrequency;
+    IntegerParam paramCamlinkLines;
+    IntegerParam paramDataFormat;
+    IntegerParam paramTransmit;
+    IntegerParam paramActualHorzRes;
+    IntegerParam paramActualVertRes;
+    IntegerParam paramTimeYear;
+    IntegerParam paramTimeMonth;
+    IntegerParam paramTimeDay;
+    IntegerParam paramTimeHour;
+    IntegerParam paramTimeMinute;
+    IntegerParam paramTimeSecond;
+    IntegerParam paramTempCcd;
+    IntegerParam paramTempCamera;
+    IntegerParam paramTempPsu;
+    IntegerParam paramBitAlignment;
+    IntegerParam paramEdgeGlobalShutter;
+    IntegerParam paramActualHorzBin;
+    IntegerParam paramActualVertBin;
+    IntegerParam paramActualRoiX0;
+    IntegerParam paramActualRoiY0;
+    IntegerParam paramActualRoiX1;
+    IntegerParam paramActualRoiY1;
+    IntegerParam paramTriggerMode;
+    IntegerParam paramStorageMode;
+    IntegerParam paramTimestampMode;
+    IntegerParam paramAcquireMode;
+    IntegerParam paramDelayTime;
+    IntegerParam paramDelayTimebase;
+    IntegerParam paramExposureTime;
+    IntegerParam paramExposureTimebase;
+    IntegerParam paramActualConvFact;
+    IntegerParam paramAdcOperation;
+    IntegerParam paramRecordingState;
+    IntegerParam paramRecorderSubmode;
+    IntegerParam paramCamlinkHorzRes;
+    IntegerParam paramCamlinkVertRes;
+    IntegerParam paramArmed;
+    IntegerParam paramClearStateRecord;
+    IntegerParam paramExternalTrigger;
+    StringParam paramStateRecord;
 
 public:
-	// Events
+    // Events
     const StateMachine::Event* requestConnectionUp;
     const StateMachine::Event* requestConnectionDown;
     const StateMachine::Event* requestOpen;
@@ -228,9 +228,9 @@ protected:
     void startTriggerTimer();
     void onConnected(TakeLock& takeLock);
     void onExternalTrigger(TakeLock& takeLock);
-	StateMachine::StateSelector smStartRecording();
-	StateMachine::StateSelector smStopTriggerTimer();
-	StateMachine::StateSelector smCreateFrame();
+    StateMachine::StateSelector smStartRecording();
+    StateMachine::StateSelector smStopTriggerTimer();
+    StateMachine::StateSelector smCreateFrame();
 };
 
 #endif /* SIMULATIONAPI_H_ */
