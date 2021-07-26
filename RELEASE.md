@@ -97,7 +97,6 @@ Release notes
 * Added PV for "confimred stop" command which calls back once stop is complete.
 * Make only 16-bit mode available and remove image reversal.
 
-
 2-3-3
 -----
 * Updated area detector to 1-9dls19.
@@ -114,7 +113,6 @@ Release notes
 * Fix some race conditions.
 * Add ability to poll buffers.
 
-
 1-8
 ---
 * Spurious frames created by the PCO4000 when arm is pressed removed.
@@ -128,7 +126,6 @@ Release notes
 * Added camlink large gap mode
 * Fixed frame number tracking that detects missing frames.
 
-
 1-3
 ---
 * Initial public version.
@@ -136,4 +133,3 @@ Release notes
 * Tested with the PCO Dimax and PCO 4000 cameras, with the following known issues. With the Dimax, the ROI feature can lock the camera up, so don't use. Also with the Dimax, recovery from an acquisition time that is longer than the
 maximum allowed currently requires the IOC to be restarted.
 The ROI feature has not been tested with the PCO4000. 
-
