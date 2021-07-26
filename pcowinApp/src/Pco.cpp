@@ -14,6 +14,7 @@
 #include <algorithm>
 #include "epicsExport.h"
 #include "epicsThread.h"
+#include "epicsEvent.h"
 #include "iocsh.h"
 #include "db_access.h"
 #include <iostream>
@@ -48,6 +49,7 @@ const double Pco::statusPollPeriod = 2.0;
 const double Pco::acquisitionStatusPollPeriod = 5.0;
 const double Pco::armIgnoreImagesPeriod = 0.1;
 const double Pco::initialisationPeriod = 1.0;
+const double Pco::acquireStartEventTimeout = 10.0;
 const int Pco::bitsPerShortWord = 16;
 const int Pco::bitsPerNybble = 4;
 const long Pco::nybbleMask = 0x0f;
@@ -254,6 +256,12 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory, int numCameraDe
         createParam(charBuff, asynParamOctet, &pcoCameraDeviceVersion[i]);
         setStringParam(pcoCameraDeviceVersion[i], "");
     }
+    // Event to be signalled when camera has started acquiring
+    this->acquireStartedEvent = epicsEventMustCreate(epicsEventEmpty);
+    if (!this->acquireStartedEvent) {
+        printf("Pco::Pco: epicsEventCreate failure for acquire start event\n");
+        return;
+    }
     // Create the state machine
     stateMachine = new StateMachine("Pco", this,
             &paramStateRecord, &stateTrace, Pco::requestQueueCapacity);
@@ -376,7 +384,7 @@ void Pco::initialiseOnceRunning()
 
 /**
  * Return the pco corresponding to the port name
- * \param[in] p The port name
+ * \param[in] portName The port name
  * \return The pco object, NULL if not found
  */
 Pco* Pco::getPco(const char* portName)
@@ -601,6 +609,8 @@ StateMachine::StateSelector Pco::smArmAndAcquire()
         }
         this->nowAcquiring();
         this->startCamera();
+        // Send the signal so Pco::writeInt32 knows the camera is ready
+        epicsEventSignal(acquireStartedEvent);
     }
     catch(std::exception& e)
     {
@@ -627,6 +637,7 @@ StateMachine::StateSelector Pco::smAcquire()
 {
     this->nowAcquiring();
     this->startCamera();
+    epicsEventSignal(acquireStartedEvent);
     return StateMachine::firstState;
 }
 
@@ -1698,7 +1709,7 @@ void Pco::post(const StateMachine::Event* req)
  */
 NDArray* Pco::allocArray(int sizeX, int sizeY, NDDataType_t dataType)
 {
-    size_t maxDims[] = {sizeX, sizeY};
+    size_t maxDims[] = {(size_t) sizeX, (size_t) sizeY};
     NDArray* image = this->pNDArrayPool->alloc(sizeof(maxDims)/sizeof(size_t),
             maxDims, dataType, 0, NULL);
     if(image == NULL)
@@ -2528,8 +2539,8 @@ void Pco::cfgBinningAndRoi(bool updateParams) throw(PcoException)
         this->reqRoiPercentY = std::min(this->reqRoiPercentY, 100);
 
         // Deduce region size from percentage
-        this->reqRoiSizeX = (this->xCamSize * this->reqRoiPercentX) / 100.0;
-        this->reqRoiSizeY = (this->yCamSize * this->reqRoiPercentY) / 100.0;
+        this->reqRoiSizeX = int((this->xCamSize * this->reqRoiPercentX) / 100.0);
+        this->reqRoiSizeY = int((this->yCamSize * this->reqRoiPercentY) / 100.0);
 
         // Deduce starting coordinates by making region symmetrical
         this->reqRoiStartX = (this->xCamSize - this->reqRoiSizeX) / 2;
@@ -3037,6 +3048,11 @@ void Pco::processFrame(NDArray* image)
     }
     if(nextImageReady)
     {
+        // Update statistics if not a client
+        if (!this->gangConnection){
+            this->arrayCounter++;
+            this->numImagesCounter++;
+        }
         // Attach the image information
         image->uniqueId = this->arrayCounter;
         epicsTimeStamp imageTime;
@@ -3051,7 +3067,9 @@ void Pco::processFrame(NDArray* image)
             epicsTimeGetCurrent(&imageTime);
         }
         image->timeStamp = imageTime.secPastEpoch +
-                imageTime.nsec / Pco::oneNanosecond;
+                imageTime.nsec * Pco::oneNanosecond;
+        // Required as of ADCore 2-0 - https://cars.uchicago.edu/software/epics/areaDetectorTimeStampSupport.html
+        updateTimeStamp(&image->epicsTS);
         this->getAttributes(image->pAttributeList);
         // Show the image to the gang system
         if(this->gangConnection)
@@ -3074,9 +3092,6 @@ void Pco::processFrame(NDArray* image)
  */
 void Pco::imageComplete(NDArray* image)
 {
-    // Update statistics
-    this->arrayCounter++;
-    this->numImagesCounter++;
     // Pass the array on
     this->doCallbacksGenericPointer(image, NDArrayData, 0);
     image->release();
@@ -3287,6 +3302,43 @@ void Pco::getDeviceFirmwareInfo()
         setIntegerParam(pcoCameraDeviceVariant[i], cameraDevices[i].getVariant());
         setStringParam(pcoCameraDeviceVersion[i], cameraDevices[i].getVersion());
     }
+}
+
+/**
+ * Override writeInt32 from ADDriverEx
+ */
+asynStatus Pco::writeInt32(asynUser *pasynUser, int value)
+{
+    asynStatus status = asynSuccess;
+    // We handle ADAcquire here so we can wait until the camera is ready
+    if(pasynUser->reason == ADAcquire && value == 1)
+    {
+        // Check we aren't already acquiring
+        if(paramADAcquire == 0)
+        {
+            // Send notifications with the parameter updated
+            TakeLock takeLock(this, /*alreadyTaken=*/true);
+            paramADAcquire = 1;
+            ADDriverEx::notifyParameters(pasynUser, takeLock);
+            {
+                // Temporarily unlock whilst we wait for the event to say the camera is ready
+                FreeLock freelock(takeLock);
+                unsigned int eventStatus = epicsEventWaitWithTimeout(acquireStartedEvent, Pco::acquireStartEventTimeout);
+                if (eventStatus != epicsEventWaitOK)
+                {
+                    // We didn't get the event in time
+                    printf("Acquire event timeout. Did the arm fail?\n");
+                    status = asynError;
+                }
+            }
+            // The parameter callbacks happens when takeLock goes out of scope (destructor method)
+        }
+    }
+    // Parent class handles all other parameter changes
+    else {
+        status = ADDriverEx::writeInt32(pasynUser, value);
+    }
+    return status;
 }
 
 // IOC shell configuration command
