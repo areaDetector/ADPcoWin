@@ -71,6 +71,7 @@ const double Pco::oneNanosecond = 1e-9;
 const double Pco::oneMillisecond = 1e-3;
 const double Pco::triggerRetryPeriod = 0.01;
 const int Pco::statusMessageSize = 256;
+
 /** Aligned allocation for DLL buffers. */
 #ifdef _WIN32
 #else
