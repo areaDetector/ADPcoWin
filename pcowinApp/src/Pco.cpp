@@ -2538,8 +2538,8 @@ void Pco::cfgBinningAndRoi(bool updateParams) throw(PcoException)
         this->reqRoiPercentY = std::min(this->reqRoiPercentY, 100);
 
         // Deduce region size from percentage
-        this->reqRoiSizeX = (this->xCamSize * this->reqRoiPercentX) / 100.0;
-        this->reqRoiSizeY = (this->yCamSize * this->reqRoiPercentY) / 100.0;
+        this->reqRoiSizeX = int((this->xCamSize * this->reqRoiPercentX) / 100.0);
+        this->reqRoiSizeY = int((this->yCamSize * this->reqRoiPercentY) / 100.0);
 
         // Deduce starting coordinates by making region symmetrical
         this->reqRoiStartX = (this->xCamSize - this->reqRoiSizeX) / 2;
