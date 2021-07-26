@@ -49,6 +49,7 @@ const double Pco::statusPollPeriod = 2.0;
 const double Pco::acquisitionStatusPollPeriod = 5.0;
 const double Pco::armIgnoreImagesPeriod = 0.1;
 const double Pco::initialisationPeriod = 1.0;
+const double Pco::acquireStartEventTimeout = 10.0;
 const int Pco::bitsPerShortWord = 16;
 const int Pco::bitsPerNybble = 4;
 const long Pco::nybbleMask = 0x0f;
@@ -70,7 +71,6 @@ const double Pco::oneNanosecond = 1e-9;
 const double Pco::oneMillisecond = 1e-3;
 const double Pco::triggerRetryPeriod = 0.01;
 const int Pco::statusMessageSize = 256;
-
 /** Aligned allocation for DLL buffers. */
 #ifdef _WIN32
 #else
@@ -256,7 +256,6 @@ Pco::Pco(const char* portName, int maxBuffers, size_t maxMemory, int numCameraDe
         setStringParam(pcoCameraDeviceVersion[i], "");
     }
     // Event to be signalled when camera has started acquiring
-    acquireStartEventTimeout = 10;
     this->acquireStartedEvent = epicsEventMustCreate(epicsEventEmpty);
     if (!this->acquireStartedEvent) {
         printf("Pco::Pco: epicsEventCreate failure for acquire start event\n");
@@ -3323,7 +3322,7 @@ asynStatus Pco::writeInt32(asynUser *pasynUser, int value)
             {
                 // Temporarily unlock whilst we wait for the event to say the camera is ready
                 FreeLock freelock(takeLock);
-                unsigned int eventStatus = epicsEventWaitWithTimeout(acquireStartedEvent, acquireStartEventTimeout);
+                unsigned int eventStatus = epicsEventWaitWithTimeout(acquireStartedEvent, Pco::acquireStartEventTimeout);
                 if (eventStatus != epicsEventWaitOK)
                 {
                     // We didn't get the event in time

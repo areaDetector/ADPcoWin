@@ -130,6 +130,7 @@ public:
     static const double armIgnoreImagesPeriod;
     static const double acquisitionStatusPollPeriod;
     static const double initialisationPeriod;
+    static const double acquireStartEventTimeout;
     static const char* stateNames[];
     static const char* eventNames[];
     static const int bitsPerShortWord;
@@ -283,7 +284,6 @@ private:
     int fifoQueueSize;
     bool useGetFrames;
     epicsEventId acquireStartedEvent;
-    int acquireStartEventTimeout;
 
 public:
     static std::map<std::string, Pco*> thePcos;
